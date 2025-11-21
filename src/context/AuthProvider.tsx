@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 interface User {
   email: string;
   role: string;
+  name?: string;
 }
 
 interface AuthContextType {
