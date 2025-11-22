@@ -51,7 +51,7 @@ export default function ChooseRolePage() {
         </div>
       </main>
 
-      <AuthFooter />
+      <AuthFooter className="mt-10" />
     </div>
   );
 }

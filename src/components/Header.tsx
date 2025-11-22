@@ -68,16 +68,19 @@ export function Header() {
           <div className="flex items-center gap-4">
 
             {/* Notifications */}
-            <motion.div whileHover={{ scale: 1.08 }}>
-              <Button variant="ghost" size="icon" className="relative hover:bg-blue-50">
-                <Bell className="w-5 h-5 text-gray-600" />
-                {notifications > 0 && (
-                  <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
-                    {notifications}
-                  </span>
-                )}
-              </Button>
-            </motion.div>
+            {user && (
+              <motion.div whileHover={{ scale: 1.08 }}>
+                <Button variant="ghost" size="icon" className="relative hover:bg-blue-50">
+                  <Bell className="w-5 h-5 text-gray-600" />
+                  {notifications > 0 && (
+                    <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+                      {notifications}
+                    </span>
+                  )}
+                </Button>
+              </motion.div>
+            )}
+
 
             {/* ➤ SI NON CONNECTÉ */}
             {!user && (

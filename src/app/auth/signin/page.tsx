@@ -116,7 +116,7 @@ export default function SigninPage() {
         </div>
       </main>
 
-      <AuthFooter />
+      <AuthFooter className="mt-10" />
     </div>
   );
 }

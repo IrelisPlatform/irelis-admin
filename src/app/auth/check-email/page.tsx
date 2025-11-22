@@ -16,7 +16,7 @@ export default function CheckEmailPage() {
         </div>
       </main>
 
-      <AuthFooter />
+      <AuthFooter className="mt-10" />
     </div>
   );
 }

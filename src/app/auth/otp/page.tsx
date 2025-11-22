@@ -61,7 +61,7 @@ export default function OtpPage() {
         </div>
       </main>
 
-      <AuthFooter />
+      <AuthFooter className="mt-10" />
     </div>
   );
 }
