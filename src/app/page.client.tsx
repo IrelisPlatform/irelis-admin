@@ -133,7 +133,8 @@ export default function Page() {
           </div>
 
           {/* DÉTAILS — colonne droite */}
-          <div className="hidden lg:block overflow-y-auto p-2 lg:col-span-1 border-l">
+<div className="mt-8 lg:mt-0 lg:block lg:overflow-y-auto p-2 lg:col-span-1 border-l">
+
             {selectedJob ? (
               <JobDetails job={selectedJob} />
             ) : (

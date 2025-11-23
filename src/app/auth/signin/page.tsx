@@ -44,23 +44,32 @@ export default function SigninPage() {
 
     setLoading(true);
 
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/otp/check-mail`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+        credentials: "include"
+      });
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/otp/check-mail`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-      credentials: "include"
-    });
+      if (!res.ok) {
+        throw new Error(`Erreur ${res.status}: impossible de vérifier l'email`);
+      }
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (data.exists && data.mode === "signin") {
-      router.push(`/auth/otp?email=${encodeURIComponent(email)}`);
-    } else {
-      router.push(`/auth/choose-role?email=${encodeURIComponent(email)}`);
+      if (data.exists && data.mode === "signin") {
+        router.push(`/auth/otp?email=${encodeURIComponent(email)}`);
+      } else {
+        router.push(`/auth/choose-role?email=${encodeURIComponent(email)}`);
+      }
+    } catch (err: any) {
+      console.error("Erreur dans handleContinue:", err);
+      setError(err.message || "Une erreur est survenue. Veuillez réessayer.");
+    } finally {
+
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (

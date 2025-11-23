@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,19 +13,38 @@ export default function OtpPage() {
   const email = params.get("email") ?? "";
   const role = params.get("role") ?? "CANDIDATE";
 
+  const router = useRouter();
+
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { verifyOtp, requestOtp } = useAuth();
+  const { verifyOtp, requestOtp, simulateLogin } = useAuth();
 
   const handleVerify = async () => {
+    if (!code) return;
     setLoading(true);
-    await verifyOtp(email, code);
-    setLoading(false);
+    setError(null);
+
+    try {
+      const ok = await verifyOtp(email, code);
+      if (!ok) {
+        setError("Code invalide ou expiré.");
+      }
+      // → verifyOtp redirige automatiquement vers "/" si succès
+    } catch (err: any) {
+      setError(err.message || "Une erreur est survenue.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const resend = async () => {
-    await requestOtp(email, role);
+    try {
+      const ok = await requestOtp(email, role);
+      if (!ok) alert("Échec de l’envoi du code.");
+    } catch (err: any) {
+      alert(err.message || "Erreur réseau");
+    }
   };
 
   return (

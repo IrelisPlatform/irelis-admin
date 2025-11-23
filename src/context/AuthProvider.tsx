@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { saveAccessToken } from "@/lib/auth";
 
 /* -------------------- TYPES -------------------- */
 interface User {
@@ -17,10 +18,12 @@ interface AuthContextType {
   requestOtp: (email: string, userType?: string) => Promise<boolean>;
   verifyOtp: (email: string, code: string) => Promise<boolean>;
   logout: () => void;
+  simulateLogin: (email: string, role: string) => void;
 }
 
 /* -------------------- CONTEXT -------------------- */
 const AuthContext = createContext<AuthContextType | null>(null);
+
 
 /* -------------------- API WRAPPER -------------------- */
 async function api(path: string, options: RequestInit = {}) {
@@ -43,25 +46,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  /* ---- AUTO-LOGIN via cookie HttpOnly ---- */
+  /* ---- AUTO-LOGIN via cookie HttpOnly ou accessToken client-side ---- */
   const fetchUser = async () => {
     try {
-      const res = await api("/auth/otp/user");
+
+      let res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/otp/user`, {
+        credentials: "include",
+      });
+
+      if (!res.ok && res.status === 401) {
+        const token = document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("accessToken="))
+          ?.split("=")[1];
+
+        if (token) {
+          res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/otp/user`, {
+            headers: {
+              Authorization: `Bearer ${decodeURIComponent(token)}`,
+            },
+          });
+        }
+      }
+
       if (res.ok) {
         const data = await res.json();
         setUser(data);
       } else {
         setUser(null);
       }
-    } catch {
+    } catch (error) {
+      console.error("Erreur lors du fetchUser:", error);
       setUser(null);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
-
-  useEffect(() => {
-    fetchUser();
-  }, []);
 
   /* ---------------- GOOGLE OAUTH -------------- */
   const signInWithGoogle = () => {
@@ -88,14 +108,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /* ---------------- OTP VERIFY -------------- */
   const verifyOtp = async (email: string, code: string): Promise<boolean> => {
-    const res = await api("/auth/otp/verify", {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+    const res = await fetch(`${backendUrl}/auth/otp/verify`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ email, code, userType: "CANDIDATE" }),
     });
 
     if (!res.ok) return false;
 
-    await fetchUser();
+    const data = await res.json();
+    saveAccessToken(data.accessToken);
+
+    // Met à jour l'utilisateur
+    setUser({ email, role: "CANDIDATE" });
+    setLoading(false);
 
     const returnTo = params.get("returnTo") || "/";
     router.push(returnTo);
@@ -119,6 +147,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         requestOtp,
         verifyOtp,
         logout,
+        simulateLogin,
       }}
     >
       {children}
