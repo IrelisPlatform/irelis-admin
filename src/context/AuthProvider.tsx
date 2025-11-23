@@ -18,7 +18,6 @@ interface AuthContextType {
   requestOtp: (email: string, userType?: string) => Promise<boolean>;
   verifyOtp: (email: string, code: string) => Promise<boolean>;
   logout: () => void;
-  simulateLogin: (email: string, role: string) => void;
 }
 
 /* -------------------- CONTEXT -------------------- */
@@ -147,7 +146,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         requestOtp,
         verifyOtp,
         logout,
-        simulateLogin,
       }}
     >
       {children}

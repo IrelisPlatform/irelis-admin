@@ -1,5 +1,6 @@
 import logo from "@/../public/icons/logo.png";
 import { Facebook, Twitter, Linkedin, Instagram, Mail, Phone, MapPin } from "lucide-react";
+import Link from "next/link";
 
 export function Footer() {
   return (
@@ -73,10 +74,11 @@ export function Footer() {
         {/* Bottom */}
         <div className="border-t border-gray-700/50 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm">
           <p className="text-gray-400">© 2025 Irelis. Tous droits réservés.</p>
-          <div className="flex gap-8">
-            <a href="#" className="hover:text-white transition-all duration-200">Mentions légales</a>
-            <a href="#" className="hover:text-white transition-all duration-200">Politique de confidentialité</a>
-            <a href="#" className="hover:text-white transition-all duration-200">CGU</a>
+          <div className="flex flex-wrap justify-center gap-6">
+            <Link href="/legal/terms" className="hover:text-white transition-all duration-200">Mentions légales</Link>
+            <Link href="/legal/privacy" className="hover:text-white transition-all duration-200">Confidentialité</Link>
+            <Link href="/legal/cgu" className="hover:text-white transition-all duration-200">CGU</Link>
+            <Link href="/legal/faq" className="hover:text-white transition-all duration-200">FAQ</Link>
           </div>
         </div>
       </div>

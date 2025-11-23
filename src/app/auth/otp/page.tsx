@@ -17,8 +17,9 @@ export default function OtpPage() {
 
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const { verifyOtp, requestOtp, simulateLogin } = useAuth();
+  const { verifyOtp, requestOtp } = useAuth();
 
   const handleVerify = async () => {
     if (!code) return;
