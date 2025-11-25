@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { saveAccessToken, getAccessToken, clearAccessToken } from "@/lib/auth";
+import { saveAccessToken, getAccessToken } from "@/lib/auth";
 
 /* -------------------- TYPES -------------------- */
 interface User {
@@ -26,24 +26,13 @@ interface AuthContextType {
 /* -------------------- CONTEXT -------------------- */
 const AuthContext = createContext<AuthContextType | null>(null);
 
+// -------------------- UTILS --------------------
+const getBackendUrl = () => {
+  const url = process.env.NEXT_PUBLIC_BACKEND_URL;
+  if (!url) throw new Error("NEXT_PUBLIC_BACKEND_URL is not defined");
+  return url;
+};
 
-/* -------------------- API WRAPPER -------------------- */
-async function api(path: string, options: RequestInit = {}) {
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-  console.log("Backend URL:", backendUrl);
-
-  if (!backendUrl) {
-    throw new Error("NEXT_PUBLIC_BACKEND_URL is not defined");
-  }
-
-  return fetch(`${backendUrl}${path}`, {
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    ...options,
-  });
-}
 
 /* -------------------- PROVIDER -------------------- */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -57,23 +46,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   /* ---- AUTO-LOGIN via cookie HttpOnly ou accessToken client-side ---- */
   const fetchUser = async () => {
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-      console.log("Backend URL:", backendUrl);
-      if (!backendUrl) return;
+      const backendUrl = getBackendUrl();
 
       let res = await fetch(`${backendUrl}/auth/otp/user`, {
         credentials: "include",
       });
 
       if (!res.ok && res.status === 401) {
-        const tokenMatch = document.cookie.match(/(^| )accessToken=([^;]+)/);
-        const token = tokenMatch ? decodeURIComponent(tokenMatch[2]) : null;
-
+        const token = getAccessToken();
         if (token) {
           res = await fetch(`${backendUrl}/auth/otp/user`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
           });
         }
       }
@@ -81,10 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (res.ok) {
         const data = await res.json();
         setUser(data);
-
-        if (!userType && data.role) {
-          setUserType(data.role);
-        }
+        if (!userType && data.role) setUserType(data.role);
       } else {
         setUser(null);
       }
@@ -97,51 +77,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    const loadToken = () => {
-      const token = getAccessToken(); // ou localStorage
-      if (token) {
+    const token = getAccessToken(); // ou localStorage
+    if (token) {
         // Optionnel : appelle /auth/otp/user pour vérifier le token
         fetchUser();
-      } else {
-        setUser(null);
-        setLoading(false);
-      }
-    };
-
-    loadToken();
+    } else {
+      setUser(null);
+      setLoading(false);
+    }
   }, []);
 
   /* ---------------- GOOGLE OAUTH -------------- */
   const signInWithGoogle = () => {
     const returnTo = params.get("returnTo") || "/";
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-    console.log("Backend URL:", backendUrl);
-    if (!backendUrl) return;
-
     window.location.href = `${backendUrl}/oauth2/authorization/google?returnTo=${encodeURIComponent(returnTo)}`;
   };
 
   /* ---------------- OTP REQUEST -------------- */
-  const requestOtp = async (
-    email: string,
-    userTypeArg = "CANDIDATE"
-  ): Promise<boolean> => {
+  const requestOtp = async (email: string, userTypeArg = "CANDIDATE"): Promise<boolean> => {
     setUserType(userTypeArg); // ← sauvegarde le rôle choisi
-    const res = await api("/auth/otp/request", {
+    const res = await fetch(`${getBackendUrl()}/auth/otp/request`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, userType: userTypeArg }),
     });
-
     return res.status === 204;
   };
 
   /* ---------------- OTP VERIFY -------------- */
   const verifyOtp = async (email: string, code: string): Promise<boolean> => {
     const currentType = userType || "CANDIDATE";
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-    console.log("Backend URL:", backendUrl);
-    if (!backendUrl) return false;
-
     const res = await fetch(`${backendUrl}/auth/otp/verify`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -153,8 +118,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const data = await res.json();
     saveAccessToken(data.accessToken);
-
-    // Met à jour l'utilisateur
     setUser({ email, role: currentType });
     setLoading(false);
 
@@ -166,7 +129,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /* ---------------- LOGOUT ---------------- */
   const logout = async () => {
-    await api("/auth/logout", { method: "POST" }).catch(() => {});
+    try {
+      await fetch(`${getBackendUrl()}/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (e) {
+      // ignore
+    }
     setUser(null);
     setUserType(null);
     router.push("/");
