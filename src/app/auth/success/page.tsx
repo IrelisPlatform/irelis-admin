@@ -4,6 +4,7 @@
 
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { parseJwt } from "@/lib/jwt";
 
 export default function AuthSuccessPage() {
   const params = useSearchParams();
@@ -31,11 +32,16 @@ export default function AuthSuccessPage() {
         if (res.ok && data.accessToken && data.refreshToken) {
           // ✅ Stocke les tokens pour persistance
           if (typeof window !== "undefined") {
+
+            const payload = parseJwt(data.accessToken);
+            const userEmail = payload?.email || "luqnleng5@gmail.com"; // fallback
+            localStorage.setItem("auth_email", userEmail);
             localStorage.setItem("accessToken", data.accessToken);
             localStorage.setItem("refreshToken", data.refreshToken);
 
             // Redirige vers la page initiale demandée (ex: /offres)
             const returnTo = localStorage.getItem("auth_returnTo") || "/";
+            window.location.href = returnTo;
             router.replace(returnTo);
           }
         } else {

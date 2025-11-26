@@ -44,6 +44,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initializeAuth();
   }, []);
 
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === "accessToken" || event.key === "refreshToken") {
+        // Force le rechargement de l'état
+        const newAccessToken = localStorage.getItem("accessToken");
+        const newEmail = localStorage.getItem("auth_email");
+        const newRole = localStorage.getItem("auth_role");
+
+        if (newAccessToken && newEmail) {
+          setUser({
+            email: newEmail,
+            role: newRole || "candidate",
+          });
+        } else {
+          setUser(null);
+        }
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
+
   const logout = () => {
     if (typeof window !== "undefined") {
       localStorage.removeItem("accessToken");
