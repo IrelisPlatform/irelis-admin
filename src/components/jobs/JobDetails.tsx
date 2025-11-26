@@ -7,10 +7,10 @@ import { Separator } from "@/components/ui/separator";
 import { MapPin, Banknote, Info, Briefcase, DollarSign, Clock, Users, Building2, Bookmark, Share2, Send, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
+import { useApplyJob } from "@/hooks/useApplyJob";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { JobDetail } from "@/lib/mockJobDetails";
+import { toast } from "sonner";
 
 interface JobDetailsProps {
   job: {
@@ -35,19 +35,14 @@ interface JobDetailsProps {
 }
 
 export default function JobDetails({ job }: { job: JobDetail }) {
-  const { user } = useAuth();
-  const router = useRouter();
+  const { handleApply } = useApplyJob(job.id);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
 
-  const handleApply = () => {
-    if (!user) {
-      router.push(`/auth/signin?returnTo=/jobs/${job.id}`);
-      return;
-    }
-    router.push(`/jobs/${job.id}/apply`);
+  const onApply = () => {
     setIsApplying(true);
-    setTimeout(() => setIsApplying(false), 2000);
+    handleApply();
+    setTimeout(() => setIsApplying(false), 1000);
   };
 
   return (
@@ -124,7 +119,7 @@ export default function JobDetails({ job }: { job: JobDetail }) {
             <Button 
               size="sm" 
               className="flex-1 bg-[#1e3a8a] hover:bg-[#1e40af] text-white shadow"
-              onClick={handleApply}
+              onClick={onApply}
               disabled={isApplying}
             >
               {isApplying ? 'Envoi...' : 'Postuler'}
