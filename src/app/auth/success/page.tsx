@@ -19,8 +19,7 @@ export default function AuthSuccessPage() {
     const exchange = async () => {
       try {
         const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://irelis-backend.onrender.com";
-        const res = await fetch(
-          `${backendUrl}/auth/otp/oauth2/exchange?code=${encodeURIComponent(code)}`,
+        const res = await fetch(`${backendUrl}/auth/otp/oauth2/exchange?code=${encodeURIComponent(code)}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

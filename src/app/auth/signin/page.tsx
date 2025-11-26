@@ -35,11 +35,16 @@ export default function SigninPage() {
 
   const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
+  const [isChecking, setIsChecking] = useState(false);
+
   const handleContinue = async () => {
     if (!validateEmail(email)) {
       setError("Veuillez entrer une adresse email valide.");
       return;
     }
+
+    setIsChecking(true); // ✅ Démarrer le chargement
+    setError("") 
 
     try {
       const res = await fetch(`${backendUrl}/auth/otp/check-mail`, {
@@ -65,6 +70,8 @@ export default function SigninPage() {
     } catch (err) {
       console.error(err);
       setError("Impossible de contacter le serveur.");
+    } finally {
+      setIsChecking(false);
     }
   };
 
@@ -111,8 +118,12 @@ export default function SigninPage() {
               {error && <p className="text-red-600 text-xs mt-1">{error}</p>}
             </div>
 
-            <Button className="w-full mt-2" onClick={handleContinue} disabled={!email}>
-              Continuer
+            <Button 
+              className="w-full mt-2" 
+              onClick={handleContinue} 
+              disabled={!email || isChecking}
+            >
+              {isChecking ? "Vérification..." : "Continuer"}
             </Button>
           </div>
         </div>

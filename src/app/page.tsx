@@ -14,10 +14,22 @@ import { JobPagination } from "@/components/jobs/JobPagination";
 import { Footer } from "@/components/Footer";
 import mockJobs, { type Job } from "@/lib/mockJobs";
 import jobDetails from "@/lib/mockJobDetails";
-// ⚠️ useAuth non utilisé ici → supprimé
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetClose,
+} from "@/components/ui/sheet";
+import { useMediaQuery } from "react-responsive";
 
 export default function Page() {
   const [selectedJobId, setSelectedJobId] = useState<string | undefined>(mockJobs[0]?.id);
+
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+  const isMobile = useMediaQuery({ maxWidth: 1023 });
 
   // ✅ Utilise useMemo pour éviter les recalculs inutiles
   const selectedJob = useMemo(() => {
@@ -42,6 +54,9 @@ export default function Page() {
 
   const handleOpenDetails = (id: string) => {
     setSelectedJobId(id);
+    if (isMobile) {
+      setIsSheetOpen(true);
+    }
   };
 
   return (
@@ -128,7 +143,7 @@ export default function Page() {
           </div>
 
           {/* DÉTAILS */}
-          <div className="mt-8 lg:mt-0 lg:block lg:overflow-y-auto p-2 lg:col-span-1 border-l">
+          <div className="hidden lg:block mt-8 lg:mt-0 lg:overflow-y-auto p-2 lg:col-span-1 border-l">
             {selectedJob ? (
               <JobDetails job={selectedJob} />
             ) : (
@@ -157,6 +172,28 @@ export default function Page() {
           <JobAlert />
         </motion.div>
       </div>
+
+
+            {/* MODAL MOBILE POUR JOB DETAILS */}
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto p-6">
+          <SheetHeader>
+            <SheetTitle className="text-xl">
+              {selectedJob?.title || "Détails de l'offre"}
+            </SheetTitle>
+            <SheetDescription asChild>
+              <div className="mt-4">
+                {selectedJob ? (
+                  <JobDetails job={selectedJob} />
+                ) : (
+                  <p>Sélectionnez une offre pour voir les détails.</p>
+                )}
+              </div>
+            </SheetDescription>
+          </SheetHeader>
+          <SheetClose className="mt-4 w-full">Fermer</SheetClose>
+        </SheetContent>
+      </Sheet>
 
       <Footer />
     </div>
