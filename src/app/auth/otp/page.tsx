@@ -66,7 +66,7 @@ export default function OtpPage() {
       if (!email) return;
       try {
         const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://irelis-backend.onrender.com";
-        const res = await fetch(${backendUrl}/auth/otp/request, {
+        const res = await fetch(`${backendUrl}/auth/otp/request`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email }),
@@ -96,7 +96,7 @@ export default function OtpPage() {
 
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://irelis-backend.onrender.com";
-      const res = await fetch(${backendUrl}/auth/otp/verify, {
+      const res = await fetch(`${backendUrl}/auth/otp/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, code }),
@@ -129,7 +129,7 @@ export default function OtpPage() {
 
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://irelis-backend.onrender.com";
-      const res = await fetch(${backendUrl}/auth/otp/request, {
+      const res = await fetch(`${backendUrl}/auth/otp/request`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -154,7 +154,7 @@ export default function OtpPage() {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return ${mins}:${secs.toString().padStart(2, "0")};
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   if (!email) {
@@ -190,9 +190,9 @@ export default function OtpPage() {
               type="button"
               onClick={handleResend}
               disabled={resendDisabled}
-              className={text-sm ${resendDisabled ? "text-gray-400" : "text-blue-600 hover:underline"}}
+              className={`text-sm ${resendDisabled ? "text-gray-400" : "text-blue-600 hover:underline"}`}
             >
-              {resendDisabled ? Renvoyer (${resendCountdown}s) : "Renvoyer le code"}
+              {resendDisabled ? `Renvoyer (${resendCountdown}s)` : "Renvoyer le code"}
             </button>
           </div>
         </div>
