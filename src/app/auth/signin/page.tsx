@@ -26,11 +26,11 @@ export default function SigninPage() {
   }, []);
 
   const handleGoogle = () => {
-    window.location.href = `${backendUrl}/auth/oauth2/google?returnTo=${encodeURIComponent(returnTo)}`;
+    window.location.href = `${backendUrl}/oauth2/authorization/google?state=google&returnTo=${encodeURIComponent(returnTo)}`;
   };
 
   const handleLinkedin = () => {
-    window.location.href = `${backendUrl}/auth/oauth2/linkedin?returnTo=${encodeURIComponent(returnTo)}`;
+    window.location.href = `${backendUrl}/oauth2/authorization/linkedin?state=linkedin&returnTo=${encodeURIComponent(returnTo)}`;
   };
 
   const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);

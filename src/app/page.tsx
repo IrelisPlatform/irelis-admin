@@ -182,7 +182,10 @@ export default function Page() {
               {selectedJob?.title || "Détails de l'offre"}
             </SheetTitle>
             <SheetDescription asChild>
-              <div className="mt-4">
+              <div 
+                className="mt-4"
+                style={{ overflowWrap: 'break-word', wordWrap: 'break-word', hyphens: 'auto' }}
+              >
                 {selectedJob ? (
                   <JobDetails job={selectedJob} />
                 ) : (
