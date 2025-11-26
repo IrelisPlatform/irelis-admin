@@ -26,12 +26,9 @@ import { useMediaQuery } from "react-responsive";
 
 export default function Page() {
   const [selectedJobId, setSelectedJobId] = useState<string | undefined>(mockJobs[0]?.id);
-
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-
   const isMobile = useMediaQuery({ maxWidth: 1023 });
 
-  // ✅ Utilise useMemo pour éviter les recalculs inutiles
   const selectedJob = useMemo(() => {
     if (!selectedJobId) return null;
     return jobDetails.find(j => j.id === selectedJobId) ?? null;
@@ -142,7 +139,7 @@ export default function Page() {
             </AnimatePresence>
           </div>
 
-          {/* DÉTAILS */}
+          {/* DÉTAILS — desktop only */}
           <div className="hidden lg:block mt-8 lg:mt-0 lg:overflow-y-auto p-2 lg:col-span-1 border-l">
             {selectedJob ? (
               <JobDetails job={selectedJob} />
@@ -173,28 +170,35 @@ export default function Page() {
         </motion.div>
       </div>
 
-
-            {/* MODAL MOBILE POUR JOB DETAILS */}
+      {/* MODAL MOBILE — SAFE */}
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto p-6">
+        <SheetContent
+          side="bottom"
+          className="w-full max-w-full max-h-[90vh] overflow-y-auto p-6"
+          style={{ maxWidth: '100vw' }}
+        >
           <SheetHeader>
-            <SheetTitle className="text-xl">
+            <SheetTitle className="text-xl font-semibold truncate">
               {selectedJob?.title || "Détails de l'offre"}
             </SheetTitle>
-            <SheetDescription asChild>
-              <div 
-                className="mt-4"
-                style={{ overflowWrap: 'break-word', wordWrap: 'break-word', hyphens: 'auto' }}
-              >
-                {selectedJob ? (
-                  <JobDetails job={selectedJob} />
-                ) : (
-                  <p>Sélectionnez une offre pour voir les détails.</p>
-                )}
-              </div>
-            </SheetDescription>
           </SheetHeader>
-          <SheetClose className="mt-4 w-full">Fermer</SheetClose>
+
+          <div
+            className="mt-4 w-full overflow-x-hidden"
+            style={{
+              overflowWrap: 'break-word',
+              wordWrap: 'break-word',
+              hyphens: 'auto',
+              fontSize: '0.875rem',
+              lineHeight: 1.6,
+            }}
+          >
+            <div className="w-full overflow-hidden">
+              {selectedJob ? <JobDetails job={selectedJob} /> : <p>Sélectionnez une offre pour voir les détails.</p>}
+            </div>
+          </div>
+
+          <SheetClose className="mt-6 w-full">Fermer</SheetClose>
         </SheetContent>
       </Sheet>
 

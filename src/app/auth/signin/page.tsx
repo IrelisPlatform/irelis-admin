@@ -16,11 +16,14 @@ export default function SigninPage() {
   const router = useRouter();
   const params = useSearchParams();
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://irelis-backend.onrender.com";
-  const returnTo = params.get("returnTo") || "/";
+  const returnTo = 
+    process.env.NODE_ENV === 'development'
+      ? "/"
+      : params.get("returnTo") || "/";
 
   // 🔧 En développement, pré-remplir l'email pour les tests OTP
   useEffect(() => {
-    if (process.env.NODE_ENV === "development") {
+    if ((process.env.NODE_ENV || 'production') === 'development') {
       setEmail("luqnleng5@gmail.com");
     }
   }, []);

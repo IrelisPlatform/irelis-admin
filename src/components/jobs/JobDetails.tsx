@@ -1,8 +1,9 @@
+// /src/components/jobs/JobDetails.tsx
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { MapPin, Banknote, Info, Briefcase, DollarSign, Clock, Users, Building2, Bookmark, Share2, Send, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
@@ -33,327 +34,178 @@ interface JobDetailsProps {
   };
 }
 
-
 export default function JobDetails({ job }: { job: JobDetail }) {
   const { user } = useAuth();
-  const router = useRouter()
+  const router = useRouter();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
 
   const handleApply = () => {
-
     if (!user) {
       router.push(`/auth/signin?returnTo=/jobs/${job.id}`);
       return;
     }
-
     router.push(`/jobs/${job.id}/apply`);
-
     setIsApplying(true);
     setTimeout(() => setIsApplying(false), 2000);
   };
 
   return (
-    <Card className="h-full flex flex-col shadow-xl border-gray-100 overflow-hidden">
-      <ScrollArea className="flex-1">
-        <div className="p-8">
-
-          {/* En-tête avec logo et info entreprise */}
+    <Card className="w-full max-w-full flex flex-col shadow-xl border-gray-100 overflow-hidden">
+      {/* Suppression de ScrollArea → cause du débordement */}
+      <div className="w-full max-w-full overflow-x-hidden p-4 sm:p-6">
+        {/* En-tête avec logo et info entreprise */}
+        <motion.div 
+          className="mb-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
           <motion.div 
-            className="mb-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
+            className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-[#1e3a8a] to-[#2563eb] rounded-2xl flex items-center justify-center text-white mb-4 shadow-xl"
+            whileHover={{ scale: 1.05, rotate: 2 }}
+            transition={{ type: "spring", stiffness: 300 }}
           >
-            <motion.div 
-              className="w-20 h-20 bg-gradient-to-br from-[#1e3a8a] to-[#2563eb] rounded-2xl flex items-center justify-center text-white mb-5 shadow-xl"
-              whileHover={{ scale: 1.05, rotate: 2 }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
-              <span className="text-2xl select-none">{job.company.substring(0, 2).toUpperCase()}</span>
-            </motion.div>
-            
-            <h2 className="mb-3 text-[#1e293b]">{job.title}</h2>
-            <p className="text-gray-600 mb-6">{job.company}</p>
-            
-            {/* Informations clés dans une carte */}
-            <div className="bg-gradient-to-br from-blue-50/80 to-indigo-50/50 p-5 rounded-xl border border-blue-100/50 shadow-sm">
-              <div className="grid grid-cols-2 gap-4 text-sm">
+            <span className="text-lg sm:text-2xl select-none">{job.company.substring(0, 2).toUpperCase()}</span>
+          </motion.div>
+          
+          <h2 className="text-xl sm:text-2xl mb-2 text-[#1e3a8a] break-words">{job.title}</h2>
+          <p className="text-gray-600 mb-4 break-words">{job.company}</p>
+          
+          {/* Informations clés */}
+          <div className="bg-gradient-to-br from-blue-50/80 to-indigo-50/50 p-3 sm:p-5 rounded-xl border border-blue-100/50 shadow-sm">
+            <div className="grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
+              {[
+                { icon: MapPin, text: job.location },
+                { icon: Briefcase, text: job.type },
+                { icon: DollarSign, text: job.salary },
+                { icon: Clock, text: job.posted }
+              ].map((item, i) => (
                 <motion.span 
+                  key={i}
                   className="flex items-center gap-2 text-gray-700"
                   whileHover={{ x: 4 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                    <MapPin className="w-4 h-4 text-[#1e3a8a]" />
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                    <item.icon className="w-3 h-3 sm:w-4 sm:h-4 text-[#1e3a8a]" />
                   </div>
-                  <span className="flex-1">{job.location}</span>
+                  <span className="flex-1 break-words">{item.text}</span>
                 </motion.span>
-                <motion.span 
-                  className="flex items-center gap-2 text-gray-700"
-                  whileHover={{ x: 4 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                    <Briefcase className="w-4 h-4 text-[#1e3a8a]" />
-                  </div>
-                  {job.type}
-                </motion.span>
-                <motion.span 
-                  className="flex items-center gap-2 text-gray-700"
-                  whileHover={{ x: 4 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                    <DollarSign className="w-4 h-4 text-[#1e3a8a]" />
-                  </div>
-                  <span className="flex-1">{job.salary}</span>
-                </motion.span>
-                <motion.span 
-                  className="flex items-center gap-2 text-gray-700"
-                  whileHover={{ x: 4 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                    <Clock className="w-4 h-4 text-[#1e3a8a]" />
-                  </div>
-                  {job.posted}
-                </motion.span>
-              </div>
-            </div>
-
-            {/* Badges et Tags */}
-            <div className="flex flex-wrap gap-2 mt-4">
-              {job.isNew && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3 }}
-                  whileHover={{ scale: 1.05, y: -2 }}
-                >
-                  <Badge 
-                    className="bg-blue-600 text-white hover:bg-blue-700 transition-all duration-200 border border-blue-700 shadow-sm"
-                  >
-                    Nouveau
-                  </Badge>
-                </motion.div>
-              )}
-              {job.isUrgent && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3, delay: 0.05 }}
-                  whileHover={{ scale: 1.05, y: -2 }}
-                >
-                  <Badge 
-                    className="bg-red-600 text-white hover:bg-red-700 transition-all duration-200 border border-red-700 shadow-sm"
-                  >
-                    Urgent
-                  </Badge>
-                </motion.div>
-              )}
-              {job.tags.map((tag, index) => (
-                <motion.div
-                  key={tag}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3, delay: 0.1 + index * 0.05 }}
-                  whileHover={{ scale: 1.05, y: -2 }}
-                >
-                  <Badge 
-                    variant="secondary" 
-                    className="bg-blue-100 text-[#1e3a8a] hover:bg-blue-200 transition-all duration-200 border border-blue-200 shadow-sm rounded-full px-3"
-                  >
-                    {tag}
-                  </Badge>
-                </motion.div>
               ))}
             </div>
+          </div>
 
-            {/* Boutons d'action principaux */}
-            <div className="flex gap-3 mt-6">
-              <motion.div 
-                className="flex-1"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+          {/* Badges */}
+          <div className="flex flex-wrap gap-1 sm:gap-2 mt-3">
+            {job.isNew && (
+              <Badge className="bg-blue-600 text-white text-xs sm:text-sm">
+                Nouveau
+              </Badge>
+            )}
+            {job.isUrgent && (
+              <Badge className="bg-red-600 text-white text-xs sm:text-sm">
+                Urgent
+              </Badge>
+            )}
+            {job.tags.map((tag, index) => (
+              <Badge 
+                key={tag}
+                variant="secondary" 
+                className="bg-blue-100 text-[#1e3a8a] text-xs sm:text-sm rounded-full px-2 sm:px-3"
               >
-                <Button 
-                  size="lg" 
-                  className="bg-[#1e3a8a] hover:bg-[#1e40af] text-white w-full shadow-lg hover:shadow-xl transition-all duration-200 relative overflow-hidden group"
-                  onClick={handleApply}
-                  disabled={isApplying}
-                >
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                    initial={{ x: "-100%" }}
-                    animate={isApplying ? { x: "100%" } : {}}
-                    transition={{ duration: 0.6, repeat: isApplying ? Infinity : 0 }}
-                  />
-                  <span className="relative z-10 flex items-center gap-2">
-                    {isApplying ? 'Envoi en cours...' : 'Postuler maintenant'}
-                    {!isApplying && <Send className="w-4 h-4" />}
-                  </span>
-                </Button>
-              </motion.div>
-              
-              <motion.div
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className={`border-2 transition-all duration-200 ${
-                    isBookmarked 
-                      ? 'border-[#1e3a8a] bg-blue-50 text-[#1e3a8a]' 
-                      : 'border-[#1e3a8a] text-[#1e3a8a] hover:bg-[#1e3a8a] hover:text-white'
-                  }`}
-                  onClick={() => setIsBookmarked(!isBookmarked)}
-                >
-                  <motion.div
-                    animate={isBookmarked ? { 
-                      scale: [1, 1.3, 1],
-                      rotate: [0, -15, 15, 0]
-                    } : {}}
-                    transition={{ duration: 0.4 }}
-                  >
-                    <Bookmark className={`w-5 h-5 ${isBookmarked ? 'fill-current' : ''}`} />
-                  </motion.div>
-                </Button>
-              </motion.div>
-              
-              <motion.div
-                whileHover={{ scale: 1.1, rotate: 5 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="border-2 border-[#1e3a8a] text-[#1e3a8a] hover:bg-[#1e3a8a] hover:text-white transition-all duration-200"
-                >
-                  <Share2 className="w-5 h-5" />
-                </Button>
-              </motion.div>
-            </div>
-          </motion.div>
+                {tag}
+              </Badge>
+            ))}
+          </div>
 
-          <Separator className="my-8" />
-
-          {/* Contenu détaillé */}
-          <motion.div 
-            className="space-y-8"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            {/* --- Description --- */}
-            <div>
-              <h3 className="mb-4 text-[#1e3a8a] flex items-center gap-2">
-                <div className="w-1 h-6 bg-[#1e3a8a] rounded-full" />
-                <Info className="w-5 h-5" /> Description du poste
-              </h3>
-              <p className="text-gray-600 leading-relaxed">
-                {job.description}
-              </p>
-            </div>
-
-            {/* --- Accordions Sections --- */}
-            <Accordion type="single" collapsible className="w-full space-y-4">
-              {/* Responsibilities */}
-              <AccordionItem value="responsibilities">
-                <AccordionTrigger className="text-lg font-medium text-[#1e3a8a]">
-                  Responsabilités
-                </AccordionTrigger>
-                <AccordionContent>
-                  <ul className="list-disc ml-6 space-y-2">
-                    {job.responsibilities.map((r, idx) => (
-                      <motion.li 
-                        key={idx}
-                        className="text-gray-600"
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.3, delay: 0.3 + idx * 0.05 }}
-                      >
-                        {r}
-                      </motion.li>
-                    ))}
-                  </ul>
-                </AccordionContent>
-              </AccordionItem>
-
-              {/* Qualifications */}
-              <AccordionItem value="qualifications">
-                <AccordionTrigger className="text-lg font-medium text-[#1e3a8a]">
-                  Qualifications requises
-                </AccordionTrigger>
-                <AccordionContent>
-                  <ul className="list-disc ml-6 space-y-2">
-                    {job.qualifications.map((q, idx) => (
-                      <motion.li 
-                        key={idx}
-                        className="text-gray-600"
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.3, delay: 0.5 + idx * 0.05 }}
-                      >
-                        {q}
-                      </motion.li>
-                    ))}
-                  </ul>
-                </AccordionContent>
-              </AccordionItem>
-
-              {/* Benefits */}
-              <AccordionItem value="benefits">
-                <AccordionTrigger className="text-lg font-medium text-[#1e3a8a]">
-                  Avantages
-                </AccordionTrigger>
-                <AccordionContent>
-                  <ul className="list-disc ml-6 space-y-2">
-                    {job.benefits.map((b, idx) => (
-                      <motion.li 
-                        key={idx}
-                        className="text-gray-600"
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.3, delay: 0.7 + idx * 0.05 }}
-                      >
-                        {b}
-                      </motion.li>
-                    ))}
-                  </ul>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-
-            <Separator />
-
-            {/* --- About the Company --- */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.9 }}
-              className="bg-gradient-to-br from-gray-50 to-blue-50/30 p-6 rounded-xl border border-gray-200/50"
+          {/* Boutons */}
+          <div className="flex gap-2 mt-4">
+            <Button 
+              size="sm" 
+              className="flex-1 bg-[#1e3a8a] hover:bg-[#1e40af] text-white shadow"
+              onClick={handleApply}
+              disabled={isApplying}
             >
-              <h3 className="mb-4 text-[#1e3a8a] flex items-center gap-2">
-                <div className="w-1 h-6 bg-[#1e3a8a] rounded-full" />
-                <Users className="w-5 h-5" /> À propos de {job.company}
-              </h3>
-              <p className="text-gray-600 leading-relaxed mb-4">
-                {job.about}
-              </p>
-              <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
-                <p>
-                  <span className="font-medium">Secteur :</span> {job.sector}
-                </p>
-                <p>
-                  <span className="font-medium">Taille :</span> {job.companySize}
-                </p>
-              </div>
-            </motion.div>
-          </motion.div>
-        </div>
-      </ScrollArea>
+              {isApplying ? 'Envoi...' : 'Postuler'}
+            </Button>
+            <Button size="sm" variant="outline" className="border-[#1e3a8a]">
+              <Bookmark className="w-4 h-4" />
+            </Button>
+            <Button size="sm" variant="outline" className="border-[#1e3a8a]">
+              <Share2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </motion.div>
+
+        <Separator className="my-6" />
+
+        {/* Contenu */}
+        <motion.div className="space-y-6 text-xs sm:text-sm">
+          <div>
+            <h3 className="mb-3 text-[#1e3a8a] flex items-center gap-2">
+              <Info className="w-4 h-4" /> Description
+            </h3>
+            <p className="text-gray-600 leading-relaxed break-words">
+              {job.description}
+            </p>
+          </div>
+
+          <Accordion type="single" collapsible className="w-full space-y-3">
+            <AccordionItem value="responsibilities">
+              <AccordionTrigger className="text-[#1e3a8a] text-sm sm:text-base">
+                Responsabilités
+              </AccordionTrigger>
+              <AccordionContent>
+                <ul className="list-disc ml-4 space-y-1 text-gray-600">
+                  {job.responsibilities.map((r, idx) => (
+                    <li key={idx} className="break-words">{r}</li>
+                  ))}
+                </ul>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="qualifications">
+              <AccordionTrigger className="text-[#1e3a8a] text-sm sm:text-base">
+                Qualifications
+              </AccordionTrigger>
+              <AccordionContent>
+                <ul className="list-disc ml-4 space-y-1 text-gray-600">
+                  {job.qualifications.map((q, idx) => (
+                    <li key={idx} className="break-words">{q}</li>
+                  ))}
+                </ul>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="benefits">
+              <AccordionTrigger className="text-[#1e3a8a] text-sm sm:text-base">
+                Avantages
+              </AccordionTrigger>
+              <AccordionContent>
+                <ul className="list-disc ml-4 space-y-1 text-gray-600">
+                  {job.benefits.map((b, idx) => (
+                    <li key={idx} className="break-words">{b}</li>
+                  ))}
+                </ul>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+
+          <Separator />
+
+          <div className="bg-gradient-to-br from-gray-50 to-blue-50/30 p-3 sm:p-4 rounded-xl">
+            <h3 className="mb-3 text-[#1e3a8a] flex items-center gap-2">
+              <Users className="w-4 h-4" /> À propos de {job.company}
+            </h3>
+            <p className="text-gray-600 mb-3 break-words">{job.about}</p>
+            <div className="grid grid-cols-2 gap-2 text-gray-600 text-xs sm:text-sm">
+              <p><span className="font-medium">Secteur :</span> {job.sector}</p>
+              <p><span className="font-medium">Taille :</span> {job.companySize}</p>
+            </div>
+          </div>
+        </motion.div>
+      </div>
     </Card>
   );
 }
