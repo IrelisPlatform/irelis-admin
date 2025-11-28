@@ -32,6 +32,7 @@ export default function AuthSuccessPage() {
         if (res.ok && data.accessToken && data.refreshToken) {
           if (typeof window !== "undefined") {
             const payload = parseJwt(data.accessToken);
+            console.log("JWT payload:", payload);
             const userEmail = payload?.email;
             if (!userEmail) {
               console.error("JWT ne contient pas d'email");
