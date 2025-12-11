@@ -9,6 +9,25 @@ const nextConfig: NextConfig = {
     root: __dirname, // Pointe vers le dossier contenant next.config.ts
   },
 
+  // ✅ Ajout de la configuration pour les images externes
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
+      // On pourra ajouter d'autres domaines ici si besoin, par exemple :
+      // {
+      //   protocol: 'https',
+      //   hostname: 'your-cdn.com',
+      //   port: '',
+      //   pathname: '/**',
+      // },
+    ],
+  },
+
   async rewrites() {
     return  [
       {

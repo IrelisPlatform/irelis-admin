@@ -1,29 +1,25 @@
 // /src/components/jobs/JobDetails.tsx
 
-import { Card } from "@/components/ui/card";
+import { Card, CardContent} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Banknote, Info, Briefcase, DollarSign, Clock, Users, Building2, Bookmark, Share2, Send, ExternalLink } from "lucide-react";
+import { MapPin, Banknote, Info, Briefcase, DollarSign, Clock, Users, Building2, Bookmark, Share2, Send, ExternalLink, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useApplyJob } from "@/hooks/useApplyJob";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { JobDetail } from "@/lib/mockJobDetails";
 import { toast } from "sonner";
-import { useLanguage } from "@/context/LanguageContext"; // ← ajout
+import { useLanguage } from "@/context/LanguageContext";
+import { MatchingScore } from "@/components/candidate/MatchingScore";
+import { useMatchingScore } from "@/hooks/candidate/useMatchingScore";
+import { useCandidateProfile } from "@/hooks/candidate/useCandidateProfile";
 
 export default function JobDetails({ job }: { job: JobDetail }) {
   const { t } = useLanguage(); // ← ajout
-  const { handleApply } = useApplyJob(job.id);
+  const { apply, isApplying: isApplyingHook } = useApplyJob(job.id);
   const [isBookmarked, setIsBookmarked] = useState(false);
-  const [isApplying, setIsApplying] = useState(false);
-
-  const onApply = () => {
-    setIsApplying(true);
-    handleApply();
-    setTimeout(() => setIsApplying(false), 1000);
-  };
 
   return (
     <Card className="w-full max-w-full flex flex-col shadow-xl border-gray-100 overflow-hidden">
@@ -45,6 +41,14 @@ export default function JobDetails({ job }: { job: JobDetail }) {
           
           <h2 className="text-xl sm:text-2xl mb-2 text-[#1e3a8a] break-words">{job.title}</h2>
           <p className="text-gray-600 mb-4 break-words">{job.company}</p>
+
+          {/* Score de compatibilité */}
+          {job.id && (
+            <div className="mb-6">
+              <h3 className="text-lg font-medium text-foreground mb-3">Votre compatibilité</h3>
+              <MatchingScoreContainer offerId={job.id} />
+            </div>
+          )}
           
           {/* Informations clés */}
           <div className="bg-gradient-to-br from-blue-50/80 to-indigo-50/50 p-3 sm:p-5 rounded-xl border border-blue-100/50 shadow-sm">
@@ -98,10 +102,10 @@ export default function JobDetails({ job }: { job: JobDetail }) {
             <Button 
               size="sm" 
               className="flex-1 bg-[#1e3a8a] hover:bg-[#1e40af] text-white shadow"
-              onClick={onApply}
-              disabled={isApplying}
+              onClick={apply}
+              disabled={isApplyingHook}
             >
-              {isApplying ? t.jobDetails.sending : t.jobDetails.apply}
+              {isApplyingHook ? t.jobDetails.sending : t.jobDetails.apply}
             </Button>
             <Button size="sm" variant="outline" className="border-[#1e3a8a]">
               <Bookmark className="w-4 h-4" />
@@ -184,4 +188,35 @@ export default function JobDetails({ job }: { job: JobDetail }) {
       </div>
     </Card>
   );
+}
+
+// Composant helper local
+function MatchingScoreContainer({ offerId }: { offerId: string }) {
+  const { result, loading, error } = useMatchingScore(offerId);
+
+  if (loading) {
+    return (
+      <Card className="p-4">
+        <CardContent className="flex items-center justify-center">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="p-4 border-destructive/20">
+        <CardContent>
+          <p className="text-sm text-destructive">Impossible de calculer le matching.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!result) {
+    return null;
+  }
+
+  return <MatchingScore matchResult={result} compact={true} />;
 }

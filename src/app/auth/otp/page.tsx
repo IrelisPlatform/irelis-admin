@@ -59,7 +59,7 @@ export default function OtpPage() {
     const requestOtp = async () => {
       if (!email) return;
       try {
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://irelis-backend.onrender.com";
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://api-irelis.us-east-2.elasticbeanstalk.com";
         const role = typeof window !== "undefined" ? localStorage.getItem("auth_role") : "CANDIDATE";
         const res = await fetch(`${backendUrl}/auth/otp/request`, {
           method: "POST",
@@ -89,7 +89,7 @@ export default function OtpPage() {
     setError(null);
 
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://irelis-backend.onrender.com";
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://api-irelis.us-east-2.elasticbeanstalk.com";
       const res = await fetch(`${backendUrl}/auth/otp/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -103,7 +103,16 @@ export default function OtpPage() {
           localStorage.setItem("accessToken", data.accessToken);
           localStorage.setItem("refreshToken", data.refreshToken);
         }
-        window.location.href = returnTo;
+        // Nouveau : utiliser la redirection préférée si elle existe
+        const preferredRedirect = localStorage.getItem("auth_preferred_redirect");
+        const finalRedirect = preferredRedirect || returnTo;
+
+        // Optionnel : nettoyer la redirection après usage
+        if (preferredRedirect) {
+          localStorage.removeItem("auth_preferred_redirect");
+        }
+
+        window.location.href = finalRedirect;
       } else {
         setError(data.message || t.auth.signin.unknownError);
       }
@@ -120,7 +129,7 @@ export default function OtpPage() {
     setError(null);
 
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://irelis-backend.onrender.com";
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://api-irelis.us-east-2.elasticbeanstalk.com";
       const role = typeof window !== "undefined" ? localStorage.getItem("auth_role") : "CANDIDATE";
       const res = await fetch(`${backendUrl}/auth/otp/request`, {
         method: "POST",

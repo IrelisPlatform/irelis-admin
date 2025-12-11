@@ -126,6 +126,23 @@ export function Header() {
                   <DropdownMenuItem disabled className="text-gray-500">
                     {user.email}
                   </DropdownMenuItem>
+
+                  {user.role === "CANDIDATE" && (
+                    <>
+                      <DropdownMenuItem onClick={() => router.push("/espace-candidat/profil")}>
+                        Mon profil
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push("/espace-candidat/messages")}>
+                        Messagerie
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push("/espace-candidat/candidatures")}>
+                        Mes candidatures
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push("/espace-candidat/parametres")}>
+                        Paramètres
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   <DropdownMenuItem
                     className="text-red-600"
                     onClick={handleLogout}
@@ -138,7 +155,16 @@ export function Header() {
 
             {/* CTA Recruteur */}
             <motion.div whileHover={{ scale: 1.05 }} className="hidden md:block">
-              <Button className="bg-[#1e3a8a] hover:bg-[#1e40af] text-white shadow-md">
+              <Button 
+                className="bg-[#1e3a8a] hover:bg-[#1e40af] text-white shadow-md"
+                onClick={() => {
+                  if (user) {
+                    router.push("/espace-recruteur?tab=jobs");
+                  } else {
+                    router.push("/auth/signin");
+                  }
+                }}
+              >
                 {t.header.postJobCTA}
               </Button>
             </motion.div>

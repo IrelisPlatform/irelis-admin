@@ -11,7 +11,7 @@ export default function AuthSuccessPage() {
   const params = useSearchParams();
   const router = useRouter();
   const code = params.get("code");
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim() || "https://irelis-backend.onrender.com";
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim() || "http://api-irelis.us-east-2.elasticbeanstalk.com";
 
   useEffect(() => {
     if (!code) {

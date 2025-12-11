@@ -9,16 +9,15 @@ interface JobCardProps {
   job: {
     id: string;
     title: string;
-    company: string;
-    location: string;
-    type: string;
-    salary: string;
-    posted: string;
     description: string;
-    logo?: string;
-    tags: string[];
-    isNew?: boolean;
-    isUrgent?: boolean;
+    workCityLocation: string;
+    workCountryLocation: string;
+    contractType: string;
+    salary: string;
+    publishedAt: string;
+    isUrgent: boolean;
+    isFeatured: boolean;
+    tagDto: Array<{ name: string; type: string }>;
   };
   onClick: () => void;
   isSelected?: boolean;
@@ -26,6 +25,13 @@ interface JobCardProps {
 
 export function JobCard({ job, onClick, isSelected }: JobCardProps) {
   const [isBookmarked, setIsBookmarked] = useState(false);
+
+  const location = `${job.workCityLocation}, ${job.workCountryLocation}`;
+  const contractType = job.contractType;
+  const posted = new Date(job.publishedAt).toLocaleDateString('fr-FR');
+  const tags = job.tagDto.map(t => t.name);
+
+  const company = "Entreprise confidentielle";
 
   const handleBookmark = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -53,7 +59,7 @@ export function JobCard({ job, onClick, isSelected }: JobCardProps) {
 
       {/* Badges de statut */}
       <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
-        {job.isNew && (
+        {job.isFeatured && (
           <motion.div
             initial={{ scale: 0, rotate: -10 }}
             animate={{ scale: 1, rotate: 0 }}
@@ -65,6 +71,7 @@ export function JobCard({ job, onClick, isSelected }: JobCardProps) {
             </Badge>
           </motion.div>
         )}
+
         {job.isUrgent && (
           <motion.div
             initial={{ scale: 0, rotate: 10 }}
@@ -86,7 +93,7 @@ export function JobCard({ job, onClick, isSelected }: JobCardProps) {
           whileHover={{ scale: 1.05, rotate: 2 }}
           transition={{ type: "spring", stiffness: 300 }}
         >
-          <span className="select-none">{job.company.substring(0, 2).toUpperCase()}</span>
+          <span className="select-none">{company.substring(0, 2).toUpperCase()}</span>
         </motion.div>
         
         <div className="flex-1">
@@ -95,7 +102,7 @@ export function JobCard({ job, onClick, isSelected }: JobCardProps) {
               <h3 className="text-[#1e3a8a] group-hover:text-[#1e40af] transition-colors mb-1.5 pr-2">
                 {job.title}
               </h3>
-              <p className="text-gray-600">{job.company}</p>
+              <p className="text-gray-600">{company}</p>
             </div>
           </div>
           
@@ -107,7 +114,7 @@ export function JobCard({ job, onClick, isSelected }: JobCardProps) {
               transition={{ duration: 0.2 }}
             >
               <MapPin className="w-4 h-4 text-[#1e3a8a]/70 flex-shrink-0" />
-              <span className="truncate">{job.location}</span>
+              <span className="truncate">{location}</span>
             </motion.span>
             <motion.span 
               className="flex items-center gap-2"
@@ -115,7 +122,7 @@ export function JobCard({ job, onClick, isSelected }: JobCardProps) {
               transition={{ duration: 0.2 }}
             >
               <Briefcase className="w-4 h-4 text-[#1e3a8a]/70 flex-shrink-0" />
-              {job.type}
+              {contractType}
             </motion.span>
             <motion.span 
               className="flex items-center gap-2"
@@ -131,7 +138,7 @@ export function JobCard({ job, onClick, isSelected }: JobCardProps) {
               transition={{ duration: 0.2 }}
             >
               <Clock className="w-4 h-4 text-[#1e3a8a]/70 flex-shrink-0" />
-              {job.posted}
+              {posted}
             </motion.span>
           </div>
           
@@ -142,7 +149,7 @@ export function JobCard({ job, onClick, isSelected }: JobCardProps) {
           
           {/* Tags */}
           <div className="flex flex-wrap gap-2 mb-3">
-            {job.tags.slice(0, 3).map((tag) => (
+            {tags.slice(0, 3).map((tag) => (
               <Badge 
                 key={tag} 
                 variant="secondary" 
@@ -151,12 +158,12 @@ export function JobCard({ job, onClick, isSelected }: JobCardProps) {
                 {tag}
               </Badge>
             ))}
-            {job.tags.length > 3 && (
+            {tags.length > 3 && (
               <Badge 
                 variant="secondary" 
                 className="bg-gray-100 text-gray-600 border border-gray-200"
               >
-                +{job.tags.length - 3}
+                +{tags.length - 3}
               </Badge>
             )}
           </div>

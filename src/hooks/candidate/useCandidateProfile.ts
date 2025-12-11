@@ -1,0 +1,431 @@
+// src/hooks/candidate/useCandidateProfile.ts
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@/context/AuthContext";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://api-irelis.us-east-2.elasticbeanstalk.com";
+if (!API_BASE_URL) {
+  throw new Error("NEXT_PUBLIC_API_URL is not defined. Check your .env.local file.");
+}
+
+// ========================
+// TYPES EXACTS DE LA SWAGGER
+// ========================
+
+export interface JobPreference {
+  desiredPosition: string;
+  contractTypes: string[];
+  availability: string;
+  pretentionsSalarial: string;
+  country: string;
+  region: string;
+  city: string;
+  sectorIds: string[];
+  sectors: string[];
+}
+
+export interface Skill {
+  id: string;
+  name: string;
+  level: "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXPERT";
+}
+
+export interface Education {
+  id: string;
+  degree: string;
+  institution: string;
+  city: string;
+  graduationYear: number;
+}
+
+export interface Language {
+  id: string;
+  language: string;
+  level: "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "FLUENT" | "NATIVE";
+}
+
+export interface Experience {
+  id: string;
+  position: string;
+  companyName: string;
+  city: string;
+  startDate: string; // ISO 8601
+  endDate: string | null;
+  isCurrent: boolean;
+  description: string;
+}
+
+export interface CandidateProfile {
+  id: string;
+  professionalTitle: string;
+  firstName: string;
+  lastName: string;
+  presentation: string;
+  phoneNumber: string;
+  schoolLevel: string;
+  experienceLevel: string;
+  avatarUrl: string | null;
+  birthDate: string;
+  linkedInUrl: string;
+  portfolioUrl: string;
+  country: string;
+  region: string;
+  city: string;
+  cvUrl: string | null;
+  motivationLetterUrl: string | null;
+  pitchMail: string;
+  skills: Skill[];
+  educations: Education[];
+  languages: Language[];
+  experiences: Experience[];
+  createdAt: string;
+  updatedAt: string;
+  isVisible?: string; // champ local pour la visibilité
+  preference?: JobPreference;
+}
+
+// ========================
+// HOOK PRINCIPAL
+// ========================
+
+export function useCandidateProfile() {
+  const { getValidToken } = useAuth();
+  const [profile, setProfile] = useState<CandidateProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // ------------------------
+  // CHARGER LE PROFIL COMPLET
+  // ------------------------
+  const loadProfile = useCallback(async () => {
+    const token = await getValidToken();
+    if (!token) {
+      setError("Non authentifié");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/profile`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (res.ok) {
+        const data: CandidateProfile = await res.json();
+        setProfile(data);
+      } else if (res.status === 404) {
+        setProfile({
+          id: "",
+          professionalTitle: "",
+          firstName: "",
+          lastName: "",
+          presentation: "",
+          phoneNumber: "",
+          schoolLevel: "",
+          experienceLevel: "",
+          avatarUrl: null,
+          birthDate: new Date().toISOString(),
+          linkedInUrl: "",
+          portfolioUrl: "",
+          country: "",
+          region: "",
+          city: "",
+          cvUrl: null,
+          motivationLetterUrl: null,
+          pitchMail: "",
+          skills: [],
+          educations: [],
+          languages: [],
+          experiences: [],
+          createdAt: "",
+          updatedAt: ""
+        });
+      } else {
+        const msg = res.status === 401 ? "Session expirée" : "Échec du chargement du profil";
+        throw new Error(msg);
+      }
+    } catch (err: any) {
+      setError(err.message || "Erreur inconnue");
+      console.error("Erreur chargement profil", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [getValidToken]);
+
+  // ------------------------
+  // METTRE À JOUR LE PROFIL (PATCH)
+  // ------------------------
+  const saveProfile = async (updates: Partial<CandidateProfile>) => {
+    const token = await getValidToken();
+    if (!token) {
+      throw new Error("Non authentifié");
+    }
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/profile`, {
+        method: "PATCH",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ data: updates })
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || "Échec de la sauvegarde");
+      }
+
+      const updated: CandidateProfile = await res.json();
+      setProfile(updated);
+      return updated;
+    } catch (err: any) {
+      throw err;
+    }
+  };
+
+  const saveJobPreferences = async (preferences: {
+    desiredPosition: string;
+    contractTypes: string[];
+    availability: string;
+    pretentionsSalarial: string;
+    country: string;
+    region: string;
+    city: string;
+    sectorIds: string[];
+    sectors: string[];
+  }) => {
+    const token = await getValidToken();
+    if (!token) throw new Error("Non authentifié");
+
+    const res = await fetch(`${API_BASE_URL}/api/v1/job-preferences`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(preferences)
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.message || "Échec de la sauvegarde des préférences");
+    }
+
+    return res.json();
+  };
+
+  // ------------------------
+  // BASCULER VISIBILITÉ
+  // ------------------------
+  const toggleVisibility = async () => {
+    const token = await getValidToken();
+    if (!token) throw new Error("Non authentifié");
+
+    const res = await fetch(`${API_BASE_URL}/api/v1/profile/visibility`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (!res.ok) {
+      throw new Error("Échec du changement de visibilité");
+    }
+
+    const isVisible = await res.json(); // boolean
+    if (profile) {
+      setProfile({ ...profile, isVisible: isVisible ? "true" : "false" as any });
+    }
+  };
+
+  // ------------------------
+  // UPLOAD CV
+  // ------------------------
+  const uploadCV = async (file: File) => {
+    const token = await getValidToken();
+    if (!token) throw new Error("Non authentifié");
+
+    const formData = new FormData();
+    formData.append("file", file); // ✅ CHAMP CORRIGÉ : "file", pas "cvUrl"
+
+    const res = await fetch(`${API_BASE_URL}/api/v1/cv`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` }, // ✅ pas de Content-Type avec FormData
+      body: formData
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.message || "Échec upload CV");
+    }
+
+    const data = await res.json();
+    if (profile) {
+      setProfile({ ...profile, cvUrl: data.cvUrl });
+    }
+    return data.cvUrl;
+  };
+
+  // ------------------------
+  // SUPPRIMER CV
+  // ------------------------
+  const deleteCV = async () => {
+    const token = await getValidToken();
+    if (!token) throw new Error("Non authentifié");
+
+    const res = await fetch(`${API_BASE_URL}/api/v1/cv`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (!res.ok) {
+      throw new Error("Échec de la suppression du CV");
+    }
+
+    if (profile) {
+      setProfile({ ...profile, cvUrl: null });
+    }
+  };
+
+  // ------------------------
+  // UPLOAD LETTRE + PITCH
+  // ------------------------
+  const saveLetterAndPitch = async (file: File | null, pitchMail: string) => {
+    const token = await getValidToken();
+    if (!token) throw new Error("Non authentifié");
+
+    const url = `${API_BASE_URL}/api/v1/letters?pitchMail=${encodeURIComponent(
+      pitchMail || ""
+    )}`;
+
+    // Important → multipart/form-data même sans fichier
+    const formData = new FormData();
+    if (file) {
+      formData.append("file", file);
+    }
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData
+    });
+ 
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      throw new Error(data?.message || "Échec sauvegarde lettre");
+    }
+
+    // Mise à jour du store local
+    if (profile) {
+      setProfile({
+        ...profile,
+        motivationLetterUrl: data.motivationLetterUrl,
+        pitchMail: data.pitchMail,
+      });
+    }
+ 
+    return data;
+  };
+ 
+  // ------------------------
+  // SUPPRIMER LETTRE
+  // ------------------------
+  const deleteLetter = async () => {
+    const token = await getValidToken();
+    if (!token) throw new Error("Non authentifié");
+
+    const res = await fetch(`${API_BASE_URL}/api/v1/letters`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (!res.ok) {
+      throw new Error("Échec de la suppression de la lettre");
+    }
+
+    if (profile) {
+      setProfile({ ...profile, motivationLetterUrl: null });
+    }
+  };
+
+  // ------------------------
+  // SUPPRESSIONS GRANULAIRES
+  // ------------------------
+
+  const deleteSkill = async (skillId: string) => {
+    const token = await getValidToken();
+    if (!token) throw new Error("Non authentifié");
+    const res = await fetch(`${API_BASE_URL}/api/v1/skills/${skillId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error("Échec de la suppression de la compétence");
+    loadProfile();
+  };
+
+  const deleteExperience = async (experienceId: string) => {
+    const token = await getValidToken();
+    if (!token) throw new Error("Non authentifié");
+    const res = await fetch(`${API_BASE_URL}/api/v1/experiences/${experienceId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error("Échec de la suppression de l'expérience");
+    loadProfile();
+  };
+
+  const deleteEducation = async (educationId: string) => {
+    const token = await getValidToken();
+    if (!token) throw new Error("Non authentifié");
+    const res = await fetch(`${API_BASE_URL}/api/v1/educations/${educationId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error("Échec de la suppression de la formation");
+    loadProfile();
+  };
+
+  const deleteLanguage = async (languageId: string) => {
+    const token = await getValidToken();
+    if (!token) throw new Error("Non authentifié");
+    const res = await fetch(`${API_BASE_URL}/api/v1/languages/${languageId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error("Échec de la suppression de la langue");
+    loadProfile();
+  };
+
+  // ------------------------
+  // INITIALISATION
+  // ------------------------
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
+
+  return {
+    profile,
+    loading,
+    error,
+    loadProfile,
+    saveProfile,
+    uploadCV,
+    deleteCV,
+    saveLetterAndPitch,
+    deleteLetter,
+    toggleVisibility,
+    deleteSkill,
+    deleteExperience,
+    deleteEducation,
+    deleteLanguage,
+    saveJobPreferences
+  };
+}

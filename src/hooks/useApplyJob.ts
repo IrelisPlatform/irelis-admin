@@ -3,31 +3,45 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 export const useApplyJob = (jobId: string) => {
-  const { user } = useAuth();
+  const { user, getValidToken } = useAuth();
   const router = useRouter();
+  const [isApplying, setIsApplying] = useState(false);
 
-  const handleApply = () => {
-    if (!user) {
-      // 🔑 Redirige vers l'auth avec returnTo = page du job
-      const currentPath = `/jobs/${jobId}`;
-      router.push(`/auth/signin?returnTo=${encodeURIComponent(currentPath)}`);
+  const apply = async () => {
+    const token = await getValidToken();
+    if (!token) {
+      router.push(`/auth/signin?returnTo=/postuler?offerId=${jobId}`);
       return;
     }
 
-    // ✅ Si l'utilisateur est connecté
-    // 🔜 Plus tard : appel API pour postuler
-    // 🚧 Pour l'instant : simule l'envoi ou redirige vers /jobs/:id/apply si la page existe
+    setIsApplying(true);
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL?.trim() || 'http://api-irelis.us-east-2.elasticbeanstalk.com';
+      const res = await fetch(`${backendUrl}/applications/${jobId}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
 
-    // ⚠️ Si tu n'as PAS encore créé `/jobs/[id]/apply`, utilise un toast
-    toast.success("✅ Candidature envoyée avec succès !");
-    
-    // ❌ Décommente la ligne ci-dessous SEULEMENT quand tu auras créé la page apply
-    // router.push(`/jobs/${jobId}/apply`);
+      if (res.ok) {
+        toast.success('✅ Candidature envoyée avec succès !');
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.message || 'Échec de la candidature.');
+      }
+    } catch (err) {
+      console.error('Erreur postuler:', err);
+      toast.error('Erreur réseau.');
+    } finally {
+      setIsApplying(false);
+    }
   };
 
-  return { handleApply };
+  return { apply, isApplying };
 };

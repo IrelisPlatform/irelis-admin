@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Header } from "@/components/Header";
 import { JobSearchBar } from "@/components/jobs/SearchBar";
@@ -12,8 +12,8 @@ import JobDetails from "@/components/jobs/JobDetails";
 import { JobAlert } from "@/components/jobs/JobAlert";
 import { JobPagination } from "@/components/jobs/JobPagination";
 import { Footer } from "@/components/Footer";
-import mockJobs, { type Job } from "@/lib/mockJobs";
-import jobDetails from "@/lib/mockJobDetails";
+import { type Job } from "@/lib/mockJobs";
+import { useJobDetails } from "@/hooks/useJobDetails";
 import {
   Sheet,
   SheetContent,
@@ -32,35 +32,33 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useLanguage } from "@/context/LanguageContext"; // ← Ajout du hook i18n
+import { useLanguage } from "@/context/LanguageContext";
+import usePublishedJobs from '@/hooks/usePublishedJobs';
 
 export default function Page() {
   const { t } = useLanguage(); // ← Accès aux traductions
 
-  const [selectedJobId, setSelectedJobId] = useState<string | undefined>(mockJobs[0]?.id);
+  const [selectedJobId, setSelectedJobId] = useState<string | undefined>(undefined);
+  const [currentPage, setCurrentPage] = useState(1);
+  const { jobs: allJobs, totalPages, loading: jobsLoading, error: jobsError } = usePublishedJobs(currentPage - 1, 5);
+
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const isMobile = useMediaQuery({ maxWidth: 1023 });
 
-  const selectedJob = useMemo(() => {
-    if (!selectedJobId) return null;
-    return jobDetails.find(j => j.id === selectedJobId) ?? null;
-  }, [selectedJobId]);
+  const { jobDetail: selectedJob, loading: detailLoading, error: detailError } = useJobDetails(selectedJobId);
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const jobsPerPage = 5;
-  const totalPages = Math.ceil(mockJobs.length / jobsPerPage);
-  const indexOfLastJob = currentPage * jobsPerPage;
-  const indexOfFirstJob = indexOfLastJob - jobsPerPage;
-  const currentJobs = mockJobs.slice(indexOfFirstJob, indexOfLastJob);
+  useEffect(() => {
+    if (allJobs && allJobs.length > 0 && !selectedJobId) {
+      setSelectedJobId(allJobs[0].id);
+    }
+  }, [allJobs, selectedJobId]);
+
 
   const [showGroups, setShowGroups] = useState(true);
 
   const handlePageChange = (page: number) => {
-    setIsLoading(true);
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    setTimeout(() => setIsLoading(false), 300);
   };
 
   const handleOpenDetails = (id: string) => {
@@ -77,7 +75,7 @@ export default function Page() {
   return (
     <div className="min-h-screen bg-[#f8f9fb]">
       <Header />
-      <JobSearchBar jobCount={mockJobs.length} />
+      <JobSearchBar jobCount={allJobs.length} />
       <DropdownFilters />
 
       {/* ✅ BOUTON "Réinitialiser les filtres" */}
@@ -210,7 +208,9 @@ export default function Page() {
           {/* LISTE DES JOBS */}
           <div className="flex flex-col gap-4 lg:col-span-1">
             <AnimatePresence mode="wait">
-              {isLoading ? (
+              {jobsError ? (
+                <div className="text-center text-red-600 p-6">{jobsError}</div>
+              ) : jobsLoading ? (
                 <motion.div
                   key="loading"
                   initial={{ opacity: 0 }}
@@ -239,7 +239,7 @@ export default function Page() {
                   exit={{ opacity: 0 }}
                   className="space-y-4"
                 >
-                  {currentJobs.map((job, index) => (
+                  {allJobs.map((job, index) => (
                     <motion.div
                       key={job.id}
                       initial={{ opacity: 0, y: 20 }}

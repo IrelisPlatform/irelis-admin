@@ -3,10 +3,12 @@
 import logo from "@/../public/icons/logo.png";
 import { Facebook, Twitter, Linkedin, Instagram, Mail, Phone, MapPin } from "lucide-react";
 import Link from "next/link";
-import { useLanguage } from "@/context/LanguageContext"; // ← ajout
+import { useLanguage } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
 
 export function Footer() {
-  const { t } = useLanguage(); // ← ajout
+  const { t } = useLanguage();
+  const { user } = useAuth();
 
   return (
     <footer className="bg-gradient-to-b from-[#1e293b] to-[#0f172a] text-gray-300 mt-20">
@@ -29,10 +31,22 @@ export function Footer() {
           <div className="flex flex-col items-start mt-3">
             <h4 className="text-white mb-5">{t.footer.candidates}</h4>
             <ul className="space-y-3 text-sm">
-              <li><a href="#" className="hover:text-white hover:translate-x-1 transition-all inline-block">{t.footer.searchJob}</a></li>
-              <li><a href="#" className="hover:text-white hover:translate-x-1 transition-all inline-block">{t.footer.createCv}</a></li>
-              <li><a href="#" className="hover:text-white hover:translate-x-1 transition-all inline-block">{t.footer.support}</a></li>
-              <li><a href="#" className="hover:text-white hover:translate-x-1 transition-all inline-block">{t.footer.careerAdvice}</a></li>
+              <li><a href="/" className="hover:text-white hover:translate-x-1 transition-all inline-block">{t.footer.searchJob}</a></li>
+              <li>
+                <Link href="/espace-candidat" className="hover:text-white hover:translate-x-1 transition-all inline-block">
+                  {t.footer.createCv}
+                </Link>
+              </li>
+              <li>
+                <Link href="/accompagnement" className="hover:text-white hover:translate-x-1 transition-all inline-block">
+                  {t.footer.support}
+                </Link>
+              </li>
+              <li>
+                <Link href="/blog" className="hover:text-white hover:translate-x-1 transition-all inline-block">
+                  {t.footer.careerAdvice}
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -40,10 +54,26 @@ export function Footer() {
           <div className="flex flex-col items-start mt-3">
             <h4 className="text-white mb-5">{t.footer.companies}</h4>
             <ul className="space-y-3 text-sm">
-              <li><a href="#" className="hover:text-white hover:translate-x-1 transition-all inline-block">{t.footer.postOffer}</a></li>
-              <li><a href="#" className="hover:text-white hover:translate-x-1 transition-all inline-block">{t.footer.hrSolutions}</a></li>
-              <li><a href="#" className="hover:text-white hover:translate-x-1 transition-all inline-block">{t.footer.pricing}</a></li>
-              <li><a href="#" className="hover:text-white hover:translate-x-1 transition-all inline-block">{t.footer.recruiterSpace}</a></li>
+              <li>
+                <Link href="/espace-recruteur?tab=jobs" className="hover:text-white hover:translate-x-1 transition-all inline-block">
+                  {t.footer.postOffer}
+                </Link>
+              </li>
+              <li>
+                <Link href="/espace-recruteur?tab=solutions" className="hover:text-white hover:translate-x-1 transition-all inline-block">
+                  {t.footer.hrSolutions}
+                </Link>
+              </li>
+              <li>
+                <Link href="/espace-recruteur?tab=subscriptions" className="hover:text-white hover:translate-x-1 transition-all inline-block">
+                  {t.footer.pricing}
+                </Link>
+              </li>
+              <li>
+                <Link href="/espace-recruteur" className="hover:text-white hover:translate-x-1 transition-all inline-block">
+                  {t.footer.recruiterSpace}
+                </Link>
+              </li>
             </ul>
           </div>
 

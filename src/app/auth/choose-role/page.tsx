@@ -25,16 +25,44 @@ export default function ChooseRolePage() {
   }, [email, router]);
 
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
-  const choose = (role: string) => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("auth_role", role);
-    }
-    router.push("/auth/otp");
-  };
+  const [loading, setLoading] = useState(false);
 
-  if (!email) {
-    return <div>Chargement...</div>;
-  }
+  const handleChooseRole = async (role: "CANDIDATE" | "RECRUITER") => {
+    if (!email) return;
+
+    setLoading(true);
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim() || "http://api-irelis.us-east-2.elasticbeanstalk.com";
+
+    try {
+      // Étape 1 : Demander l'OTP avec userType (obligatoire pour les nouveaux)
+      const res = await fetch(`${backendUrl}/auth/otp/request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, userType: role }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        alert(errorData.message || "Erreur lors de l’envoi du code."); // ou toast si tu préfères
+        return;
+      }
+
+      // Étape 2 : Stocker le rôle + la redirection souhaitée
+      localStorage.setItem("auth_role", role);
+      localStorage.setItem(
+        "auth_preferred_redirect",
+        role === "RECRUITER" ? "/espace-recruteur" : "/espace-candidat"
+      );
+
+      // Étape 3 : Rediriger vers la page OTP
+      router.push("/auth/otp");
+    } catch (err) {
+      console.error("Erreur réseau :", err);
+      alert("Erreur réseau. Veuillez réessayer.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f9fafb]">
@@ -80,10 +108,10 @@ export default function ChooseRolePage() {
 
           <Button
             className="w-full mt-6 bg-[#1e3a8a] hover:bg-[#1e40af] text-white shadow-md"
-            disabled={!selectedRole}
-            onClick={() => selectedRole && choose(selectedRole)}
+            disabled={!selectedRole || loading}
+            onClick={() => selectedRole && handleChooseRole(selectedRole as "CANDIDATE" | "RECRUITER")}
           >
-            {t.auth.chooseRole.continue}
+            {loading ? "Envoi du code..." : t.auth.chooseRole.continue}
           </Button>
         </div>
       </main>

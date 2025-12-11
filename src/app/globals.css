@@ -1,3 +1,5 @@
+/* /src/app/globals.css */
+
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
@@ -8,8 +10,8 @@
 :root {
   --font-size: 16px;
 
-  --background: #f8f9fb;
-  --foreground: #1e293b;
+  --background: #ffffff;
+  --foreground: #1a1a1a;
 
   --card: #ffffff;
   --card-foreground: #1e293b;
@@ -17,7 +19,7 @@
   --popover: #ffffff;
   --popover-foreground: #1e293b;
 
-  --primary: #1e3a8a;
+  --primary: #1e40af;
   --primary-foreground: #ffffff;
 
   --secondary: #e0e7ff;

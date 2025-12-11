@@ -8,11 +8,14 @@ import { useLanguage } from "@/context/LanguageContext";
 
 interface JobSearchBarProps {
   jobCount: number;
+  onSearch?: (title: string, location: string) => void;
 }
 
 export function JobSearchBar({ jobCount }: JobSearchBarProps) {
   const { t } = useLanguage();
   const suggestions = t.search.suggestions;
+  const [keyword, setKeyword] = useState('');
+  const [location, setLocation] = useState('');
 
   return (
     <div className="bg-gradient-to-b from-white via-blue-50/30 to-white py-20 relative overflow-hidden">
@@ -74,6 +77,7 @@ export function JobSearchBar({ jobCount }: JobSearchBarProps) {
             className="relative z-10"
           >
             <Button 
+              onClick={() => onSearch(keyword, location)}
               size="lg" 
               className="bg-[#1e3a8a] hover:bg-[#1e40af] text-white px-10 shadow-md hover:shadow-xl transition-all duration-200 relative overflow-hidden group/btn"
             >
