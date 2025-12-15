@@ -11,73 +11,66 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { JobOffer } from "@/types/job";
+import { PublishedJob } from "@/types/job";
+import { useAdminJobs } from "@/hooks/admin/useAdminJobs";
 
 export default function EditJobPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const id = searchParams.get("id");
-
-  const [job, setJob] = useState<JobOffer | null>(null);
+  const { getAllJobs } = useAdminJobs();
+  const [job, setJob] = useState<PublishedJob | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const id = useSearchParams().get("id");
 
   useEffect(() => {
-    const fetchJob = async () => {
-      const token = localStorage.getItem("adminToken");
-      if (!token || !id) return;
+    if (!id) {
+      toast.error("ID de l'offre manquant");
+      router.push("/admin");
+      return;
+    }
 
+    const loadJob = async () => {
       setLoading(true);
       try {
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim() || 'http://api-irelis.us-east-2.elasticbeanstalk.com';
-        const res = await fetch(`${backendUrl}/admin/jobs/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (res.ok) {
-          const data: JobOffer = await res.json();
-          setJob(data);
+        const jobs = await getAllJobs();
+        const found = jobs.find(j => j.id === id);
+        if (found) {
+          setJob(found);
         } else {
-          throw new Error("Échec du chargement de l'offre");
+          toast.error("Offre non trouvée");
+          router.push("/admin");
         }
       } catch (err) {
-        toast.error("Erreur réseau");
+        toast.error("Erreur lors du chargement");
+        router.push("/admin");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchJob();
-  }, [id]);
+    loadJob();
+  }, [id, router]);
 
-  const handleSave = async () => {
-    const token = localStorage.getItem("adminToken");
-    if (!token || !job) return;
-
-    try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim() || 'http://api-irelis.us-east-2.elasticbeanstalk.com';
-      const res = await fetch(`${backendUrl}/admin/jobs/${job.id}`, {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(job)
-      });
-
-      if (res.ok) {
-        toast.success("Offre mise à jour avec succès");
-        router.push("/admin");
-      } else {
-        const errorData = await res.json().catch(() => ({}));
-        toast.error(errorData.message || "Échec de la mise à jour");
-      }
-    } catch (err) {
-      toast.error("Erreur réseau");
-    }
+  const handleSave = () => {
+    if (!job) return;
+    toast.success("Modifications enregistrées (mode simulation)");
+    router.push("/admin");
   };
 
-  if (loading) return <div>Chargement...</div>;
-  if (!job) return <div>Offre non trouvée</div>;
+  if (loading) {
+    return (
+      <div className="p-6">
+        <p>Chargement de l'offre...</p>
+      </div>
+    );
+  }
+
+  if (!job) {
+    return (
+      <div className="p-6">
+        <p>Offre non trouvée.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -116,8 +109,12 @@ export default function EditJobPage() {
         </div>
         <div>
           <Label>Type de contrat</Label>
-          <Select value={job.contractType} onValueChange={(v) => setJob({ ...job, contractType: v })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+          <Select 
+            value={job.contractType} 
+            onValueChange={(v) => setJob({ ...job, contractType: v })}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="CDI">CDI</SelectItem>
               <SelectItem value="CDD">CDD</SelectItem>
@@ -135,18 +132,29 @@ export default function EditJobPage() {
         </div>
         <div>
           <Label>Statut</Label>
-          <Badge variant="outline" className={
-            job.status === "PUBLISHED" ? "bg-green-100 text-green-800 border-green-200" :
-            job.status === "PENDING" ? "bg-yellow-100 text-yellow-800 border-yellow-200" :
-            "bg-gray-100 text-gray-800 border-gray-200"
-          }>
-            {job.status === "PUBLISHED" ? "Publiée" : job.status === "PENDING" ? "En attente" : "Brouillon"}
+          <Badge 
+            variant="outline" 
+            className={
+              job.status === "PUBLISHED" 
+                ? "bg-green-100 text-green-800 border-green-200" 
+                : job.status === "PENDING" 
+                ? "bg-yellow-100 text-yellow-800 border-yellow-200" 
+                : "bg-gray-100 text-gray-800 border-gray-200"
+            }
+          >
+            {job.status === "PUBLISHED" 
+              ? "Publiée" 
+              : job.status === "PENDING" 
+              ? "En attente" 
+              : "Brouillon"}
           </Badge>
         </div>
       </div>
       <div className="mt-6 flex gap-2">
         <Button onClick={handleSave}>Sauvegarder les modifications</Button>
-        <Button variant="outline" onClick={() => router.back()}>Annuler</Button>
+        <Button variant="outline" onClick={() => router.back()}>
+          Annuler
+        </Button>
       </div>
     </div>
   );

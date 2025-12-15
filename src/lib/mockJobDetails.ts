@@ -1,4 +1,5 @@
 // src/lib/mockJobDetails.ts
+
 export type JobDetail = {
   id: string;
   title: string;

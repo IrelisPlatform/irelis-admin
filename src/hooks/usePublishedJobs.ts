@@ -42,9 +42,10 @@ export default function usePublishedJobs(page: number = 0, size: number = 10) {
         const url = `${API_URL}/api/v1/jobs/published?page=${page}&size=${size}`;
         
         const res = await fetch(url);
+
         if (!res.ok) throw new Error(`Erreur ${res.status}`);
         
-        const  JobPage = await res.json();
+        const data = await res.json();
         setJobs(data.content);
         setTotalPages(data.total_pages);
       } catch (err: any) {
@@ -58,5 +59,5 @@ export default function usePublishedJobs(page: number = 0, size: number = 10) {
     fetchJobs();
   }, [page, size]);
 
-  return { jobs, totalPages, loading, error };
+  return { jobs, total_Pages, loading, error };
 }

@@ -1,14 +1,16 @@
 // src/types/job.ts
+
 export interface TagDto {
   name: string;
-  type: string;
+  type: string; // ex: "skill", "tool"
 }
 
 export interface RequiredDocument {
-  type: 'CV' | 'LETTER' | string; // ajuste selon les valeurs possibles
+  type: 'CV' | 'COVER_LETTER' | 'PORTFOLIO' | 'CERTIFICATE' | 'IDENTITY_DOC' | string;
 }
 
-export interface JobOffer {
+// 🔹 Offre telle que renvoyée par le backend (lecture)
+export interface PublishedJob {
   id: string;
   title: string;
   description: string;
@@ -17,18 +19,46 @@ export interface JobOffer {
   responsibilities: string;
   requirements: string;
   benefits: string;
-  contractType: 'CDI' | 'CDD' | 'INTERNSHIP' | 'ALTERNATIVE' | 'FREELANCE' | string; 
-  status: 'PENDING' | 'PUBLISHED' | string;
-  jobType: string;
+  contractType: 'CDI' | 'CDD' | 'INTERNSHIP' | 'ALTERNATIVE' | 'FREELANCE' | string;
+  status: 'PENDING' | 'PUBLISHED' | 'DRAFT' | string;
+  jobType: 'FULL_TIME' | 'PART_TIME' | 'REMOTE' | 'HYBRID' | string;
   salary: string;
-  publishedAt?: string; // ISO 8601
-  expirationDate?: string;
+  publishedAt: string | null; // ISO 8601
+  expirationDate: string; // obligatoire selon Swagger
   isFeatured: boolean;
   isUrgent: boolean;
   requiredLanguage: string;
   sectorName: string;
   postNumber: number;
-  tagDto: TagDto[];
+  tagDto: { name: string; type: string }[];
+  requiredDocuments: RequiredDocument[];
+}
+
+// 🔹 Offre telle qu'envoyée au backend (création)
+export interface AdminJobOfferRequest {
+  // Champs entreprise
+  companyName: string;
+  companyDescription: string;
+  sectorId: string;
+  companyEmail?: string;
+
+  // Champs offre (identiques à PublishedJob, mais sans id/publishedAt)
+  title: string;
+  description: string;
+  workCountryLocation: string;
+  workCityLocation: string;
+  responsibilities: string;
+  requirements: string;
+  benefits?: string;
+  contractType: 'CDI' | 'CDD' | 'INTERNSHIP' | 'ALTERNATIVE' | 'FREELANCE';
+  jobType: 'FULL_TIME' | 'PART_TIME' | 'REMOTE' | 'HYBRID';
+  salary?: string;
+  expirationDate: string;
+  isFeatured?: boolean;
+  isUrgent?: boolean;
+  requiredLanguage: string;
+  postNumber?: number;
+  tagDto: { name: string; type?: string }[];
   requiredDocuments: RequiredDocument[];
 }
 

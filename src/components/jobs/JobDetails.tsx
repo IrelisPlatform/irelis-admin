@@ -7,19 +7,37 @@ import { Separator } from "@/components/ui/separator";
 import { MapPin, Banknote, Info, Briefcase, DollarSign, Clock, Users, Building2, Bookmark, Share2, Send, ExternalLink, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { useApplyJob } from "@/hooks/useApplyJob";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { JobDetail } from "@/lib/mockJobDetails";
 import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
-import { MatchingScore } from "@/components/candidate/MatchingScore";
-import { useMatchingScore } from "@/hooks/candidate/useMatchingScore";
-import { useCandidateProfile } from "@/hooks/candidate/useCandidateProfile";
 
 export default function JobDetails({ job }: { job: JobDetail }) {
-  const { t } = useLanguage(); // ← ajout
-  const { apply, isApplying: isApplyingHook } = useApplyJob(job.id);
+  const { t } = useLanguage();
   const [isBookmarked, setIsBookmarked] = useState(false);
+
+  const handleApply = () => {
+    alert("Fonctionnalité de candidature bientôt disponible !");
+  };
+
+  const handleBookmark = () => {
+    setIsBookmarked(!isBookmarked);
+    // Pour l'instant : pas de persistance
+  };
+
+  const handleShare = () => {
+    // Optionnel : partager l'URL actuelle
+    if (navigator.share) {
+      navigator.share({
+        title: job.title,
+        text: `Découvrez cette offre chez ${job.company}`,
+        url: window.location.href,
+      });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert("Lien copié dans le presse-papiers !");
+    }
+  };
 
   return (
     <Card className="w-full max-w-full flex flex-col shadow-xl border-gray-100 overflow-hidden">
@@ -36,19 +54,16 @@ export default function JobDetails({ job }: { job: JobDetail }) {
             whileHover={{ scale: 1.05, rotate: 2 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
-            <span className="text-lg sm:text-2xl select-none">{job.company.substring(0, 2).toUpperCase()}</span>
+            <span className="text-lg sm:text-2xl select-none">
+              {job.company.substring(0, 2).toUpperCase()}
+            </span>
           </motion.div>
           
-          <h2 className="text-xl sm:text-2xl mb-2 text-[#1e3a8a] break-words">{job.title}</h2>
+          <h2 className="text-xl sm:text-2xl mb-2 text-[#1e3a8a] break-words">
+            {job.title}
+          </h2>
           <p className="text-gray-600 mb-4 break-words">{job.company}</p>
 
-          {/* Score de compatibilité */}
-          {job.id && (
-            <div className="mb-6">
-              <h3 className="text-lg font-medium text-foreground mb-3">Votre compatibilité</h3>
-              <MatchingScoreContainer offerId={job.id} />
-            </div>
-          )}
           
           {/* Informations clés */}
           <div className="bg-gradient-to-br from-blue-50/80 to-indigo-50/50 p-3 sm:p-5 rounded-xl border border-blue-100/50 shadow-sm">
@@ -57,7 +72,10 @@ export default function JobDetails({ job }: { job: JobDetail }) {
                 { icon: MapPin, text: job.location },
                 { icon: Briefcase, text: job.type },
                 { icon: DollarSign, text: job.salary },
-                { icon: Clock, text: job.posted }
+                { icon: Clock, text: job.expirationDate 
+                  ? new Date(job.expirationDate).toLocaleDateString("fr-FR") 
+                  : "Date non précisée" 
+                }
               ].map((item, i) => (
                 <motion.span 
                   key={i}
@@ -99,19 +117,26 @@ export default function JobDetails({ job }: { job: JobDetail }) {
 
           {/* Boutons */}
           <div className="flex gap-2 mt-4">
+            <Button onClick={handleApply} className="flex-1">
+              Postuler
+            </Button>
             <Button 
               size="sm" 
-              className="flex-1 bg-[#1e3a8a] hover:bg-[#1e40af] text-white shadow"
-              onClick={apply}
-              disabled={isApplyingHook}
+              variant="outline" 
+              className="border-[#1e3a8a]"
+              onClick={handleBookmark}
             >
-              {isApplyingHook ? t.jobDetails.sending : t.jobDetails.apply}
-            </Button>
-            <Button size="sm" variant="outline" className="border-[#1e3a8a]">
               <Bookmark className="w-4 h-4" />
-              <span className="ml-1 text-xs">{isBookmarked ? t.jobDetails.saved : t.jobDetails.save}</span>
+              <span className="ml-1 text-xs">
+                {isBookmarked ? t.jobDetails.saved : t.jobDetails.save}
+              </span>
             </Button>
-            <Button size="sm" variant="outline" className="border-[#1e3a8a]">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="border-[#1e3a8a]"
+              onClick={handleShare}
+            >
               <Share2 className="w-4 h-4" />
               <span className="ml-1 text-xs">{t.jobDetails.share}</span>
             </Button>
@@ -188,35 +213,4 @@ export default function JobDetails({ job }: { job: JobDetail }) {
       </div>
     </Card>
   );
-}
-
-// Composant helper local
-function MatchingScoreContainer({ offerId }: { offerId: string }) {
-  const { result, loading, error } = useMatchingScore(offerId);
-
-  if (loading) {
-    return (
-      <Card className="p-4">
-        <CardContent className="flex items-center justify-center">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="p-4 border-destructive/20">
-        <CardContent>
-          <p className="text-sm text-destructive">Impossible de calculer le matching.</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!result) {
-    return null;
-  }
-
-  return <MatchingScore matchResult={result} compact={true} />;
 }
