@@ -29,7 +29,7 @@ export default function Page() {
     const { t } = useLanguage();
     const [selectedJobId, setSelectedJobId] = useState<string | undefined>(undefined);
     const [currentPage, setCurrentPage] = useState(1);
-    const { jobs: allJobs, totalPages, totalElements, loading: jobsLoading, error: jobsError } = usePublishedJobs(currentPage - 1, 10);
+    const { jobs: allJobs, totalPages, totalElements, loading: jobsLoading, error: jobsError } = usePublishedJobs(currentPage - 1, 5);
 
 
     // useEffect(() => {

@@ -89,7 +89,7 @@ const transformJob = (job: BackendPublishedJob): PublishedJob => {
     };
 };
 
-export default function usePublishedJobs(page: number = 0, size: number = 10) {
+export default function usePublishedJobs(page: number = 0, size: number = 5) {
     const [jobs, setJobs] = useState<PublishedJob[]>([]);
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
