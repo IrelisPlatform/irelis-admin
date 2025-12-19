@@ -28,7 +28,7 @@ const nextConfig: NextConfig = {
         return [
             {
                 source: "/api/:path*",
-                destination: 'http://api-irelis.us-east-2.elasticbeanstalk.com/:path*',
+                destination: "https://irelis-backend.onrender.com/:path*",
             },
         ];
     },
