@@ -1,32 +1,69 @@
-// src/components/admin/AdminUserMenu.tsx
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { User, LogOut } from "lucide-react";
-import { useRouter } from "next/navigation";
+import {useRouter} from "next/navigation";
+import api from "@/services/axiosClient";
+
+
+
+interface User{
+    email: string;
+    role: string;
+}
 
 export default function AdminUserMenu() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [email, setEmail] = useState("Admin");
-  const router = useRouter();
+  const [user,setUser] = useState<User|null>(null)
+    const router = useRouter();
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedEmail = localStorage.getItem("adminEmail");
-      if (storedEmail) {
-        setEmail(storedEmail);
-      }
-    }
-  }, []);
+    // const fetchUser = async () => {
+    //     try {
+    //         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/otp/user`, {
+    //             method: "GET",
+    //             credentials: "include",
+    //         });
+    //
+    //         if (!response.ok) throw new Error("Erreur récupération utilisateur");
+    //
+    //         const data = await response.json();
+    //         setUser(data);
+    //     } catch (error) {
+    //         console.log(error);
+    //     }
+    // };
 
-  const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    router.push("/admin/login");
-  };
+    const fetchUser = async () => {
+        try {
+            const { data } = await api.get("/auth/otp/user");
+            setUser(data);
+        } catch (err) {
+            console.error("Erreur lors de la récupération de l'utilisateur :", err);
+        }
+    };
 
-  
-  return (
+    useEffect(() => {
+        fetchUser();
+    }, []);
+
+    const logout = async () => {
+        try {
+            await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/otp/logout`, {
+                method: "POST",
+                credentials: "include"
+            });
+        } catch (err) {
+            console.error("Erreur lors de la déconnexion", err);
+        }
+        setUser(null);
+        router.push("/admin/login");
+    };
+
+
+
+    return (
     <div className="relative">
       <Button
         variant="ghost"
@@ -39,10 +76,10 @@ export default function AdminUserMenu() {
       {isMenuOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-50">
           <div className="p-4 border-b">
-            <p className="text-sm font-medium">{email}</p>
+            <p className="text-sm font-medium">{user?.email}</p>
           </div>
           <button
-            onClick={handleLogout}
+            onClick={logout}
             className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"
           >
             <LogOut className="h-4 w-4" />

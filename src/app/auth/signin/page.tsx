@@ -1,8 +1,8 @@
-// src/app/auth/signin/page.tsx
+
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { AuthHeader } from "@/components/auth/AuthHeader";
 import { AuthFooter } from "@/components/auth/AuthFooter";
 import Image from "next/image";
 import { useLanguage } from "@/context/LanguageContext";
+import {Spinner} from "@/components/ui/spinner";
 
 export default function SigninPage() {
   const { t } = useLanguage();
@@ -17,17 +18,13 @@ export default function SigninPage() {
   const [error, setError] = useState("");
   const router = useRouter();
   const params = useSearchParams();
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://api-irelis.us-east-2.elasticbeanstalk.com";
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL
   const returnTo = 
     process.env.NODE_ENV === 'development'
       ? "/"
       : params.get("returnTo") || "/";
 
-  useEffect(() => {
-    if ((process.env.NODE_ENV || 'production') === 'development') {
-      setEmail("luqnleng5@gmail.com");
-    }
-  }, []);
+
 
   const handleGoogle = () => {
     const returnTo = 
@@ -39,9 +36,9 @@ export default function SigninPage() {
     window.location.href = `${backendUrl}/oauth2/authorization/google?state=google&returnTo=${encodeURIComponent(returnTo)}&redirect_uri=${encodeURIComponent(redirectUri)}`;
   };
 
-  const handleLinkedin = () => {
-    window.location.href = `${backendUrl}/oauth2/authorization/linkedin?state=linkedin&returnTo=${encodeURIComponent(returnTo)}`;
-  };
+  // const handleLinkedin = () => {
+  //   window.location.href = `${backendUrl}/oauth2/authorization/linkedin?state=linkedin&returnTo=${encodeURIComponent(returnTo)}`;
+  // };
 
   const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
@@ -68,10 +65,14 @@ export default function SigninPage() {
       if (res.ok) {
         localStorage.setItem("auth_email", email);
         localStorage.setItem("auth_returnTo", returnTo);
-
         if (data.mode === "signup") {
           router.push("/auth/choose-role");
         } else {
+            await fetch(`${backendUrl}/auth/otp/request`,{
+                method:"POST",
+                body:JSON.stringify({email}),
+                headers: {"Content-Type" : "application/json"}
+            })
           router.push("/auth/otp");
         }
       } else {
@@ -100,11 +101,11 @@ export default function SigninPage() {
             {t.auth.signin.consent}
           </p>
 
-          {process.env.NODE_ENV === "development" && (
-            <p className="text-xs text-orange-500 mb-3 bg-orange-50 p-2 rounded">
-              {t.auth.signin.devNote}
-            </p>
-          )}
+          {/*{process.env.NODE_ENV === "development" && (*/}
+          {/*  <p className="text-xs text-orange-500 mb-3 bg-orange-50 p-2 rounded">*/}
+          {/*    {t.auth.signin.devNote}*/}
+          {/*  </p>*/}
+          {/*)}*/}
 
           <div className="space-y-3">
             <Button variant="outline" className="w-full" onClick={handleGoogle}>
@@ -112,10 +113,10 @@ export default function SigninPage() {
               {t.auth.signin.google}
             </Button>
 
-            <Button variant="outline" className="w-full" onClick={handleLinkedin}>
-              <Image src="/icons/linkedin-logo.jpg" alt="LinkedIn" width={18} height={18} className="mr-2" />
-              {t.auth.signin.linkedin}
-            </Button>
+            {/*<Button variant="outline" className="w-full" onClick={handleLinkedin}>*/}
+            {/*  <Image src="/icons/linkedin-logo.jpg" alt="LinkedIn" width={18} height={18} className="mr-2" />*/}
+            {/*  {t.auth.signin.linkedin}*/}
+            {/*</Button>*/}
 
             <div className="text-center text-sm text-muted-foreground my-3">{t.auth.signin.or}</div>
 
@@ -138,7 +139,7 @@ export default function SigninPage() {
               onClick={handleContinue} 
               disabled={!email || isChecking}
             >
-              {isChecking ? t.auth.signin.verifying : t.auth.signin.continue}
+              {isChecking ?<><Spinner className="h-4 w-4 text-white" /> <span className="ml-2">{t.auth.signin.verifying}</span></>  : t.auth.signin.continue}
             </Button>
           </div>
         </div>

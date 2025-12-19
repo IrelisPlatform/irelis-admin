@@ -2,14 +2,12 @@
 
 "use client";
 
-import { useAuth } from "@/context/AuthContext";
 import { Bell, User, Menu } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import logo from "@/../public/icons/logo.png";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -23,24 +21,102 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { useLanguage } from "@/context/LanguageContext"; // ← ajout
+import { useLanguage } from "@/context/LanguageContext";
+import {useEffect, useState} from "react";
+import api from "@/services/axiosClient";
+
+interface User{
+    email: string;
+    role: string;
+}
 
 export function Header() {
-  const router = useRouter();
-  const { user, logout, loading } = useAuth();
-  const { t } = useLanguage(); // ← ajout
+  const { t } = useLanguage()
+    const [user,setUser] = useState<User|null>(null)
   const notifications = 0;
+    const router = useRouter();
 
-  const handleLogout = () => {
-    toast.success(t.header.toastLoggingOut);
-    setTimeout(() => logout(), 300);
-  };
+    // const logout = () => {
+    //
+    //     if (typeof window !== "undefined") {
+    //         localStorage.removeItem("accessToken");
+    //         localStorage.removeItem("refreshToken");
+    //         localStorage.removeItem("auth_email");
+    //         localStorage.removeItem("auth_role");
+    //         localStorage.removeItem("auth_returnTo");
+    //         Cookies.remove("accessToken");
+    //     }
+    //     setUser(null);
+    //     router.push("/");
+    // };
 
-  if (loading) {
-    return (
-      <header className="border-b border-gray-100 bg-white/95 backdrop-blur-md sticky top-0 z-50 h-20" />
-    );
-  }
+    // const token = localStorage.getItem("accessToken")
+
+
+    const logout = async () => {
+        try {
+            await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/otp/logout`, {
+                method: "POST",
+                credentials: "include"
+            });
+        } catch (err) {
+            console.error("Erreur lors de la déconnexion", err);
+        }
+
+        localStorage.removeItem("auth_email");
+        localStorage.removeItem("auth_role");
+        localStorage.removeItem("auth_returnTo");
+        setUser(null);
+        router.push("/");
+    };
+
+
+
+    // const fetchUser = async () => {
+    //     try {
+    //         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/otp/user`, {
+    //             method: "GET",
+    //             credentials: "include",
+    //         });
+    //
+    //         const data = await response.json();
+    //         setUser(data);
+    //     } catch (error) {
+    //         console.log(error);
+    //     }
+    // };
+
+    // const fetchUser = async () => {
+    //     try {
+    //         const response = await fetchWithAuth(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/otp/user`, {
+    //             method: "GET",
+    //         });
+    //
+    //         if (!response.ok) {
+    //             throw new Error(`Erreur ${response.status}`);
+    //         }
+    //
+    //         const data = await response.json();
+    //         setUser(data);
+    //     } catch (error) {
+    //         console.error("Erreur lors de la récupération de l'utilisateur :", error);
+    //     }
+    // };
+
+
+    const fetchUser = async () => {
+        try {
+            const { data } = await api.get("/auth/otp/user");
+            setUser(data);
+        } catch (err) {
+            console.error("Erreur lors de la récupération de l'utilisateur :", err);
+        }
+    };
+
+    useEffect(() => {
+        fetchUser();
+    }, []);
+
 
   return (
     <motion.header
@@ -123,11 +199,11 @@ export function Header() {
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent className="w-48">
-                  <DropdownMenuItem disabled className="text-gray-500">
+                  <DropdownMenuItem className="text-gray-500">
                     {user.email}
                   </DropdownMenuItem>
 
-                  {user.role === "CANDIDATE" && (
+                  {user && (
                     <>
                       <DropdownMenuItem onClick={() => router.push("/espace-candidat/profil")}>
                         Mon profil
@@ -145,7 +221,7 @@ export function Header() {
                   )}
                   <DropdownMenuItem
                     className="text-red-600"
-                    onClick={handleLogout}
+                    onClick={logout}
                   >
                     {t.header.logout}
                   </DropdownMenuItem>
@@ -186,7 +262,7 @@ export function Header() {
 
                 <div className="mt-6 flex flex-col gap-6">
                   <Link href="/" className="text-gray-800 text-lg">{t.header.nav.home}</Link>
-                  <Link href="/accompagnement" className="text-gray-800 text-lg">{t.header.nav.support}</Link>
+                  <Link href="/src/components/accompagnement" className="text-gray-800 text-lg">{t.header.nav.support}</Link>
                   <Link href="/blog" className="text-gray-800 text-lg">{t.header.nav.blog}</Link>
 
                   {!user && (
@@ -200,7 +276,7 @@ export function Header() {
 
                   {user && (
                     <>
-                      <Button variant="destructive" onClick={handleLogout}>
+                      <Button variant="destructive" onClick={logout}>
                         {t.header.logout}
                       </Button>
                     </>

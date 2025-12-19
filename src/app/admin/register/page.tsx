@@ -101,13 +101,13 @@ export default function AdminRegisterPage() {
               </div>
             </div>
 
-            <Button
-              type="submit"
-              className="w-full bg-[#1e3a8a] hover:bg-[#1e40af] text-white"
-              disabled={registerloading}
-            >
-              {registerloading ? "Création en cours..." : "Créer le compte"}
-            </Button>
+            {/*<Button*/}
+            {/*  type="submit"*/}
+            {/*  className="w-full bg-[#1e3a8a] hover:bg-[#1e40af] text-white"*/}
+            {/*  disabled={registerloading}*/}
+            {/*>*/}
+            {/*  {registerloading ? "Création en cours..." : "Créer le compte"}*/}
+            {/*</Button>*/}
           </form>
           <div className="mt-4 text-center text-sm">
             <button

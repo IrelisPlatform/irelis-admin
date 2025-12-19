@@ -31,10 +31,9 @@ export default function ChooseRolePage() {
     if (!email) return;
 
     setLoading(true);
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim() || "http://api-irelis.us-east-2.elasticbeanstalk.com";
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL
 
     try {
-      // Étape 1 : Demander l'OTP avec userType (obligatoire pour les nouveaux)
       const res = await fetch(`${backendUrl}/auth/otp/request`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -43,18 +42,17 @@ export default function ChooseRolePage() {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        alert(errorData.message || "Erreur lors de l’envoi du code."); // ou toast si tu préfères
+        alert(errorData.message || "Erreur lors de l’envoi du code.")
         return;
       }
 
-      // Étape 2 : Stocker le rôle + la redirection souhaitée
       localStorage.setItem("auth_role", role);
       localStorage.setItem(
         "auth_preferred_redirect",
         role === "RECRUITER" ? "/espace-recruteur" : "/espace-candidat"
       );
 
-      // Étape 3 : Rediriger vers la page OTP
+
       router.push("/auth/otp");
     } catch (err) {
       console.error("Erreur réseau :", err);

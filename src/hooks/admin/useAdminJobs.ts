@@ -25,43 +25,43 @@ export function useAdminJobs() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const getAuthToken = () => {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem('accessToken');
-  };
-
-  const handleAuthError = () => {
-    localStorage.removeItem('accessToken');
-    toast.error('Votre session a expiré. Veuillez vous reconnecter.');
-    router.push('/admin/login');
-  };
-
-  const ensureAuth = () => {
-    const token = getAuthToken();
-    if (!token) {
-      handleAuthError();
-      return null;
-    }
-    return token;
-  };
+  // const getAuthToken = () => {
+  //   if (typeof window === 'undefined') return null;
+  //   return localStorage.getItem('accessToken');
+  // };
+  //
+  // const handleAuthError = () => {
+  //   localStorage.removeItem('accessToken');
+  //   toast.error('Votre session a expiré. Veuillez vous reconnecter.');
+  //   router.push('/admin/login');
+  // };
+  //
+  // const ensureAuth = () => {
+  //   const token = getAuthToken();
+  //   if (!token) {
+  //     handleAuthError();
+  //     return null;
+  //   }
+  //   return token;
+  // };
 
   // Fonction utilitaire pour gérer les erreurs 401
-  const handleApiError = (err: any) => {
-    if (err.message?.includes('401') || err.message?.includes('Unauthorized')) {
-      handleAuthError();
-      return true; // erreur gérée
-    }
-    return false; // erreur non gérée ici
-  };
+  // const handleApiError = (err: any) => {
+  //   if (err.message?.includes('401') || err.message?.includes('Unauthorized')) {
+  //     handleAuthError();
+  //     return true; // erreur gérée
+  //   }
+  //   return false; // erreur non gérée ici
+  // };
 
   const getAllJobs = async (): Promise<AdminJob[]> => {
-    const token = ensureAuth();
-    if (!token) return [];
 
     try {
-      const data = await apiRequest<PaginatedResponse<AdminJob>>('/admin/jobs?page=0&size=100', {
-        headers: { Authorization: `Bearer ${token}` },
+      const data = await apiRequest<PaginatedResponse<AdminJob>>('/admin/jobs', {
+        method : 'GET',
+          credentials:'include'
       });
+      console.log(data);
       return data.content;
     } catch (err: any) {
       if (!handleApiError(err)) {
@@ -72,23 +72,21 @@ export function useAdminJobs() {
   };
 
   const createJob = async (payload: JobCreatePayload): Promise<AdminJob> => {
-    const token = ensureAuth();    
-    if (!token) throw new Error('Non authentifié');
+    // const token = ensureAuth();
+    // if (!token) throw new Error('Non authentifié');
 
     setLoading(true);
     try {
       const createdJob = await apiRequest<AdminJob>('/admin/jobs/create', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
         body: JSON.stringify(payload),
       });
 
       toast.success('Offre créée avec succès !');
       return createdJob;
     } catch (err: any) {
-      if (!handleApiError(err)) {
-        toast.error(err.message || 'Échec de la création.');
-      }
+        console.error(err.message);
       throw err;
     } finally {
       setLoading(false);
@@ -96,36 +94,27 @@ export function useAdminJobs() {
   };
 
   const publishJob = async (id: string) => {
-    const token = ensureAuth();
-    if (!token) return;
 
     try {
       await apiRequest<void>(`/admin/jobs/${id}/publish`, {
         method: 'PATCH',
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include'
       });
       toast.success('Offre publiée !');
     } catch (err: any) {
-      if (!handleApiError(err)) {
-        toast.error(err.message || 'Échec de la publication.');
-      }
+      console.error(err.message);
     }
   };
 
   const deleteJob = async (id: string) => {
-    const token = ensureAuth();
-    if (!token) return;
-
     try {
       await apiRequest<void>(`/admin/jobs/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
       });
       toast.success('Offre supprimée.');
     } catch (err: any) {
-      if (!handleApiError(err)) {
-        toast.error(err.message || 'Échec de la suppression.');
-      }
+         console.log(err);
     }
   };
 
@@ -135,6 +124,5 @@ export function useAdminJobs() {
     publishJob,
     deleteJob,
     loading,
-    getAuthToken,
   };
 }

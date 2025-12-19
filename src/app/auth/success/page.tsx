@@ -2,16 +2,17 @@
 
 "use client";
 
-import { useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useLanguage } from "@/context/LanguageContext";
+import {useEffect} from "react";
+import {useRouter, useSearchParams} from "next/navigation";
+import {useLanguage} from "@/context/LanguageContext";
+import Cookies from "js-cookie";
 
 export default function AuthSuccessPage() {
   const { t } = useLanguage();
   const params = useSearchParams();
   const router = useRouter();
   const code = params.get("code");
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim() || "http://api-irelis.us-east-2.elasticbeanstalk.com";
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL
 
   useEffect(() => {
     if (!code) {
@@ -21,9 +22,9 @@ export default function AuthSuccessPage() {
 
     const exchangeAndFetchUser = async () => {
       try {
-        // 1. Échanger le code OAuth contre les tokens
         const tokenRes = await fetch(`${backendUrl}/auth/otp/oauth2/exchange?code=${encodeURIComponent(code)}`, {
           method: "POST",
+            credentials:"include",
           headers: { "Content-Type": "application/json" },
         });
 
@@ -35,31 +36,11 @@ export default function AuthSuccessPage() {
           return;
         }
 
-        // 2. Récupérer l'email via l'endpoint dédié /auth/otp/user
-        const userRes = await fetch(`${backendUrl}/auth/otp/user`, {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${tokenData.accessToken}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        const userData = await userRes.json();
-
-        if (!userRes.ok || !userData.email) {
-          console.error("Impossible de récupérer l'email via /auth/otp/user:", userData);
-          router.replace("/auth/signin?error=missing_email");
-          return;
-        }
-
-        // 3. Sauvegarder et rediriger
         if (typeof window !== "undefined") {
-          localStorage.setItem("auth_email", userData.email);
-          localStorage.setItem("accessToken", tokenData.accessToken);
-          localStorage.setItem("refreshToken", tokenData.refreshToken);
-
-          const returnTo = localStorage.getItem("auth_returnTo") || "/";
-          window.location.href = returnTo; // Full page reload pour rafraîchir l'état d'auth
+          // localStorage.setItem("accessToken", tokenData.accessToken);
+          // localStorage.setItem("refreshToken", tokenData.refreshToken);
+          // Cookies.set("accessToken", tokenData.accessToken);
+          window.location.href = localStorage.getItem("auth_returnTo") || "/";
         }
       } catch (err) {
         console.error("Erreur réseau dans /auth/success:", err);

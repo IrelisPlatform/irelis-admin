@@ -8,7 +8,6 @@ import { useAuth } from "@/context/AuthContext";
 
 export function Footer() {
   const { t } = useLanguage();
-  const { user } = useAuth();
 
   return (
     <footer className="bg-gradient-to-b from-[#1e293b] to-[#0f172a] text-gray-300 mt-20">
@@ -38,7 +37,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/accompagnement" className="hover:text-white hover:translate-x-1 transition-all inline-block">
+                <Link href="/src/components/accompagnement" className="hover:text-white hover:translate-x-1 transition-all inline-block">
                   {t.footer.support}
                 </Link>
               </li>
