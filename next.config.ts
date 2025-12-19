@@ -24,14 +24,14 @@ const nextConfig: NextConfig = {
         ignoreDuringBuilds: true,
     },
 
-    async rewrites() {
-        return [
-            {
-                source: "/api/:path*",
-                destination: "https://irelis-backend.onrender.com/:path*",
-            },
-        ];
-    },
+    // async rewrites() {
+    //     return [
+    //         {
+    //             source: "/api/:path*",
+    //             destination: "https://irelis-backend.onrender.com/:path*",
+    //         },
+    //     ];
+    // },
 };
 
 export default nextConfig;
