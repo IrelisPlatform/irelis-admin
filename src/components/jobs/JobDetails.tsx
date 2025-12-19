@@ -42,7 +42,7 @@ export default function JobDetails({ job }: { job: PublishedJob }) {
     const displayCompany = job.company || "l'entreprise";
 
     return (
-        <Card className="w-full max-w-full  flex flex-col shadow-xl border-gray-100 overflow-hidden">
+        <Card className="w-full max-w-full h-3/4 flex flex-col shadow-xl border-gray-100 overflow-hidden">
             <div className="w-full max-w-full overflow-x-hidden p-4 sm:p-6">
                 <motion.div
                     className="mb-6"
