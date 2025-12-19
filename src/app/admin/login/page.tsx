@@ -8,6 +8,7 @@ import { AuthHeader } from "@/components/auth/AuthHeader";
 import { AuthFooter } from "@/components/auth/AuthFooter";
 import { Eye, EyeOff } from "lucide-react";
 import {Spinner} from "@/components/ui/spinner";
+import Cookies from "js-cookie";
 
 export default function AdminLoginPage() {
     const [email, setEmail] = useState("");
@@ -21,9 +22,9 @@ export default function AdminLoginPage() {
     const login = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
+        setLoading(true);
 
         try {
-            setLoading(true);
             const res = await fetch(
                 `${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/auth/login`,
                 {
@@ -41,7 +42,12 @@ export default function AdminLoginPage() {
                 setError(errData.message || "Erreur de connexion");
                 return;
             }
-            setLoading(false);
+
+            const data = await res.json();
+
+            Cookies.set("access_token", data.accessToken);
+            Cookies.set("refresh_token", data.refreshToken);
+            Cookies.set("admin_session","true")
 
             router.push("/admin");
         } catch (err) {
@@ -50,8 +56,11 @@ export default function AdminLoginPage() {
             } else {
                 setError("Erreur réseau");
             }
+        } finally {
+            setLoading(false);
         }
     };
+
 
     return (
         <div className="min-h-screen flex flex-col bg-[#f9fafb]">

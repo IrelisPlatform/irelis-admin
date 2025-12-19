@@ -11,6 +11,7 @@ import { AuthFooter } from "@/components/auth/AuthFooter";
 import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
 import { Spinner } from "@/components/ui/spinner";
+import Cookies from "js-cookie";
 
 export default function OtpPage() {
     const { t } = useLanguage();
@@ -109,6 +110,9 @@ export default function OtpPage() {
                 if (preferredRedirect) {
                     localStorage.removeItem("auth_preferred_redirect");
                 }
+
+                Cookies.set("access_token", data.accessToken);
+                Cookies.set("refresh_token", data.refreshToken);
 
                 localStorage.removeItem("auth_returnTo");
                 localStorage.removeItem("auth_email");

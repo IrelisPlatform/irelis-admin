@@ -24,6 +24,7 @@ import {
 import { useLanguage } from "@/context/LanguageContext";
 import {useEffect, useState} from "react";
 import api from "@/services/axiosClient";
+import Cookies from "js-cookie";
 
 interface User{
     email: string;
@@ -35,40 +36,39 @@ export function Header() {
     const [user,setUser] = useState<User|null>(null)
   const notifications = 0;
     const router = useRouter();
+    const token = Cookies.get("access_token");
 
-    // const logout = () => {
-    //
-    //     if (typeof window !== "undefined") {
-    //         localStorage.removeItem("accessToken");
-    //         localStorage.removeItem("refreshToken");
-    //         localStorage.removeItem("auth_email");
-    //         localStorage.removeItem("auth_role");
-    //         localStorage.removeItem("auth_returnTo");
-    //         Cookies.remove("accessToken");
-    //     }
-    //     setUser(null);
-    //     router.push("/");
-    // };
+    const logout = () => {
 
-    // const token = localStorage.getItem("accessToken")
-
-
-    const logout = async () => {
-        try {
-            await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/otp/logout`, {
-                method: "POST",
-                credentials: "include"
-            });
-        } catch (err) {
-            console.error("Erreur lors de la déconnexion", err);
+        if (typeof window !== "undefined") {
+            localStorage.removeItem("auth_email");
+            localStorage.removeItem("auth_role");
+            localStorage.removeItem("auth_returnTo");
+            Cookies.remove("access_token");
+            Cookies.remove("refresh_token");
         }
-
-        localStorage.removeItem("auth_email");
-        localStorage.removeItem("auth_role");
-        localStorage.removeItem("auth_returnTo");
         setUser(null);
         router.push("/");
     };
+
+
+
+    // const logout = async () => {
+    //     try {
+    //         await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/otp/logout`, {
+    //             method: "POST",
+    //             credentials: "include"
+    //         });
+    //     } catch (err) {
+    //         console.error("Erreur lors de la déconnexion", err);
+    //     }
+    //
+    //     localStorage.removeItem("auth_email");
+    //     localStorage.removeItem("auth_role");
+    //     localStorage.removeItem("auth_returnTo");
+    //     setUser(null);
+    //     router.push("/");
+    // };
 
 
 
@@ -106,7 +106,12 @@ export function Header() {
 
     const fetchUser = async () => {
         try {
-            const { data } = await api.get("/auth/otp/user");
+            const { data } = await api.get("/auth/otp/user",{
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                }
+            });
             setUser(data);
         } catch (err) {
             console.error("Erreur lors de la récupération de l'utilisateur :", err);

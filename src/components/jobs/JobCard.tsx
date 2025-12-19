@@ -54,36 +54,36 @@ export function JobCard({ job, onClick, isSelected }: JobCardProps) {
 
             {/* Badges de statut */}
             <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
-                {job.isNew && (
-                    <Badge className="bg-blue-600 text-white text-xs sm:text-sm">
-                        {t.jobDetails.new}
-                    </Badge>
-                )}
-                {job.isFeatured && (
-                    <motion.div
-                        initial={{ scale: 0, rotate: -10 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        transition={{ type: "spring", stiffness: 200, damping: 10 }}
-                    >
-                        <Badge className="bg-gradient-to-r from-emerald-500 to-green-600 text-white border-0 shadow-lg flex items-center gap-1 px-2 py-1">
-                            <Sparkles className="w-3 h-3" />
-                            Nouveau
-                        </Badge>
-                    </motion.div>
-                )}
+                {/*{job.isNew && (*/}
+                {/*    <Badge className="bg-blue-600 text-white text-xs sm:text-sm">*/}
+                {/*        {t.jobDetails.new}*/}
+                {/*    </Badge>*/}
+                {/*)}*/}
+                {/*{job.isFeatured && (*/}
+                {/*    <motion.div*/}
+                {/*        initial={{ scale: 0, rotate: -10 }}*/}
+                {/*        animate={{ scale: 1, rotate: 0 }}*/}
+                {/*        transition={{ type: "spring", stiffness: 200, damping: 10 }}*/}
+                {/*    >*/}
+                {/*        <Badge className="bg-gradient-to-r from-emerald-500 to-green-600 text-white border-0 shadow-lg flex items-center gap-1 px-2 py-1">*/}
+                {/*            <Sparkles className="w-3 h-3" />*/}
+                {/*            Nouveau*/}
+                {/*        </Badge>*/}
+                {/*    </motion.div>*/}
+                {/*)}*/}
 
-                {job.isUrgent && (
-                    <motion.div
-                        initial={{ scale: 0, rotate: 10 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        transition={{ type: "spring", stiffness: 200, damping: 10, delay: 0.1 }}
-                    >
-                        <Badge className="bg-gradient-to-r from-orange-500 to-red-600 text-white border-0 shadow-lg flex items-center gap-1 px-2 py-1 animate-pulse">
-                            <Zap className="w-3 h-3" />
-                            Urgent
-                        </Badge>
-                    </motion.div>
-                )}
+                {/*{job.isUrgent && (*/}
+                {/*    <motion.div*/}
+                {/*        initial={{ scale: 0, rotate: 10 }}*/}
+                {/*        animate={{ scale: 1, rotate: 0 }}*/}
+                {/*        transition={{ type: "spring", stiffness: 200, damping: 10, delay: 0.1 }}*/}
+                {/*    >*/}
+                {/*        <Badge className="bg-gradient-to-r from-orange-500 to-red-600 text-white border-0 shadow-lg flex items-center gap-1 px-2 py-1 animate-pulse">*/}
+                {/*            <Zap className="w-3 h-3" />*/}
+                {/*            Urgent*/}
+                {/*        </Badge>*/}
+                {/*    </motion.div>*/}
+                {/*)}*/}
             </div>
 
             <div className="flex gap-5 relative">

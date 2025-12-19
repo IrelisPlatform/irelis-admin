@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Cookies from "js-cookie";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL
 if (!API_BASE_URL) {
@@ -92,6 +93,7 @@ export function useCandidateProfile() {
   const [profile, setProfile] = useState<CandidateProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const token = Cookies.get("access_token");
 
   // ------------------------
   // CHARGER LE PROFIL COMPLET
@@ -104,7 +106,10 @@ export function useCandidateProfile() {
     try {
       const res = await fetch(`${API_BASE_URL}/api/v1/profile`, {
         method: "GET",
-        credentials:"include"
+        credentials:"include",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
       });
 
       if (res.ok) {
@@ -153,6 +158,9 @@ export function useCandidateProfile() {
       const res = await fetch(`${API_BASE_URL}/api/v1/profile`, {
         method: "PATCH",
        credentials:"include",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         body: JSON.stringify({ data: updates })
       });
 
@@ -180,6 +188,9 @@ export function useCandidateProfile() {
     const res = await fetch(`${API_BASE_URL}/api/v1/job-preferences`, {
       method: "POST",
      credentials:"include",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       body: JSON.stringify(preferences)
     });
 
@@ -199,6 +210,9 @@ export function useCandidateProfile() {
     const res = await fetch(`${API_BASE_URL}/api/v1/profile/visibility`, {
       method: "PATCH",
       credentials:"include",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
     });
 
     if (!res.ok) {
@@ -222,6 +236,9 @@ export function useCandidateProfile() {
     const res = await fetch(`${API_BASE_URL}/api/v1/cv`, {
       method: "POST",
       credentials: "include",
+        headers:{
+          Authorization: `Bearer ${token}`,
+        },
       body: formData
     });
 
@@ -243,6 +260,9 @@ export function useCandidateProfile() {
     const res = await fetch(`${API_BASE_URL}/api/v1/cv`, {
       method: "DELETE",
       credentials:"include",
+        headers:{
+            Authorization: `Bearer ${token}`,
+        },
     });
 
     if (!res.ok) {
@@ -270,6 +290,9 @@ export function useCandidateProfile() {
     const res = await fetch(url, {
       method: "POST",
      credentials: "include",
+        headers:{
+            Authorization: `Bearer ${token}`,
+        },
       body: formData
     });
  
@@ -297,6 +320,9 @@ export function useCandidateProfile() {
     const res = await fetch(`${API_BASE_URL}/api/v1/letters`, {
       method: "DELETE",
      credentials: "include",
+        headers:{
+            Authorization: `Bearer ${token}`,
+        },
     });
 
     if (!res.ok) {
@@ -317,6 +343,9 @@ export function useCandidateProfile() {
     const res = await fetch(`${API_BASE_URL}/api/v1/skills/${skillId}`, {
       method: "DELETE",
      credentials:"include",
+        headers:{
+            Authorization: `Bearer ${token}`,
+        },
     });
     if (!res.ok) throw new Error("Échec de la suppression de la compétence");
     loadProfile();

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { User, LogOut } from "lucide-react";
 import {useRouter} from "next/navigation";
 import api from "@/services/axiosClient";
+import Cookies from "js-cookie";
 
 
 
@@ -18,6 +19,7 @@ export default function AdminUserMenu() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user,setUser] = useState<User|null>(null)
     const router = useRouter();
+    const token = Cookies.get("access_token");
 
     // const fetchUser = async () => {
     //     try {
@@ -35,9 +37,22 @@ export default function AdminUserMenu() {
     //     }
     // };
 
+    // const fetchUser = async () => {
+    //     try {
+    //         const { data } = await api.get("/auth/otp/user");
+    //         setUser(data);
+    //     } catch (err) {
+    //         console.error("Erreur lors de la récupération de l'utilisateur :", err);
+    //     }
+    // };
     const fetchUser = async () => {
         try {
-            const { data } = await api.get("/auth/otp/user");
+            const { data } = await api.get("/auth/otp/user",{
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                }
+            });
             setUser(data);
         } catch (err) {
             console.error("Erreur lors de la récupération de l'utilisateur :", err);
@@ -48,18 +63,33 @@ export default function AdminUserMenu() {
         fetchUser();
     }, []);
 
-    const logout = async () => {
-        try {
-            await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/otp/logout`, {
-                method: "POST",
-                credentials: "include"
-            });
-        } catch (err) {
-            console.error("Erreur lors de la déconnexion", err);
+    // const logout = async () => {
+    //     try {
+    //         await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/otp/logout`, {
+    //             method: "POST",
+    //             credentials: "include"
+    //         });
+    //     } catch (err) {
+    //         console.error("Erreur lors de la déconnexion", err);
+    //     }
+    //     setUser(null);
+    //     router.push("/admin/login");
+    // };
+
+    const logout = () => {
+
+        if (typeof window !== "undefined") {
+            localStorage.removeItem("auth_email");
+            localStorage.removeItem("auth_role");
+            localStorage.removeItem("auth_returnTo");
+            Cookies.remove("access_token");
+            Cookies.remove("refresh_token");
+            Cookies.remove("admin_session");
         }
         setUser(null);
         router.push("/admin/login");
     };
+
 
 
 

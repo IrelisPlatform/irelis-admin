@@ -103,16 +103,16 @@ export default function JobDetails({ job }: { job: PublishedJob }) {
 
                     {/* Badges */}
                     <div className="flex flex-wrap gap-1 sm:gap-2 mt-3">
-                        {job.isNew && (
-                            <Badge className="bg-blue-600 text-white text-xs sm:text-sm">
-                                {t.jobDetails.new}
-                            </Badge>
-                        )}
-                        {job.isUrgent && (
-                            <Badge className="bg-red-600 text-white text-xs sm:text-sm">
-                                {t.jobDetails.urgent}
-                            </Badge>
-                        )}
+                        {/*{job.isNew && (*/}
+                        {/*    <Badge className="bg-blue-600 text-white text-xs sm:text-sm">*/}
+                        {/*        {t.jobDetails.new}*/}
+                        {/*    </Badge>*/}
+                        {/*)}*/}
+                        {/*{job.isUrgent && (*/}
+                        {/*    <Badge className="bg-red-600 text-white text-xs sm:text-sm">*/}
+                        {/*        {t.jobDetails.urgent}*/}
+                        {/*    </Badge>*/}
+                        {/*)}*/}
                         {job?.tags?.map((tag, index) => (
                             <Badge
                                 key={index}

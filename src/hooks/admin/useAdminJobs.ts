@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { apiRequest } from '@/lib/api/client';
 import { PublishedJob, JobCreatePayload } from '@/types/job';
+import Cookies from "js-cookie";
 
 export type AdminJob = PublishedJob & {
   recruiterName?: string;
@@ -24,6 +25,7 @@ export type PaginatedResponse<T> = {
 export function useAdminJobs() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const token = Cookies.get('access_token');
 
   // const getAuthToken = () => {
   //   if (typeof window === 'undefined') return null;
@@ -59,7 +61,10 @@ export function useAdminJobs() {
     try {
       const data = await apiRequest<PaginatedResponse<AdminJob>>('/admin/jobs', {
         method : 'GET',
-          credentials:'include'
+          credentials:'include',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
       });
       console.log(data);
       return data.content;
@@ -80,6 +85,9 @@ export function useAdminJobs() {
       const createdJob = await apiRequest<AdminJob>('/admin/jobs/create', {
         method: 'POST',
         credentials: 'include',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         body: JSON.stringify(payload),
       });
 
@@ -98,7 +106,10 @@ export function useAdminJobs() {
     try {
       await apiRequest<void>(`/admin/jobs/${id}/publish`, {
         method: 'PATCH',
-        credentials: 'include'
+        credentials: 'include',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
       });
       toast.success('Offre publiée !');
     } catch (err: any) {
@@ -111,6 +122,9 @@ export function useAdminJobs() {
       await apiRequest<void>(`/admin/jobs/${id}`, {
         method: 'DELETE',
         credentials: 'include',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
       });
       toast.success('Offre supprimée.');
     } catch (err: any) {

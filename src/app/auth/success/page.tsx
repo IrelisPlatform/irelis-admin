@@ -37,9 +37,8 @@ export default function AuthSuccessPage() {
         }
 
         if (typeof window !== "undefined") {
-          // localStorage.setItem("accessToken", tokenData.accessToken);
-          // localStorage.setItem("refreshToken", tokenData.refreshToken);
-          // Cookies.set("accessToken", tokenData.accessToken);
+            Cookies.set("access_token", tokenData.accessToken);
+            Cookies.set("refresh_token", tokenData.refreshToken);
           window.location.href = localStorage.getItem("auth_returnTo") || "/";
         }
       } catch (err) {
