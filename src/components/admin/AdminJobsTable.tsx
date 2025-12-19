@@ -223,10 +223,10 @@ export function AdminJobsTable() {
     const filteredJobs = jobs.filter((job) => {
         const matchesSearch =
             job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            job.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            job.location.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesStatus = statusFilter === "all" || job.type === statusFilter;
-        const matchesType = typeFilter === "all" || job.type === typeFilter;
+            job.workCityLocation.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            job.workCityLocation.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStatus = statusFilter === "all" || job.status === statusFilter;
+        const matchesType = typeFilter === "all" || job.status === typeFilter;
         return matchesSearch && matchesStatus && matchesType;
     });
 
