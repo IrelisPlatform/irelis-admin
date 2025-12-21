@@ -17,34 +17,36 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import {
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Briefcase,
-  GraduationCap,
-  Award,
-  Globe,
-  Calendar,
-  DollarSign,
-  FileText,
-  Upload,
-  Save,
-  Eye,
-  EyeOff,
-  Linkedin,
-  Plus,
-  X,
-  TrendingUp,
-  Target,
-  Languages,
-  Sparkles,
-  Trash2,
-  AlertTriangle,
+    User,
+    Mail,
+    Phone,
+    MapPin,
+    Briefcase,
+    GraduationCap,
+    Award,
+    Globe,
+    Calendar,
+    DollarSign,
+    FileText,
+    Upload,
+    Save,
+    Eye,
+    EyeOff,
+    Linkedin,
+    Plus,
+    X,
+    TrendingUp,
+    Target,
+    Languages,
+    Sparkles,
+    Trash2,
+    AlertTriangle, Download,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCandidateProfile } from "@/hooks/candidate/useCandidateProfile";
 import { monthStringToIsoDate } from '@/utils/date';
+import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle} from "../ui/dialog";
+import {Spinner} from "@/components/ui/spinner";
 
 interface Competence {
   id: string;
@@ -132,9 +134,9 @@ export function ProfilCandidat() {
     deleteLetter,
     toggleVisibility,
     deleteSkill,
-    deleteExperience,
-    deleteEducation,
-    deleteLanguage 
+    // deleteExperience,
+    // deleteEducation,
+    // deleteLanguage
   } = useCandidateProfile();
 
   // UI state
@@ -145,10 +147,16 @@ export function ProfilCandidat() {
     if (profile) {
       setProfilVisible(Boolean(profile.isVisible));
     }
-  }, [profile]);
+  }, []);
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [loadingDelete, setLoadingDelete] = useState(false);
+    const [loadingUpload, setLoadingUpload] = useState(false);
+    const [previewOpen, setPreviewOpen] = useState(false);
 
-  // Informations personnelles
+
+    // Informations personnelles
   const [nom, setNom] = useState("");
+  const [emailName,setEmailName] = useState("");
   const [prenom, setPrenom] = useState("");
   const [email, setEmail] = useState("");
   const [telephone, setTelephone] = useState("");
@@ -169,6 +177,7 @@ export function ProfilCandidat() {
   const [mobilite, setMobilite] = useState("");
   const [pretentionsSalariales, setPretentionsSalariales] = useState("");
   const [secteursActivite, setSecteursActivite] = useState<string[]>([]);
+  const [cvUrl,setCVUrl] = useState("");
 
   // Compétences
   const [competences, setCompetences] = useState<Competence[]>([]);
@@ -186,7 +195,6 @@ export function ProfilCandidat() {
   const [vuesProfil] = useState(47);
   const [candidaturesEnvoyees] = useState(12);
 
-  // Initialiser les états locaux depuis le profil backend
   useEffect(() => {
     if (profile) {
       setPrenom(profile.firstName || "");
@@ -199,6 +207,9 @@ export function ProfilCandidat() {
       setLinkedin(profile.linkedInUrl || "");
       setPortfolio(profile.portfolioUrl || "");
       setPitchMail(profile.pitchMail || "");
+      setCVUrl(profile.cvUrl || "");
+      setEmailName(profile.email || "");
+      setTitreProfessionnel(profile.professionalTitle || "");
 
       // Compétences
       setCompetences(profile.skills.map(s => ({
@@ -237,6 +248,27 @@ export function ProfilCandidat() {
     }
   }, [profile]);
 
+
+    const handleUpload = async (file: File) => {
+        setLoadingUpload(true);
+        try {
+            await uploadCV(file);
+            toast.success("CV téléchargé avec succès !");
+        } catch (err: any) {
+            toast.error(err.message || "Erreur lors de l'upload");
+        } finally {
+            setLoadingUpload(false);
+        }
+    };
+
+    const getFileName = (url: string) => {
+        try {
+            const decoded = decodeURIComponent(url.split("/").pop() || "");
+            return decoded.split("?")[0];
+        } catch {
+            return "CV";
+        }
+    };
   const ajouterCompetence = () => {
     setCompetences(prev => [...prev, { id: Date.now().toString(), nom: '', niveau: 'débutant' }]);
   };
@@ -272,6 +304,19 @@ export function ProfilCandidat() {
     }]);
   };
 
+    const confirmDelete = async () => {
+        setLoadingDelete(true);
+        try {
+            await deleteCV();
+            toast.success("CV supprimé");
+            setDeleteModalOpen(false);
+        } catch (err: any) {
+            toast.error(err.message || "Erreur lors de la suppression");
+        } finally {
+            setLoadingDelete(false);
+        }
+    };
+
   const supprimerFormation = (id: string) => {
     setFormations(prev => prev.filter(f => f.id !== id));
   };
@@ -304,9 +349,9 @@ export function ProfilCandidat() {
           availability: disponibilite,
           pretentionsSalarial: pretentionsSalariales,
           country: pays,
-          region: "", // ou "" si non collecté
+          region: "",
           city: ville,
-          sectorIds: [], // ou vide si tu n’as pas les UUIDs
+          sectorIds: [],
           sectors: secteursActivite
         },
         skills: competences.map(c => ({
@@ -316,7 +361,6 @@ export function ProfilCandidat() {
         })),
 
         experiences: experiences.map(e => {
-          // Convertir les dates au bon format
           const startDateIso = e.dateDebut ? monthStringToIsoDate(e.dateDebut) : null;
           let endDateIso: string | null = null;
 
@@ -325,8 +369,6 @@ export function ProfilCandidat() {
           } else if (e.dateFin) {
             endDateIso = monthStringToIsoDate(e.dateFin);
           }
-
-          // Valider que startDate est présent (obligatoire)
           if (!startDateIso) {
             throw new Error(`La date de début de l'expérience "${e.poste}" est invalide.`);
           }
@@ -386,7 +428,6 @@ export function ProfilCandidat() {
 
   return (
     <div className="w-full">
-      {/* En-tête avec bouton Enregistrer */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Mon profil candidat</h1>
@@ -399,7 +440,7 @@ export function ProfilCandidat() {
           className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 flex items-center"
         >
           <Save className="h-4 w-4" />
-          Enregistrer
+            {loading ? 'En cours...' : 'Enregistrer'}
         </Button>
       </div>
 
@@ -450,8 +491,9 @@ export function ProfilCandidat() {
                   <Input
                     id="email"
                     type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={emailName}
+                    onChange={(e) => setEmailName(e.target.value)}
+                    readOnly={true}
                     className="mt-1"
                   />
                 </div>
@@ -522,50 +564,86 @@ export function ProfilCandidat() {
               {/* CV */}
               <div>
                 <Label>CV</Label>
-                <div 
-                  className="border-2 border-dashed border-muted rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer mt-1"
-                  onClick={() => document.getElementById('cv-upload')?.click()}
-                >
-                  <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-foreground">
-                    {profile?.cvUrl 
-                      ? 'CV téléchargé' 
-                      : 'Cliquez pour télécharger votre CV'}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    PDF, DOCX max 5 Mo
-                  </p>
-                  <input
-                    id="cv-upload"
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) uploadCV(file).catch(err => toast.error(err.message));
-                    }}
-                  />
-                </div>
-                {profile?.cvUrl && (
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    className="mt-2"
-                    onClick={async () => {
-                      if (confirm("Supprimer votre CV ?")) {
-                        try {
-                          await deleteCV();
-                          toast.success("CV supprimé");
-                        } catch (err: any) {
-                          toast.error(err.message);
-                        }
-                      }
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" /> Supprimer le CV
-                  </Button>
-                )}
+                  {!profile.cvUrl ? (
+                      <div
+                          className="border-2 border-dashed border-muted rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer mt-1"
+                          onClick={() => document.getElementById('cv-upload')?.click()}
+                      >
+                          {loadingUpload ? (
+                              <Spinner className="mx-auto h-8 w-8 text-muted-foreground" />
+                          ) : (
+                              <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                          )}
+                          <p className="text-sm text-foreground">
+                              {loadingUpload ? "Upload en cours..." : "Cliquez pour télécharger votre CV"}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">PDF, DOCX max 5 Mo</p>
+                          <input
+                              id="cv-upload"
+                              type="file"
+                              accept=".pdf,.doc,.docx"
+                              className="hidden"
+                              onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleUpload(file);
+                              }}
+                          />
+                      </div>
+                  ) : (
+                      <div className="mt-2 flex flex-col gap-2 border rounded-lg p-4 bg-gray-50">
+                          <p className="text-sm font-medium truncate">{getFileName(profile.cvUrl)}</p>
+                          <div className="flex gap-2">
+                              <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => window.open(profile.cvUrl, "_blank")}
+                              >
+                                  <Eye className="w-4 h-4 mr-1" /> Voir
+                              </Button>
+                              <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => {
+                                      const link = document.createElement("a");
+                                      link.href = profile.cvUrl;
+                                      link.download = getFileName(profile.cvUrl);
+                                      link.click();
+                                  }}
+                              >
+                                  <Download className="w-4 h-4 mr-1" /> Télécharger
+                              </Button>
+                              <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => setDeleteModalOpen(true)}
+                              >
+                                  <Trash2 className="h-4 w-4" /> Supprimer
+                              </Button>
+                          </div>
+
+                          {/* Modal suppression */}
+                          <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+                              <DialogContent>
+                                  <DialogHeader>
+                                      <DialogTitle>Supprimer le CV</DialogTitle>
+                                      <DialogDescription>
+                                          Cette action est irréversible. Êtes-vous sûr ?
+                                      </DialogDescription>
+                                  </DialogHeader>
+                                  <div className="flex justify-end gap-2 pt-4">
+                                      <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>Annuler</Button>
+                                      <Button
+                                          variant="destructive"
+                                          onClick={confirmDelete}
+                                          disabled={loadingDelete}
+                                      >
+                                          {loadingDelete ? "Suppression..." : "Supprimer"}
+                                      </Button>
+                                  </div>
+                              </DialogContent>
+                          </Dialog>
+                      </div>
+                  )}
               </div>
 
               {/* Lettre */}
@@ -1132,13 +1210,13 @@ Disponible immédiatement et mobile sur toute l'Afrique Centrale, je reste à vo
               <div>
                 <Label htmlFor="linkedin">LinkedIn</Label>
                 <div className="flex gap-2">
-                  <Linkedin className="h-10 w-10 text-[#0077B5] mt-1" />
+                  {/*<Linkedin className="h-10 w-10 text-[#0077B5] mt-1" />*/}
                   <Input
                     id="linkedin"
                     value={linkedin}
                     onChange={(e) => setLinkedin(e.target.value)}
                     placeholder="linkedin.com/in/votre-profil"
-                    className="flex-1"
+                    className="flex-1 mt-2"
                   />
                 </div>
               </div>
@@ -1149,6 +1227,7 @@ Disponible immédiatement et mobile sur toute l'Afrique Centrale, je reste à vo
                   value={portfolio}
                   onChange={(e) => setPortfolio(e.target.value)}
                   placeholder="https://votre-site.com"
+                  className="flex-1 mt-2"
                 />
               </div>
             </div>

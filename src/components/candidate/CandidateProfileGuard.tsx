@@ -49,6 +49,5 @@ export function CandidateProfileGuard({ children }: { children: React.ReactNode 
     return <>{children}</>;
   }
 
-  // Si profil n'existe pas, on reste sur la même page (onboarding intégré dans ProfilCandidat)
   return <>{children}</>;
 }

@@ -119,7 +119,10 @@ export function Header() {
     };
 
     useEffect(() => {
-        fetchUser();
+
+        if(Cookies.get("access_token")){
+            fetchUser();
+        }
     }, []);
 
 

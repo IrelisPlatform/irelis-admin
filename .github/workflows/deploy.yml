@@ -1,12 +1,5 @@
-Workflow CI/CD GitHub Actions (deploy.yml)**
+name: CI/CD GitHub Actions
 
-Créer ce fichier :  
-`.github/workflows/deploy.yml`
-
----
-
-```yaml
-name: 🚀 Deploy to Vercel
 
 on:
   push:

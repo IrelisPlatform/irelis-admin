@@ -3,6 +3,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Cookies from "js-cookie";
+import {toast} from "sonner";
+import api from "@/services/axiosClient";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL
 if (!API_BASE_URL) {
@@ -62,6 +64,7 @@ export interface CandidateProfile {
   firstName: string;
   lastName: string;
   presentation: string;
+  email: string;
   phoneNumber: string;
   schoolLevel: string;
   experienceLevel: string;
@@ -98,82 +101,72 @@ export function useCandidateProfile() {
   // ------------------------
   // CHARGER LE PROFIL COMPLET
   // ------------------------
-  const loadProfile = useCallback(async () => {
+    const loadProfile = useCallback(async () => {
+        setLoading(true);
+        setError(null);
 
-    setLoading(true);
-    setError(null);
+        try {
+            const res = await api.get<CandidateProfile>("/api/v1/profile");
+            console.log(res.data);
+            setProfile(res.data);
+        } catch (err: any) {
+            if (err.response?.status === 404) {
+                setProfile({
+                    id: "",
+                    professionalTitle: "",
+                    firstName: "",
+                    lastName: "",
+                    presentation: "",
+                    email:"",
+                    phoneNumber: "",
+                    schoolLevel: "",
+                    experienceLevel: "",
+                    avatarUrl: null,
+                    birthDate: new Date().toISOString(),
+                    linkedInUrl: "",
+                    portfolioUrl: "",
+                    country: "",
+                    region: "",
+                    city: "",
+                    cvUrl: null,
+                    motivationLetterUrl: null,
+                    pitchMail: "",
+                    skills: [],
+                    educations: [],
+                    languages: [],
+                    experiences: [],
+                    createdAt: "",
+                    updatedAt: ""
+                });
+            } else if (err.response?.status === 401) {
+                setError("Session expirée");
+            } else {
+                setError("Échec du chargement du profil");
+            }
+            console.error("Erreur chargement profil", err);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
 
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/v1/profile`, {
-        method: "GET",
-        credentials:"include",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          }
-      });
+    const saveProfile = async (updates: Partial<CandidateProfile>) => {
+        try {
+            setLoading(true);
+            const res = await api.patch<CandidateProfile>("/api/v1/profile", updates);
+            setProfile(res.data);
+            return res.data;
+        } catch (err: any) {
+            console.error("Erreur sauvegarde profil :", err);
+            const message = err.response?.data?.message || "Échec de la sauvegarde";
+            throw new Error(message);
+        }
+        finally {
+            setLoading(false);
+        }
+    };
 
-      if (res.ok) {
-        const data: CandidateProfile = await res.json();
-        setProfile(data);
-      } else if (res.status === 404) {
-        setProfile({
-          id: "",
-          professionalTitle: "",
-          firstName: "",
-          lastName: "",
-          presentation: "",
-          phoneNumber: "",
-          schoolLevel: "",
-          experienceLevel: "",
-          avatarUrl: null,
-          birthDate: new Date().toISOString(),
-          linkedInUrl: "",
-          portfolioUrl: "",
-          country: "",
-          region: "",
-          city: "",
-          cvUrl: null,
-          motivationLetterUrl: null,
-          pitchMail: "",
-          skills: [],
-          educations: [],
-          languages: [],
-          experiences: [],
-          createdAt: "",
-          updatedAt: ""
-        });
-      } else {
-        const msg = res.status === 401 ? "Session expirée" : "Échec du chargement du profil";
-        throw new Error(msg);
-      }
-    } catch (err: any) {
-      setError(err.message || "Erreur inconnue");
-      console.error("Erreur chargement profil", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
-  const saveProfile = async (updates: Partial<CandidateProfile>) => {
-      const res = await fetch(`${API_BASE_URL}/api/v1/profile`, {
-        method: "PATCH",
-       credentials:"include",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        body: JSON.stringify({ data: updates })
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || "Échec de la sauvegarde");
-      }
-
-      const updated: CandidateProfile = await res.json();
-      setProfile(updated);
-  };
-
-  const saveJobPreferences = async (preferences: {
+    const saveJobPreferences = async (preferences: {
     desiredPosition: string;
     contractTypes: string[];
     availability: string;
@@ -232,6 +225,7 @@ export function useCandidateProfile() {
 
     const formData = new FormData();
     formData.append("file", file);
+    console.log(formData.get('file'));
 
     const res = await fetch(`${API_BASE_URL}/api/v1/cv`, {
       method: "POST",
@@ -246,6 +240,8 @@ export function useCandidateProfile() {
       const errorData = await res.json().catch(() => ({}));
       throw new Error(errorData.message || "Échec upload CV");
     }
+
+    toast.success("Cv uploade avec succes");
 
     const data = await res.json();
     if (profile) {
@@ -272,6 +268,7 @@ export function useCandidateProfile() {
     if (profile) {
       setProfile({ ...profile, cvUrl: null });
     }
+
   };
 
   // ------------------------
@@ -389,7 +386,7 @@ export function useCandidateProfile() {
   // ------------------------
   useEffect(() => {
     loadProfile();
-  }, [loadProfile]);
+  }, []);
 
   return {
     profile,
