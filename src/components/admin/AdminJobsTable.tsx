@@ -1018,7 +1018,6 @@ export function AdminJobsTable() {
                             <TableHead>Nom de l'entreprise</TableHead>
                             <TableHead>Localisation</TableHead>
                             <TableHead>Type de contrat</TableHead>
-                            <TableHead>Documents Requis</TableHead>
                             <TableHead>Statut</TableHead>
                             <TableHead>Date de publication</TableHead>
                             <TableHead>Date d'expiration</TableHead>
