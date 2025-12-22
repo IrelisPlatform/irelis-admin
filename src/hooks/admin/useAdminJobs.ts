@@ -82,6 +82,7 @@ export function useAdminJobs() {
 
     setLoading(true);
     try {
+        console.log(payload);
       const createdJob = await apiRequest<AdminJob>('/admin/jobs/create', {
         method: 'POST',
         credentials: 'include',

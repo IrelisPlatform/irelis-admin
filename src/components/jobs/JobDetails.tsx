@@ -174,14 +174,15 @@ export default function JobDetails({ job }: { job: PublishedJob }) {
                                 {t.jobDetails.responsibilities}
                             </AccordionTrigger>
                             <AccordionContent>
-                                <ul className="list-disc ml-4 space-y-1 text-gray-600">
-                                    {(job?.responsibilities || []).map((r, idx) => (
-                                        <li key={idx} className="flex items-start gap-2 break-words">
-                                            <span className="w-1.5 h-1.5 bg-[#1e3a8a] rounded-full mt-2 flex-shrink-0"></span>
-                                            <span>{r}</span>
-                                        </li>
-                                    ))}
-                                </ul>
+                                {/*<ul className="list-disc ml-4 space-y-1 text-gray-600">*/}
+                                {/*    {(job?.responsibilities || []).map((r, idx) => (*/}
+                                {/*        <li key={idx} className="flex items-start gap-2 break-words">*/}
+                                {/*            <span className="w-1.5 h-1.5 bg-[#1e3a8a] rounded-full mt-2 flex-shrink-0"></span>*/}
+                                {/*            <span>{r}</span>*/}
+                                {/*        </li>*/}
+                                {/*    ))}*/}
+                                {/*</ul>*/}
+                                {job.responsibilities}
                             </AccordionContent>
                         </AccordionItem>
 
@@ -190,14 +191,15 @@ export default function JobDetails({ job }: { job: PublishedJob }) {
                                 {t.jobDetails.qualifications}
                             </AccordionTrigger>
                             <AccordionContent>
-                                <ul className="list-disc ml-4 space-y-1 text-gray-600">
-                                    {(job?.qualifications || []).map((q, idx) => (
-                                        <li key={idx} className="flex items-start gap-2 break-words">
-                                            <span className="w-1.5 h-1.5 bg-[#1e3a8a] rounded-full mt-2 flex-shrink-0"></span>
-                                            <span>{q}</span>
-                                        </li>
-                                    ))}
-                                </ul>
+                                {/*<ul className="list-disc ml-4 space-y-1 text-gray-600">*/}
+                                {/*    {(job?.qualifications || []).map((q, idx) => (*/}
+                                {/*        <li key={idx} className="flex items-start gap-2 break-words">*/}
+                                {/*            <span className="w-1.5 h-1.5 bg-[#1e3a8a] rounded-full mt-2 flex-shrink-0"></span>*/}
+                                {/*            <span>{q}</span>*/}
+                                {/*        </li>*/}
+                                {/*    ))}*/}
+                                {/*</ul>*/}
+                                {job.qualifications}
                             </AccordionContent>
                         </AccordionItem>
 
@@ -207,15 +209,16 @@ export default function JobDetails({ job }: { job: PublishedJob }) {
                             </AccordionTrigger>
                             <AccordionContent>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    {(job?.benefits || []).map((b, idx) => (
-                                        <div
-                                            key={idx}
-                                            className="flex items-center gap-2 p-2 bg-green-50 rounded-lg border border-green-100 text-green-800"
-                                        >
-                                            <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                                            <span className="break-words">{b}</span>
-                                        </div>
-                                    ))}
+                                    {/*{(job?.benefits || []).map((b, idx) => (*/}
+                                    {/*    <div*/}
+                                    {/*        key={idx}*/}
+                                    {/*        className="flex items-center gap-2 p-2 bg-green-50 rounded-lg border border-green-100 text-green-800"*/}
+                                    {/*    >*/}
+                                    {/*        <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />*/}
+                                    {/*        <span className="break-words">{b}</span>*/}
+                                    {/*    </div>*/}
+                                    {/*))}*/}
+                                    {job.benefits}
                                 </div>
                             </AccordionContent>
                         </AccordionItem>

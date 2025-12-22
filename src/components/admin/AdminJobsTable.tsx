@@ -256,10 +256,6 @@ export function AdminJobsTable() {
         }
 
         const validTags = newJob.tagDto.filter(tag => tag.name?.trim());
-        if (validTags.length === 0) {
-            toast.error("Au moins un mot-clé est requis.");
-            return;
-        }
 
         if (newJob.requiredDocuments.length === 0) {
             toast.error("Au moins un document requis est requis.");
@@ -305,11 +301,11 @@ export function AdminJobsTable() {
                 name: tag.name.trim(),
                 type: tag.type.trim(),
             }));
-
-        if (cleanTagDto.length === 0) {
-            toast.error("Au moins un mot-clé doit avoir un type.");
-            return;
-        }
+        //
+        // if (cleanTagDto.length === 0) {
+        //     toast.error("Au moins un mot-clé doit avoir un type.");
+        //     return;
+        // }
 
         // Préparer le payload exactement comme attendu par Swagger
         const payload = {
@@ -553,7 +549,7 @@ export function AdminJobsTable() {
                                             />
                                         </div>
                                         <div>
-                                            <Label className="mb-2">Description</Label>
+                                            <Label className="mb-2">Description<span className="text-red-500">*</span></Label>
                                             <Textarea
                                                 value={newJob.description}
                                                 placeholder="Vous intégrerez l’équipe plateforme pour concevoir, développer et maintenir des systèmes distribués performants et résilients. Vous travaillerez sur des features critiques, performance et scalabilité."
@@ -562,6 +558,29 @@ export function AdminJobsTable() {
                                             />
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label className="mb-2">
+                                                    Pays <span className="text-red-500">*</span>
+                                                </Label>
+                                                <Select
+                                                    value={newJob.workCountryLocation}
+                                                    onValueChange={(v) => {
+                                                        setNewJob({...newJob, workCountryLocation: v});
+                                                        setSelectedCountry(v);
+                                                    }}
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Sélectionnez un pays"/>
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {COUNTRIES.map((country) => (
+                                                            <SelectItem key={country} value={country}>
+                                                                {country}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
                                             <div className="space-y-2">
                                                 <Label className="mb-2">
                                                     Ville <span className="text-red-500">*</span>
@@ -588,29 +607,7 @@ export function AdminJobsTable() {
                                                     </SelectContent>
                                                 </Select>
                                             </div>
-                                            <div className="space-y-2">
-                                                <Label className="mb-2">
-                                                    Pays <span className="text-red-500">*</span>
-                                                </Label>
-                                                <Select
-                                                    value={newJob.workCountryLocation}
-                                                    onValueChange={(v) => {
-                                                        setNewJob({...newJob, workCountryLocation: v});
-                                                        setSelectedCountry(v); // pour filtrer les villes
-                                                    }}
-                                                >
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Sélectionnez un pays"/>
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {COUNTRIES.map((country) => (
-                                                            <SelectItem key={country} value={country}>
-                                                                {country}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
+
                                         </div>
                                         <div>
                                             <Label className="mb-2">
@@ -822,7 +819,7 @@ export function AdminJobsTable() {
 
                                         {/* Gestion des tags (compétences, outils, domaines) */}
                                         <div className="space-y-3">
-                                            <Label className="mb-2">Mots-clés <span className="text-red-500">*</span></Label>
+                                            <Label className="mb-4">Tags(utile pour le referencement mais pas obligatoire) </Label>
                                             {/* Nouveau tag */}
                                             <div className="grid grid-cols-3 gap-2">
                                                 <Select value={newTagType}
@@ -1018,8 +1015,10 @@ export function AdminJobsTable() {
                     <TableHeader>
                         <TableRow className="bg-muted/50">
                             <TableHead>Titre</TableHead>
+                            <TableHead>Nom de l'entreprise</TableHead>
                             <TableHead>Localisation</TableHead>
                             <TableHead>Type de contrat</TableHead>
+                            <TableHead>Documents Requis</TableHead>
                             <TableHead>Statut</TableHead>
                             <TableHead>Date de publication</TableHead>
                             <TableHead>Date d'expiration</TableHead>
@@ -1039,6 +1038,7 @@ export function AdminJobsTable() {
                             filteredJobs.map((job: PublishedJob) => (
                                 <TableRow key={job.id}>
                                     <TableCell className="font-medium">{job.title}</TableCell>
+                                    <TableCell className="font-medium">{job.companyName}</TableCell>
                                     <TableCell>{job.workCityLocation}, {job.workCountryLocation}</TableCell>
                                     <TableCell>
                                         <Badge variant="outline">{job.contractType}</Badge>

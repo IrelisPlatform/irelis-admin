@@ -56,10 +56,9 @@ export interface PublishedJob {
     companySize?: string;
     companyLogo?: string;
     tags: string[];
-
-    responsibilities: string[];
-    qualifications: string[];
-    benefits: string[];
+    responsibilities: string;
+    qualifications: string;
+    benefits: string;
 }
 
 // 🔹 Pour les réponses paginées (réutilisable partout)
