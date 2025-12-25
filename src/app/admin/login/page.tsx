@@ -45,8 +45,8 @@ export default function AdminLoginPage() {
 
             const data = await res.json();
 
-            Cookies.set("access_token", data.accessToken);
-            Cookies.set("refresh_token", data.refreshToken);
+            Cookies.set("access_token", data.accessToken,{secure:true});
+            Cookies.set("refresh_token", data.refreshToken,{secure:true});
             Cookies.set("admin_session","true")
 
             router.push("/admin");

@@ -86,6 +86,7 @@ const transformJob = (job: BackendPublishedJob): PublishedJob => {
         responsibilities: parseListFromString(job.responsibilities),
         qualifications: parseListFromString(job.requirements),
         benefits: parseListFromString(job.benefits),
+        requiredDocuments:job.requiredDocuments,
     };
 };
 

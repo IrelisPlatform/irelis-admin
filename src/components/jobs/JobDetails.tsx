@@ -11,11 +11,18 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import { PublishedJob } from "@/types/job";
 import { useLanguage } from "@/context/LanguageContext";
 import {formatDateRelative, formatDateShort} from "@/services/date";
+import {ReadonlyEditor} from "@/components/ReadonlyEditor";
 
 
 export default function JobDetails({ job }: { job: PublishedJob }) {
     const { t } = useLanguage();
     const [isBookmarked, setIsBookmarked] = useState(false);
+    const documentLabels: Record<string, string> = {
+        CV: "Curriculum Vitae",
+        COVER_LETTER: "Lettre de motivation",
+        PORTFOLIO: "Portfolio",
+        IDENTITY_CARD:"Carte d'identite"
+    }
 
     const handleApply = () => {
         alert("Fonctionnalité de candidature bientôt disponible !");
@@ -48,18 +55,23 @@ export default function JobDetails({ job }: { job: PublishedJob }) {
                     className="mb-6"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4 }}
-                >
+                    transition={{ duration: 0.4 }}>
                     <motion.div
-                        className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-[#1e3a8a] to-[#2563eb] rounded-2xl flex items-center justify-center text-white mb-4 shadow-xl"
-                        whileHover={{ scale: 1.05, rotate: 2 }}
-                        transition={{ type: "spring", stiffness: 300 }}
-                    >
-            <span className="text-lg sm:text-2xl select-none">
-              {displayCompany.substring(0, 2).toUpperCase()}
-            </span>
-                    </motion.div>
+                        className="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:shadow-2xl transition-all duration-300 overflow-hidden "
+                        whileHover={{scale: 1.05, rotate: 2}}
+                        transition={{type: "spring", stiffness: 300}}>
 
+                        {job.companyLogo ? (
+                            <img
+                                src={job.companyLogo}
+                                alt={`Logo ${job.company}`}
+                                className="w-full h-full object-contain"
+                                loading="lazy"
+                            />
+                        ) : (
+                            <span className="text-white font-semibold text-lg select-none">{job.company.substring(0, 2).toUpperCase()}</span>
+                        )}
+                    </motion.div>
                     <h2 className="text-xl sm:text-2xl mb-2 text-[#1e3a8a] break-words">
                         {job.title}
                     </h2>
@@ -77,7 +89,7 @@ export default function JobDetails({ job }: { job: PublishedJob }) {
                                     icon: Clock,
                                     text: job.expirationDate
                                         ? formatDateShort(job.expirationDate)
-                                        : "Date d’expiration non précisée"
+                                        : "Postuler au plus tot"
                                 },
                                 {
                                     icon: Calendar,
@@ -108,11 +120,11 @@ export default function JobDetails({ job }: { job: PublishedJob }) {
                         {/*        {t.jobDetails.new}*/}
                         {/*    </Badge>*/}
                         {/*)}*/}
-                        {/*{job.isUrgent && (*/}
-                        {/*    <Badge className="bg-red-600 text-white text-xs sm:text-sm">*/}
-                        {/*        {t.jobDetails.urgent}*/}
-                        {/*    </Badge>*/}
-                        {/*)}*/}
+                        {job.isUrgent && (
+                            <Badge className="bg-red-300 text-white text-xs sm:text-sm">
+                                {t.jobDetails.urgent}
+                            </Badge>
+                        )}
                         {job?.tags?.map((tag, index) => (
                             <Badge
                                 key={index}
@@ -163,9 +175,15 @@ export default function JobDetails({ job }: { job: PublishedJob }) {
                         <h3 className="mb-3 text-[#1e3a8a] flex items-center gap-2">
                             <Info className="w-4 h-4" /> {t.jobDetails.description}
                         </h3>
-                        <p className="text-gray-600 leading-relaxed break-words">
-                            {job.description || "Aucune description fournie."}
-                        </p>
+                        {job.description ? (
+                            <ReadonlyEditor
+                                value={JSON.parse(job.description)}
+                                namespace={`job-description-${job.id}`}
+                            />
+                        ) : (
+                            <p className="text-gray-600">Aucune description fournie.</p>
+                        )}
+
                     </div>
 
                     <Accordion type="single" collapsible className="w-full space-y-3">
@@ -182,7 +200,14 @@ export default function JobDetails({ job }: { job: PublishedJob }) {
                                 {/*        </li>*/}
                                 {/*    ))}*/}
                                 {/*</ul>*/}
-                                {job.responsibilities}
+                                {job.responsibilities ? (
+                                    <ReadonlyEditor
+                                        value={JSON.parse(job.responsibilities)}
+                                        namespace={`job-responsabilities-${job.id}`}
+                                    />
+                                ) : (
+                                    "Aucune description fournie."
+                                )}
                             </AccordionContent>
                         </AccordionItem>
 
@@ -199,7 +224,14 @@ export default function JobDetails({ job }: { job: PublishedJob }) {
                                 {/*        </li>*/}
                                 {/*    ))}*/}
                                 {/*</ul>*/}
-                                {job.qualifications}
+                                {job.qualifications ? (
+                                    <ReadonlyEditor
+                                        value={JSON.parse(job.qualifications)}
+                                        namespace={`job-qualifications-${job.id}`}
+                                    />
+                                ) : (
+                                    <p className="text-gray-600">Aucune qualification fournie.</p>
+                                )}
                             </AccordionContent>
                         </AccordionItem>
 
@@ -218,10 +250,34 @@ export default function JobDetails({ job }: { job: PublishedJob }) {
                                     {/*        <span className="break-words">{b}</span>*/}
                                     {/*    </div>*/}
                                     {/*))}*/}
-                                    {job.benefits}
+                                    {job.benefits ? (
+                                        <ReadonlyEditor
+                                            value={JSON.parse(job.benefits)}
+                                            namespace={`job-description-${job.id}`}
+                                        />
+                                    ) : (
+                                        <p className="text-gray-600">Non specifie</p>
+                                    )}
                                 </div>
                             </AccordionContent>
                         </AccordionItem>
+                        <AccordionItem value="benefits">
+                            <AccordionTrigger className="text-[#1e3a8a] text-sm sm:text-base">
+                                Documents de candidatures
+                            </AccordionTrigger>
+                            <AccordionContent>
+                                <div className="grid grid-cols-1 gap-2">
+                                    {job.requiredDocuments.map((doc) => (
+                                        <ul key={doc.type}>
+                                            <li>{documentLabels[doc.type]}</li>
+                                        </ul>
+                                    ))}
+                                </div>
+                            </AccordionContent>
+                        </AccordionItem>
+
+
+
                     </Accordion>
 
                     <Separator />
@@ -235,7 +291,7 @@ export default function JobDetails({ job }: { job: PublishedJob }) {
                         </p>
                         <div className="grid grid-cols-2 gap-2 text-gray-600 text-xs sm:text-sm">
                             <p><span className="font-medium">{t.jobDetails.sector}</span> {job.sector}</p>
-                            <p><span className="font-medium">{t.jobDetails.companySize}</span> {job.companySize ? job.companySize +' employes' : "-"}</p>
+                            <p><span className="font-medium">{t.jobDetails.companySize}</span> {job.companySize ? job.companySize : "-"}</p>
                         </div>
                     </div>
                 </motion.div>

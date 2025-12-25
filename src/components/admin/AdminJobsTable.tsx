@@ -37,6 +37,10 @@ import {getSkillsForSector, EDUCATION_LEVELS, EXPERIENCE_OPTIONS} from '@/lib/jo
 import {TAG_NAMES, TagType} from '@/lib/jobTags';
 import {formatDateLong, formatDateRelative, formatDateShort} from "@/services/date";
 import {Spinner} from "@/components/ui/spinner";
+import CkEditor from "@/components/CkEditor";
+import TiptapEditor from "@/components/TiptapEditor";
+import {SerializedEditorState} from "lexical";
+import {Editor} from "@/components/blocks/editor-00/editor";
 
 const STEPS = [
     {id: 1, name: "Création de l'entreprise"},
@@ -49,6 +53,8 @@ type TagDto = {
     name: string;
     type: "domain" | "skill" | "tool";
 };
+
+
 
 
 
@@ -67,16 +73,17 @@ const INITIAL_JOB_STATE = {
     companyName: "",
     companyEmail: "",
     companyDescription: "",
+    companyLength:"",
     sectorId: "",
 
     // Champs offre
     title: "",
-    description: "",
+    description: null as SerializedEditorState | null,
     workCountryLocation: "",
     workCityLocation: "",
-    responsibilities: "",
-    requirements: "",
-    benefits: "",
+    responsibilities: null as SerializedEditorState | null,
+    requirements: null as SerializedEditorState | null,
+    benefits: null as SerializedEditorState | null ,
     contractType: "CDI" as const,
     status: "PENDING" as const,
     jobType: "FULL_TIME" as const,
@@ -95,6 +102,61 @@ const INITIAL_JOB_STATE = {
 export function AdminJobsTable() {
     const router = useRouter();
     const {sectors, loading: sectorsLoading} = useSectors();
+    const [companyLogo, setCompanyLogo] = useState<File | null>(null);
+
+
+    function setJobField<K extends keyof typeof INITIAL_JOB_STATE>(
+        field: K,
+        value: (typeof INITIAL_JOB_STATE)[K]
+    ) {
+        setNewJob((prev) => ({
+            ...prev,
+            [field]: value,
+        }))
+    }
+    const companySizeRanges = [
+        "1 - 10 employés",
+        "11 - 50 employés",
+        "51 - 200 employés",
+        "201 - 500 employés",
+        "501 - 1000 employés",
+        "1001 - 5000 employés",
+        "5001 - 10 000 employés",
+        "Plus de 10 000 employés",
+    ];
+
+    const initialValue = {
+        root: {
+            children: [
+                {
+                    children: [
+                        {
+                            detail: 0,
+                            format: 0,
+                            mode: "normal",
+                            style: "",
+                            text: "Hello World ",
+                            type: "text",
+                            version: 1,
+                        },
+                    ],
+                    direction: "ltr",
+                    format: "",
+                    indent: 0,
+                    type: "paragraph",
+                    version: 1,
+                },
+            ],
+            direction: "ltr",
+            format: "",
+            indent: 0,
+            type: "root",
+            version: 1,
+        },
+    } as unknown as SerializedEditorState
+    const [editorState, setEditorState] =
+        useState<SerializedEditorState>(initialValue)
+
     const {
         getAllJobs,
         createJob,
@@ -102,6 +164,14 @@ export function AdminJobsTable() {
         deleteJob,
         loading:jobLoading,
     } = useAdminJobs();
+
+    // const handleEditorUpdate = (content: string) => {
+    //     setNewJob(prev => ({
+    //         ...prev,
+    //         description: content,
+    //     }));
+    // };
+
 
 
     const [jobs, setJobs] = useState<PublishedJob[]>([]);
@@ -114,6 +184,16 @@ export function AdminJobsTable() {
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [jobToDelete, setJobToDelete] = useState<string | null>(null);
     const [newJob, setNewJob] = useState(INITIAL_JOB_STATE);
+
+
+    const salaryRanges: string[] = []
+
+    for (let start = 50000; start < 1000000; start += 100000) {
+        const end = start + 50000
+        salaryRanges.push(`${start.toLocaleString()} - ${end.toLocaleString()} FCFA`)
+    }
+
+
 
 
 
@@ -261,39 +341,33 @@ export function AdminJobsTable() {
             toast.error("Au moins un document requis est requis.");
             return;
         }
-
-        // if (selectedSkills.length === 0 || !newJob.requirements.trim()) {
-        //     toast.error("Au moins une compétence est requise.");
-        //     return;
-        // }
-
         // Validation champs offre
         if (
             !newJob.title.trim() ||
-            !newJob.description.trim() ||
+            !newJob.description ||
             !newJob.workCityLocation.trim() ||
             !newJob.workCountryLocation.trim() ||
-            !newJob.responsibilities.trim() ||
-            !newJob.requirements.trim() ||
+            !newJob.responsibilities ||
+            !newJob.requirements ||
             !newJob.contractType ||
             !newJob.jobType ||
-            !newJob.expirationDate ||
             !newJob.requiredLanguage.trim()
         ) {
             toast.error("Veuillez remplir tous les champs obligatoires.");
             return;
         }
 
-        // Vérifier que expirationDate est dans le futur
-        const now = new Date();
-        const expDate = new Date(newJob.expirationDate);
-        if (isNaN(expDate.getTime())) {
-            toast.error("Date d'expiration invalide.");
-            return;
-        }
-        expDate.setHours(23, 59, 59, 999);
-        const expirationDateISO = expDate.toISOString();
+        let expirationDateISO: string | null = null;
 
+        if (newJob.expirationDate) {
+            const expDate = new Date(newJob.expirationDate);
+            if (!isNaN(expDate.getTime())) {
+                expDate.setHours(23, 59, 59, 999);
+                expirationDateISO = expDate.toISOString();
+            } else {
+                toast.error("Date d'expiration invalide.");
+            }
+        }
 
         const cleanTagDto = validTags
             .filter(tag => tag.type?.trim())
@@ -311,29 +385,45 @@ export function AdminJobsTable() {
         const payload = {
             companyName: newJob.companyName.trim(),
             companyDescription: newJob.companyDescription.trim(),
+            companyLength: newJob.companyLength,
             sectorId: newJob.sectorId,
             companyEmail: newJob.companyEmail?.trim() || undefined,
             title: newJob.title.trim(),
-            description: newJob.description.trim(),
+            description: JSON.stringify(newJob.description),
             workCountryLocation: newJob.workCountryLocation,
             workCityLocation: newJob.workCityLocation,
-            responsibilities: newJob.responsibilities.trim(),
-            requirements: newJob.requirements.trim(),
-            benefits: newJob.benefits?.trim() || undefined,
+            responsibilities: JSON.stringify(newJob.responsibilities),
+            requirements: JSON.stringify(newJob.requirements),
+            benefits: JSON.stringify(newJob.benefits),
             contractType: newJob.contractType,
             jobType: newJob.jobType,
-            salary: newJob.salary?.trim() || undefined,
+            salary: newJob.salary ,
             isUrgent: newJob.isUrgent,
             isFeatured: newJob.isFeatured,
-            expirationDate: expirationDateISO,
+            expirationDate: expirationDateISO ,
             requiredLanguage: newJob.requiredLanguage.trim(),
             postNumber: newJob.postNumber || 1,
             tagDto: cleanTagDto,
             requiredDocuments: newJob.requiredDocuments,
         };
 
+        const formData = new FormData();
+
+        // formData.append("data", JSON.stringify(payload));
+
+
+        formData.append(
+            "data",
+            new Blob([JSON.stringify(payload)], {
+                type: "application/json",
+            })
+        );
+        if (companyLogo) {
+            formData.append("file", companyLogo);
+        }
+
         try {
-            await createJob(payload);
+            await createJob(formData);
             // Recharger la liste
             const updatedJobs = await getAllJobs();
             setJobs(updatedJobs);
@@ -396,6 +486,7 @@ export function AdminJobsTable() {
     // @ts-ignore
     return (
         <div className="space-y-4">
+
             {/* Alerte */}
             <Alert className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-300">
                 <ShieldCheck className="h-5 w-5 text-green-600"/>
@@ -476,6 +567,36 @@ export function AdminJobsTable() {
                                 {currentStep === 1 && (
                                     <div className="space-y-4">
                                         <div>
+                                            <Label className="mb-2">Logo de l’entreprise</Label>
+                                            <Input
+                                                type="file"
+                                                accept="image/png,image/jpeg,image/webp"
+                                                onChange={(e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file) {
+                                                        setCompanyLogo(file);
+                                                    }
+                                                }}
+                                            />
+                                            {companyLogo && (
+                                                <div className="mt-3 flex items-center gap-3">
+                                                    <img
+                                                        src={URL.createObjectURL(companyLogo)}
+                                                        alt="Logo entreprise"
+                                                        className="w-16 h-16 rounded-lg object-cover border"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setCompanyLogo(null)}
+                                                        className="text-sm text-red-500 hover:underline"
+                                                    >
+                                                        Supprimer
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div>
                                             <Label className="mb-2">
                                                 Nom de l'entreprise <span className="text-red-500">*</span>
                                             </Label>
@@ -532,6 +653,24 @@ export function AdminJobsTable() {
                                                 </SelectContent>
                                             </Select>
                                         </div>
+                                        <div>
+                                            <Label className="mb-2">Taille de l'entreprise</Label>
+                                            <Select
+                                                value={newJob.companyLength}
+                                                onValueChange={(v) => setNewJob({ ...newJob, companyLength: v })}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Sélectionner la taille de l’entreprise" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {companySizeRanges.map((range) => (
+                                                        <SelectItem key={range} value={range}>
+                                                            {range}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
                                     </div>
                                 )}
 
@@ -540,7 +679,7 @@ export function AdminJobsTable() {
                                     <div className="space-y-4">
                                         <div>
                                             <Label className="mb-2">
-                                                Titre <span className="text-red-500">*</span>
+                                                Titre de l'offre <span className="text-red-500">*</span>
                                             </Label>
                                             <Input
                                                 value={newJob.title}
@@ -549,14 +688,19 @@ export function AdminJobsTable() {
                                             />
                                         </div>
                                         <div>
-                                            <Label className="mb-2">Description<span className="text-red-500">*</span></Label>
-                                            <Textarea
-                                                value={newJob.description}
-                                                placeholder="Vous intégrerez l’équipe plateforme pour concevoir, développer et maintenir des systèmes distribués performants et résilients. Vous travaillerez sur des features critiques, performance et scalabilité."
-                                                onChange={(e) => setNewJob({...newJob, description: e.target.value})}
-                                                rows={3}
+                                            <Label className="mb-2">
+                                                Description de l'offre <span className="text-red-500">*</span>
+                                            </Label>
+
+                                            <Editor
+                                                editorSerializedState={newJob.description ?? undefined}
+                                                onSerializedChange={(value) =>
+                                                    setJobField("description", value)
+                                                }
                                             />
+
                                         </div>
+
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <Label className="mb-2">
@@ -611,7 +755,7 @@ export function AdminJobsTable() {
                                         </div>
                                         <div>
                                             <Label className="mb-2">
-                                                Date d'expiration <span className="text-red-500">*</span>
+                                                Date d'expiration
                                             </Label>
                                             <Input
                                                 type="date"
@@ -647,174 +791,56 @@ export function AdminJobsTable() {
                                         {/* Missions */}
                                         <div className="space-y-2">
                                             <Label className="mb-2">Missions <span className="text-red-500">*</span></Label>
-                                            <Textarea
-                                                value={newJob.responsibilities}
-                                                onChange={(e) => setNewJob({
-                                                    ...newJob,
-                                                    responsibilities: e.target.value
-                                                })}
-                                                placeholder="Décrivez les principales responsabilités..."
-                                                rows={3}
+                                            <Editor
+                                                editorSerializedState={newJob.responsibilities ?? undefined}
+                                                onSerializedChange={(value) =>
+                                                    setJobField("responsibilities", value)
+                                                }
                                             />
                                         </div>
 
                                         {/* Sélection multiple de compétences */}
                                         <div className="space-y-2">
                                             <Label className="mb-2">Competences requises<span className="text-red-500">*</span></Label>
-                                            <Textarea
-                                                value={newJob.requirements}
-                                                onChange={(e) => setNewJob({...newJob, requirements: e.target.value})}
-                                                placeholder="3 ans d'experience ..."
-                                                rows={2}
+                                            <Editor
+                                                editorSerializedState={newJob.requirements ?? undefined}
+                                                onSerializedChange={(value) =>
+                                                    setJobField("requirements", value)
+                                                }
                                             />
                                         </div>
-                                        {/*<div className="space-y-2">*/}
-                                        {/*    <Label className="mb-2">Compétences requises <span className="text-red-500">*</span></Label>*/}
 
-                                        {/*    <div className="flex gap-2">*/}
-                                        {/*        <Select*/}
-                                        {/*            value=""*/}
-                                        {/*            onValueChange={(skill) => {*/}
-                                        {/*                if (skill === "Autre") {*/}
-                                        {/*                    // Gère "Autre" séparément*/}
-                                        {/*                    setOtherCompetence("");*/}
-                                        {/*                } else if (skill && !selectedSkills.includes(skill)) {*/}
-                                        {/*                    setSelectedSkills(prev => [...prev, skill]);*/}
-                                        {/*                }*/}
-                                        {/*            }}*/}
-                                        {/*        >*/}
-                                        {/*            <SelectTrigger className="flex-1">*/}
-                                        {/*                <SelectValue placeholder="Ajouter une compétence"/>*/}
-                                        {/*            </SelectTrigger>*/}
-                                        {/*            <SelectContent>*/}
-                                        {/*                {skillsForSector*/}
-                                        {/*                    .filter(skill => skill.trim() !== "" && !selectedSkills.includes(skill))*/}
-                                        {/*                    .map(skill => (*/}
-                                        {/*                        <SelectItem key={skill} value={skill}>*/}
-                                        {/*                            {skill}*/}
-                                        {/*                        </SelectItem>*/}
-                                        {/*                    ))}*/}
-                                        {/*                <SelectItem value="Autre">Autre</SelectItem>*/}
-                                        {/*            </SelectContent>*/}
-                                        {/*        </Select>*/}
-                                        {/*    </div>*/}
-
-                                        {/*    /!* Affichage des compétences sélectionnées *!/*/}
-                                        {/*    {selectedSkills.length > 0 && (*/}
-                                        {/*        <div className="flex flex-wrap gap-2 mt-2">*/}
-                                        {/*            {selectedSkills.map((skill, idx) => (*/}
-                                        {/*                <Badge key={idx} variant="secondary"*/}
-                                        {/*                       className="flex items-center gap-1">*/}
-                                        {/*                    {skill}*/}
-                                        {/*                    <button*/}
-                                        {/*                        type="button"*/}
-                                        {/*                        onClick={() => removeSkill(skill)}*/}
-                                        {/*                        className="ml-1 text-xs text-muted-foreground hover:text-foreground"*/}
-                                        {/*                    >*/}
-                                        {/*                        ✕*/}
-                                        {/*                    </button>*/}
-                                        {/*                </Badge>*/}
-                                        {/*            ))}*/}
-                                        {/*        </div>*/}
-                                        {/*    )}*/}
-
-                                        {/*    /!* Gestion manuelle pour "Autre" *!/*/}
-                                        {/*    {otherCompetence !== null && (*/}
-                                        {/*        <Input*/}
-                                        {/*            placeholder="Précisez la compétence"*/}
-                                        {/*            value={otherCompetence}*/}
-                                        {/*            onChange={(e) => setOtherCompetence(e.target.value)}*/}
-                                        {/*            onBlur={() => {*/}
-                                        {/*                if (otherCompetence.trim()) {*/}
-                                        {/*                    setSelectedSkills(prev => [...prev, otherCompetence.trim()]);*/}
-                                        {/*                    setOtherCompetence(null); // cache l'input*/}
-                                        {/*                }*/}
-                                        {/*            }}*/}
-                                        {/*        />*/}
-                                        {/*    )}*/}
-                                        {/*</div>*/}
-
-                                        {/*/!* Formations *!/*/}
-                                        {/*<div className="space-y-2">*/}
-                                        {/*    <Label>Niveau de formation requis <span*/}
-                                        {/*        className="text-red-500">*</span></Label>*/}
-                                        {/*    <Select value={formationLevel} onValueChange={setFormationLevel}>*/}
-                                        {/*        <SelectTrigger>*/}
-                                        {/*            <SelectValue placeholder="Sélectionnez un niveau"/>*/}
-                                        {/*        </SelectTrigger>*/}
-                                        {/*        <SelectContent>*/}
-                                        {/*            {EDUCATION_LEVELS.map((group) => (*/}
-                                        {/*                <Fragment key={group.label}>*/}
-                                        {/*                    /!* Label de groupe (désactivé → non sélectionnable) *!/*/}
-                                        {/*                    <SelectItem value={`__group__${group.label}`} disabled>*/}
-                                        {/*                        <span*/}
-                                        {/*                            className="font-semibold text-muted-foreground">{group.label}</span>*/}
-                                        {/*                    </SelectItem>*/}
-
-                                        {/*                    /!* Options réelles *!/*/}
-                                        {/*                    {group.options.map((opt) => (*/}
-                                        {/*                        <SelectItem key={opt} value={opt}>*/}
-                                        {/*                            {opt}*/}
-                                        {/*                        </SelectItem>*/}
-                                        {/*                    ))}*/}
-                                        {/*                </Fragment>*/}
-                                        {/*            ))}*/}
-                                        {/*        </SelectContent>*/}
-                                        {/*    </Select>*/}
-                                        {/*    {formationLevel && !formationLevel.startsWith("__group__") && (*/}
-                                        {/*        <Input*/}
-                                        {/*            className="mt-1"*/}
-                                        {/*            value={formationDetail}*/}
-                                        {/*            onChange={(e) => setFormationDetail(e.target.value)}*/}
-                                        {/*            placeholder="Précisez la formation (ex: Licence en Droit)"*/}
-                                        {/*        />*/}
-                                        {/*    )}*/}
-                                        {/*</div>*/}
-
-                                        {/*/!* Expériences *!/*/}
-                                        {/*<div className="space-y-2">*/}
-                                        {/*    <Label>Expérience requise <span className="text-red-500">*</span></Label>*/}
-                                        {/*    <Select value={experiences} onValueChange={setExperiences}>*/}
-                                        {/*        <SelectTrigger>*/}
-                                        {/*            <SelectValue placeholder="Sélectionnez"/>*/}
-                                        {/*        </SelectTrigger>*/}
-                                        {/*        <SelectContent>*/}
-                                        {/*            {EXPERIENCE_OPTIONS.map((opt) => (*/}
-                                        {/*                <SelectItem key={opt} value={opt}>*/}
-                                        {/*                    {opt}*/}
-                                        {/*                </SelectItem>*/}
-                                        {/*            ))}*/}
-                                        {/*        </SelectContent>*/}
-                                        {/*    </Select>*/}
-                                        {/*    {experiences === "Autre" && (*/}
-                                        {/*        <Input*/}
-                                        {/*            className="mt-1"*/}
-                                        {/*            placeholder="Ex: Expérience en gestion de crise"*/}
-                                        {/*            value={otherExperience}*/}
-                                        {/*            onChange={(e) => setOtherExperience(e.target.value)}*/}
-                                        {/*        />*/}
-                                        {/*    )}*/}
-                                        {/*</div>*/}
 
                                         {/* Avantages */}
                                         <div className="space-y-2">
                                             <Label className="mb-2">Avantages</Label>
-                                            <Textarea
-                                                value={newJob.benefits}
-                                                onChange={(e) => setNewJob({...newJob, benefits: e.target.value})}
-                                                placeholder="Ex: Télétravail, mutuelle, formation..."
-                                                rows={2}
+                                            <Editor
+                                                editorSerializedState={newJob.benefits ?? undefined}
+                                                onSerializedChange={(value) =>
+                                                    setJobField("benefits", value)
+                                                }
                                             />
                                         </div>
 
                                         {/* Salaire */}
                                         <div className="space-y-2">
                                             <Label className="mb-2">Salaire</Label>
-                                            <Input
+                                            <Select
                                                 value={newJob.salary}
-                                                onChange={(e) => setNewJob({...newJob, salary: e.target.value})}
-                                                placeholder="Ex: 500-800K FCFA"
-                                            />
+                                                onValueChange={(v) => setNewJob({ ...newJob, salary: v })}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Sélectionner un salaire" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {salaryRanges.map((range) => (
+                                                        <SelectItem key={range} value={range}>
+                                                            {range}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+
                                         </div>
 
                                         {/* Gestion des tags (compétences, outils, domaines) */}
@@ -926,17 +952,6 @@ export function AdminJobsTable() {
                                                 />
                                                 <Label htmlFor="urgent">Offre urgente</Label>
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <Checkbox
-                                                    id="featured"
-                                                    checked={newJob.isFeatured}
-                                                    onCheckedChange={(checked) => setNewJob({
-                                                        ...newJob,
-                                                        isFeatured: checked as boolean
-                                                    })}
-                                                />
-                                                <Label className="mb-2" htmlFor="featured">Mettre en avant</Label>
-                                            </div>
                                         </div>
 
                                         <div>
@@ -1015,6 +1030,7 @@ export function AdminJobsTable() {
                     <TableHeader>
                         <TableRow className="bg-muted/50">
                             <TableHead>Titre</TableHead>
+                            {/*<TableHead>Logo</TableHead>*/}
                             <TableHead>Nom de l'entreprise</TableHead>
                             <TableHead>Localisation</TableHead>
                             <TableHead>Type de contrat</TableHead>
@@ -1037,12 +1053,22 @@ export function AdminJobsTable() {
                             filteredJobs.map((job: PublishedJob) => (
                                 <TableRow key={job.id}>
                                     <TableCell className="font-medium">{job.title}</TableCell>
+                                    {/*<TableCell>{job.companyLogo ? (*/}
+                                    {/*    <img*/}
+                                    {/*        src={job.companyLogo}*/}
+                                    {/*        alt={`Logo ${job.companyName}`}*/}
+                                    {/*        className="w-full h-full object-contain"*/}
+                                    {/*        loading="lazy"*/}
+                                    {/*    />*/}
+                                    {/*) : (*/}
+                                    {/*    <span className=" font-semibold text-lg select-none">{job.companyName.substring(0, 2).toUpperCase()}</span>*/}
+                                    {/*)}</TableCell>*/}
                                     <TableCell className="font-medium">{job.companyName}</TableCell>
                                     <TableCell>{job.workCityLocation}, {job.workCountryLocation}</TableCell>
                                     <TableCell>
                                         <Badge variant="outline">{job.contractType}</Badge>
                                     </TableCell>
-                                    <TableCell className="text-center">{getStatusBadge(job.status)}</TableCell>
+                                    <TableCell className="">{getStatusBadge(job.status)}</TableCell>
                                     <TableCell>
                                         {job.publishedAt
                                             ? formatDateShort(job.publishedAt)
@@ -1052,7 +1078,7 @@ export function AdminJobsTable() {
                                         {job.expirationDate
                                             ? formatDateShort(job.expirationDate)
                                             : job.status === "PUBLISHED"
-                                                ? "Date indisponible"
+                                                ? "Postuler au plutot"
                                                 : "Non publiée"}
                                     </TableCell>
 

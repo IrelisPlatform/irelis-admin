@@ -59,6 +59,7 @@ export interface PublishedJob {
     responsibilities: string;
     qualifications: string;
     benefits: string;
+    requiredDocuments: RequiredDocument[];
 }
 
 // 🔹 Pour les réponses paginées (réutilisable partout)

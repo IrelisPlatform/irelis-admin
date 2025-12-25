@@ -248,6 +248,48 @@
     }
 }
 
+
+/* === FIX CKEDITOR EN MODAL === */
+
+.ck-editor {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/*.ck-editor__main,*/
+/*.ck-editor__editable {*/
+/*    width: 100% !important;*/
+/*    max-width: 100% !important;*/
+/*    box-sizing: border-box;*/
+/*}*/
+
+/*!* Toolbar responsive *!*/
+/*.ck-toolbar {*/
+/*    flex-wrap: wrap !important;*/
+/*    max-width: 100% !important;*/
+/*}*/
+
+/*!* Contenu qui ne déborde jamais *!*/
+/*.ck-content {*/
+/*    max-width: 100% !important;*/
+/*    overflow-wrap: break-word;*/
+/*    word-break: break-word;*/
+/*}*/
+
+/*!* Images et tableaux *!*/
+/*.ck-content img,*/
+/*.ck-content table {*/
+/*    max-width: 100% !important;*/
+/*    height: auto;*/
+/*}*/
+
+/*!* Hauteur confortable *!*/
+/*.ck-editor__editable {*/
+/*    min-height: 160px;*/
+/*}*/
+
+
+
 /* ============================================
    COMPONENT COMPATIBILITY FIXES
 ============================================== */

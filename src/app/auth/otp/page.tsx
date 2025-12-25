@@ -111,8 +111,8 @@ export default function OtpPage() {
                     localStorage.removeItem("auth_preferred_redirect");
                 }
 
-                Cookies.set("access_token", data.accessToken);
-                Cookies.set("refresh_token", data.refreshToken);
+                Cookies.set("access_token", data.accessToken,{secure:true});
+                Cookies.set("refresh_token", data.refreshToken,{secure:true});
 
                 localStorage.removeItem("auth_returnTo");
                 localStorage.removeItem("auth_email");

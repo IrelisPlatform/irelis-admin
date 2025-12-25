@@ -1,16 +1,17 @@
 // /src/components/jobs/JobCard.tsx
 
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Bookmark, MapPin, Briefcase, DollarSign, Clock, Zap, Sparkles } from "lucide-react";
-import { motion } from "framer-motion";
-import { useState } from "react";
+import {Card} from "@/components/ui/card";
+import {Badge} from "@/components/ui/badge";
+import {Button} from "@/components/ui/button";
+import {Bookmark, MapPin, Briefcase, DollarSign, Clock, Zap, Sparkles} from "lucide-react";
+import {motion} from "framer-motion";
+import {useState} from "react";
 
 
-import { PublishedJob } from "@/types/job";
+import {PublishedJob} from "@/types/job";
 import {formatDateRelative} from "@/services/date";
 import {useLanguage} from "@/context/LanguageContext";
+import {ReadonlyEditor} from "@/components/ReadonlyEditor";
 
 interface JobCardProps {
     job: PublishedJob;
@@ -18,7 +19,7 @@ interface JobCardProps {
     isSelected?: boolean;
 }
 
-export function JobCard({ job, onClick, isSelected }: JobCardProps) {
+export function JobCard({job, onClick, isSelected}: JobCardProps) {
     const [isBookmarked, setIsBookmarked] = useState(false);
     const {t} = useLanguage()
 
@@ -46,9 +47,9 @@ export function JobCard({ job, onClick, isSelected }: JobCardProps) {
             {isSelected && (
                 <motion.div
                     className="absolute inset-0 bg-gradient-to-r from-[#1e3a8a]/5 to-transparent pointer-events-none"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
+                    initial={{opacity: 0}}
+                    animate={{opacity: 1}}
+                    transition={{duration: 0.3}}
                 />
             )}
 
@@ -89,11 +90,20 @@ export function JobCard({ job, onClick, isSelected }: JobCardProps) {
             <div className="flex gap-5 relative">
                 {/* Logo de l'entreprise avec effet hover */}
                 <motion.div
-                    className="w-16 h-16 bg-gradient-to-br from-[#1e3a8a] to-[#2563eb] rounded-xl flex items-center justify-center text-white flex-shrink-0 shadow-lg group-hover:shadow-2xl transition-all duration-300"
-                    whileHover={{ scale: 1.05, rotate: 2 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                >
-                    <span className="select-none">{companyInitials}</span>
+                    className="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:shadow-2xl transition-all duration-300 overflow-hidden "
+                    whileHover={{scale: 1.05, rotate: 2}}
+                    transition={{type: "spring", stiffness: 300}}>
+
+                    {job.companyLogo ? (
+                        <img
+                            src={job.companyLogo}
+                            alt={`Logo ${job.company}`}
+                            className="w-full h-full object-contain"
+                            loading="lazy"
+                        />
+                    ) : (
+                        <span className="text-white font-semibold text-lg select-none">{job.company.substring(0, 2).toUpperCase()}</span>
+                    )}
                 </motion.div>
 
                 <div className="flex-1">
@@ -110,34 +120,34 @@ export function JobCard({ job, onClick, isSelected }: JobCardProps) {
                     <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm text-gray-600 mb-4">
                         <motion.span
                             className="flex items-center gap-2"
-                            whileHover={{ x: 2 }}
-                            transition={{ duration: 0.2 }}
+                            whileHover={{x: 2}}
+                            transition={{duration: 0.2}}
                         >
-                            <MapPin className="w-4 h-4 text-[#1e3a8a]/70 flex-shrink-0" />
+                            <MapPin className="w-4 h-4 text-[#1e3a8a]/70 flex-shrink-0"/>
                             <span className="truncate">{location}</span>
                         </motion.span>
                         <motion.span
                             className="flex items-center gap-2"
-                            whileHover={{ x: 2 }}
-                            transition={{ duration: 0.2 }}
+                            whileHover={{x: 2}}
+                            transition={{duration: 0.2}}
                         >
-                            <Briefcase className="w-4 h-4 text-[#1e3a8a]/70 flex-shrink-0" />
+                            <Briefcase className="w-4 h-4 text-[#1e3a8a]/70 flex-shrink-0"/>
                             {contractType}
                         </motion.span>
                         <motion.span
                             className="flex items-center gap-2"
-                            whileHover={{ x: 2 }}
-                            transition={{ duration: 0.2 }}
+                            whileHover={{x: 2}}
+                            transition={{duration: 0.2}}
                         >
-                            <Clock className="w-4 h-4 text-[#1e3a8a]/70 flex-shrink-0" />
+                            <Clock className="w-4 h-4 text-[#1e3a8a]/70 flex-shrink-0"/>
                             {formatDateRelative(job.publishedAt)}
                             {/*<DollarSign className="w-4 h-4 text-[#1e3a8a]/70 flex-shrink-0" />*/}
                             {/*<span className="truncate">{job.salary}</span>*/}
                         </motion.span>
                         <motion.span
                             className="flex items-center gap-2"
-                            whileHover={{ x: 2 }}
-                            transition={{ duration: 0.2 }}
+                            whileHover={{x: 2}}
+                            transition={{duration: 0.2}}
                         >
                             {/*<Clock className="w-4 h-4 text-[#1e3a8a]/70 flex-shrink-0" />*/}
                             {/*{formatDateRelative(job.publishedAt)}*/}
@@ -145,9 +155,20 @@ export function JobCard({ job, onClick, isSelected }: JobCardProps) {
                     </div>
 
                     {/* Description */}
-                    <p className="text-gray-600 mb-4 line-clamp-2 leading-relaxed text-sm">
-                        {job.description}
-                    </p>
+                    {job.description ? (
+                        (() => {
+                            try {
+                                const parsed = JSON.parse(job.description);
+                                return <ReadonlyEditor value={parsed} namespace={`job-description-${job.id}`}/>;
+                            } catch {
+                                t
+                                return <p className="text-gray-600">{job.description}</p>;
+                            }
+                        })()
+                    ) : (
+                        <p className="text-gray-600">Aucune description fournie.</p>
+                    )
+                    }
 
                     {/* Tags */}
                     <div className="flex flex-wrap gap-2 mb-3">
@@ -173,8 +194,8 @@ export function JobCard({ job, onClick, isSelected }: JobCardProps) {
                     {/* Bouton Bookmark avec animation */}
                     <div className="flex items-center justify-end pt-2 border-t border-gray-100">
                         <motion.div
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.95 }}
+                            whileHover={{scale: 1.1}}
+                            whileTap={{scale: 0.95}}
                         >
                             <Button
                                 variant="ghost"
@@ -191,7 +212,7 @@ export function JobCard({ job, onClick, isSelected }: JobCardProps) {
                                         scale: [1, 1.2, 1],
                                         rotate: [0, -10, 10, 0]
                                     } : {}}
-                                    transition={{ duration: 0.3 }}
+                                    transition={{duration: 0.3}}
                                 >
                                     <Bookmark
                                         className={`w-4 h-4 mr-1.5 ${isBookmarked ? 'fill-current' : ''}`}
