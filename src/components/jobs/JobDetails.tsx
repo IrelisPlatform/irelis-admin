@@ -21,7 +21,9 @@ export default function JobDetails({ job }: { job: PublishedJob }) {
         CV: "Curriculum Vitae",
         COVER_LETTER: "Lettre de motivation",
         PORTFOLIO: "Portfolio",
-        IDENTITY_CARD:"Carte d'identite"
+        IDENTITY_CARD:"Carte d'identite",
+        CERTIFICATE:"Certificat"
+
     }
 
     const handleApply = () => {
