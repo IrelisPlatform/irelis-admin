@@ -189,7 +189,7 @@ export default function Page() {
                     </div>
                 </motion.div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-[520px_1fr] gap-6">
                     <div className="flex flex-col gap-4 lg:col-span-1">
                         <AnimatePresence mode="wait">
                             {jobsError ? (

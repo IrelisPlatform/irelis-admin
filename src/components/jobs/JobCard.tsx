@@ -155,20 +155,33 @@ export function JobCard({job, onClick, isSelected}: JobCardProps) {
                     </div>
 
                     {/* Description */}
+                    {/* Description */}
                     {job.description ? (
                         (() => {
                             try {
                                 const parsed = JSON.parse(job.description);
-                                return <ReadonlyEditor value={parsed} namespace={`job-description-${job.id}`}/>;
+                                return (
+                                    <div className="line-clamp-3 text-gray-600">
+                                        <ReadonlyEditor
+                                            value={parsed}
+                                            namespace={`job-description-${job.id}`}
+                                        />
+                                    </div>
+                                );
                             } catch {
-                                t
-                                return <p className="text-gray-600">{job.description}</p>;
+                                return (
+                                    <p className="text-gray-600 line-clamp-3">
+                                        {job.description}
+                                    </p>
+                                );
                             }
                         })()
                     ) : (
-                        <p className="text-gray-600">Aucune description fournie.</p>
-                    )
-                    }
+                        <p className="text-gray-600 line-clamp-3">
+                            Aucune description fournie.
+                        </p>
+                    )}
+
 
                     {/* Tags */}
                     <div className="flex flex-wrap gap-2 mb-3">
