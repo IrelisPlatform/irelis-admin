@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { apiRequest } from '@/lib/api/client';
-import { PublishedJob, JobCreatePayload } from '@/types/job';
+import { PublishedJob } from '@/types/job';
 import Cookies from "js-cookie";
 import api from "@/services/axiosClient";
 
@@ -85,8 +85,6 @@ export function useAdminJobs() {
                     Authorization: `Bearer ${Cookies.get("access_token")}`,
                 },
             });
-
-            console.log(response.data);
             return response.data.content;
         } catch (err: any) {
                 toast.error(err.message || 'Échec du chargement des offres.');
@@ -166,11 +164,18 @@ export function useAdminJobs() {
                     Authorization: `Bearer ${Cookies.get("access_token")}`,
                 },
             });
-
             toast.success('Offre publiée !');
         } catch (err: any) {
             console.error(err?.response?.data || err.message);
         }
+    };
+
+     const updateJob = async (id: string, data: FormData) => {
+        return api.patch(`/admin/jobs/${id}`, data, {
+            headers: {
+                Authorization: `Bearer ${Cookies.get("access_token")}`,
+            },
+        });
     };
 
   // const deleteJob = async (id: string) => {
@@ -209,5 +214,6 @@ export function useAdminJobs() {
     publishJob,
     deleteJob,
     loading,
+        updateJob
   };
 }

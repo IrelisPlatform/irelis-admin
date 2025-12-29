@@ -18,6 +18,8 @@ import {HistoryToolbarPlugin} from "@/components/editor/plugins/toolbar/history-
 import {FontFormatToolbarPlugin} from "@/components/editor/plugins/toolbar/font-format-toolbar-plugin";
 import {ElementFormatToolbarPlugin} from "@/components/editor/plugins/toolbar/element-format-toolbar-plugin";
 import {TabIndentationPlugin} from "@lexical/react/LexicalTabIndentationPlugin";
+import {FontFamilyToolbarPlugin} from "@/components/editor/plugins/toolbar/font-family-toolbar-plugin";
+import {FontSizeToolbarPlugin} from "@/components/editor/plugins/toolbar/font-size-toolbar-plugin";
 
 export function Plugins() {
   const [floatingAnchorElem, setFloatingAnchorElem] =
@@ -46,6 +48,8 @@ export function Plugins() {
                     <HistoryToolbarPlugin />
                     <FontFormatToolbarPlugin />
                     <ElementFormatToolbarPlugin />
+                    <FontFamilyToolbarPlugin />
+                    <FontSizeToolbarPlugin />
                 </div>
 
             )}

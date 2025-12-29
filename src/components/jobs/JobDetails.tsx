@@ -10,7 +10,7 @@ import { useState } from "react";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { PublishedJob } from "@/types/job";
 import { useLanguage } from "@/context/LanguageContext";
-import {formatDateRelative, formatDateShort} from "@/services/date";
+import {formatDateLong, formatDateRelative, formatDateShort} from "@/services/date";
 import {ReadonlyEditor} from "@/components/ReadonlyEditor";
 
 
@@ -21,10 +21,26 @@ export default function JobDetails({ job }: { job: PublishedJob }) {
         CV: "Curriculum Vitae",
         COVER_LETTER: "Lettre de motivation",
         PORTFOLIO: "Portfolio",
-        IDENTITY_CARD:"Carte d'identite",
+        IDENTITY_DOC:"Carte d'identite",
         CERTIFICATE:"Certificat"
-
     }
+
+     const ContractTypeLabels: Record<string, string> = {
+        CDI: "CDI (Temps plein)",
+        CDD: "CDD (Temps plein)",
+        CDI_PART_TIME: "CDI (Temps partiel)",
+        CDD_PART_TIME: "CDD (Temps partiel)",
+        INTERNSHIP: "Stage",
+        ALTERNATIVE: "Alternance",
+        FREELANCE: "Freelance",
+        INTERIM: "Intérim"
+    }
+    const getContractTypeLabel = (type?: string) =>
+        type && ContractTypeLabels[type]
+            ? ContractTypeLabels[type]
+            : "Type de contrat non spécifié"
+
+
 
     const handleApply = () => {
         alert("Fonctionnalité de candidature bientôt disponible !");
@@ -85,12 +101,20 @@ export default function JobDetails({ job }: { job: PublishedJob }) {
                         <div className="grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
                             {[
                                 { icon: MapPin, text: job.location },
-                                { icon: Briefcase, text: job.type },
-                                { icon: Banknote, text: job?.salary },
+                                {
+                                    icon: Briefcase,
+                                    text: getContractTypeLabel(job.type)
+                                },
+                                {
+                                    icon: Banknote,
+                                    text: job.salary && job.salary.trim() !== ""
+                                        ? job.salary
+                                        : "Non spécifié"
+                                },
                                 {
                                     icon: Clock,
                                     text: job.expirationDate
-                                        ? formatDateShort(job.expirationDate)
+                                        ? formatDateLong(job.expirationDate)
                                         : "Postuler au plus tot"
                                 },
                                 {
@@ -194,14 +218,6 @@ export default function JobDetails({ job }: { job: PublishedJob }) {
                                 {t.jobDetails.responsibilities}
                             </AccordionTrigger>
                             <AccordionContent>
-                                {/*<ul className="list-disc ml-4 space-y-1 text-gray-600">*/}
-                                {/*    {(job?.responsibilities || []).map((r, idx) => (*/}
-                                {/*        <li key={idx} className="flex items-start gap-2 break-words">*/}
-                                {/*            <span className="w-1.5 h-1.5 bg-[#1e3a8a] rounded-full mt-2 flex-shrink-0"></span>*/}
-                                {/*            <span>{r}</span>*/}
-                                {/*        </li>*/}
-                                {/*    ))}*/}
-                                {/*</ul>*/}
                                 {job.responsibilities ? (
                                     <ReadonlyEditor
                                         value={JSON.parse(job.responsibilities)}
@@ -218,14 +234,6 @@ export default function JobDetails({ job }: { job: PublishedJob }) {
                                 {t.jobDetails.qualifications}
                             </AccordionTrigger>
                             <AccordionContent>
-                                {/*<ul className="list-disc ml-4 space-y-1 text-gray-600">*/}
-                                {/*    {(job?.qualifications || []).map((q, idx) => (*/}
-                                {/*        <li key={idx} className="flex items-start gap-2 break-words">*/}
-                                {/*            <span className="w-1.5 h-1.5 bg-[#1e3a8a] rounded-full mt-2 flex-shrink-0"></span>*/}
-                                {/*            <span>{q}</span>*/}
-                                {/*        </li>*/}
-                                {/*    ))}*/}
-                                {/*</ul>*/}
                                 {job.qualifications ? (
                                     <ReadonlyEditor
                                         value={JSON.parse(job.qualifications)}
@@ -242,25 +250,14 @@ export default function JobDetails({ job }: { job: PublishedJob }) {
                                 {t.jobDetails.benefits}
                             </AccordionTrigger>
                             <AccordionContent>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    {/*{(job?.benefits || []).map((b, idx) => (*/}
-                                    {/*    <div*/}
-                                    {/*        key={idx}*/}
-                                    {/*        className="flex items-center gap-2 p-2 bg-green-50 rounded-lg border border-green-100 text-green-800"*/}
-                                    {/*    >*/}
-                                    {/*        <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />*/}
-                                    {/*        <span className="break-words">{b}</span>*/}
-                                    {/*    </div>*/}
-                                    {/*))}*/}
                                     {job.benefits ? (
                                         <ReadonlyEditor
                                             value={JSON.parse(job.benefits)}
-                                            namespace={`job-description-${job.id}`}
+                                            namespace={`job-benefits-${job.id}`}
                                         />
                                     ) : (
                                         <p className="text-gray-600">Non specifie</p>
                                     )}
-                                </div>
                             </AccordionContent>
                         </AccordionItem>
                         <AccordionItem value="benefits">
@@ -269,11 +266,23 @@ export default function JobDetails({ job }: { job: PublishedJob }) {
                             </AccordionTrigger>
                             <AccordionContent>
                                 <div className="grid grid-cols-1 gap-2">
-                                    {job.requiredDocuments.map((doc) => (
-                                        <ul key={doc.type}>
-                                            <li>{documentLabels[doc.type]}</li>
-                                        </ul>
-                                    ))}
+                                    <ul className="list-disc pl-5 space-y-1">
+                                        {job.requiredDocuments.map((doc) => (
+                                            <li key={doc.type}>{documentLabels[doc.type]}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </AccordionContent>
+                        </AccordionItem>
+                        <AccordionItem value="language">
+                            <AccordionTrigger className="text-[#1e3a8a] text-sm sm:text-base">
+                               Langues
+                            </AccordionTrigger>
+                            <AccordionContent>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <ul className="list-disc pl-5 space-y-1 gap-2">
+                                        <li>{job.requiredLanguage}</li>
+                                    </ul>
                                 </div>
                             </AccordionContent>
                         </AccordionItem>
@@ -291,9 +300,9 @@ export default function JobDetails({ job }: { job: PublishedJob }) {
                         <p className="text-gray-600 mb-3 break-words">
                             {job.about || "Aucune information disponible sur l'entreprise."}
                         </p>
-                        <div className="grid grid-cols-2 gap-2 text-gray-600 text-xs sm:text-sm">
-                            <p><span className="font-medium">{t.jobDetails.sector}</span> {job.sector}</p>
-                            <p><span className="font-medium">{t.jobDetails.companySize}</span> {job.companySize ? job.companySize : "-"}</p>
+                        <div className="  text-gray-600 text-base">
+                            <p className="text-base"><span className="font-bold ">Secteur d'activite</span> : {job.sector}</p>
+                            <p className="mt-2 text-base"><span className="font-bold ">{t.jobDetails.companySize}</span> {job.companySize ? job.companySize : "-"}</p>
                         </div>
                     </div>
                 </motion.div>

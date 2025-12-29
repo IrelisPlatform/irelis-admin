@@ -21,7 +21,6 @@ api.interceptors.response.use(
 
                 const refreshToken = Cookies.get("refresh_token");
                 if (!refreshToken) {
-                    console.warn("Refresh token manquant");
                     throw new Error("Refresh token manquant");
                 }
 
@@ -46,7 +45,6 @@ api.interceptors.response.use(
 
                 originalRequest.headers["Authorization"] = `Bearer ${accessToken}`;
 
-                console.log("Token rafraîchi avec succès");
                 return api(originalRequest);
 
             } catch (refreshError) {

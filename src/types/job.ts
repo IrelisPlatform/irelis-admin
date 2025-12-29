@@ -42,7 +42,16 @@ export interface PublishedJob {
     id: string;
     title: string;
     description: string;
+    companyLogoUrl: string;
     companyName: string;
+    companyDescription:string;
+    sectorId: string;
+    postNumber: number;
+    companyLength: string;
+    workCountryLocation: string;
+    workCityLocation: string;
+    jobType: string;
+    requirements: string;
     about: string;
     location: string;
     type: string;
@@ -55,11 +64,15 @@ export interface PublishedJob {
     sector: string;
     companySize?: string;
     companyLogo?: string;
+    companyEmail: string;
     tags: string[];
     responsibilities: string;
     qualifications: string;
     benefits: string;
+    requiredLanguage: string;
     requiredDocuments: RequiredDocument[];
+    tagDto: Array<{ name: string; type: string }>;
+    contractType: string;
 }
 
 // 🔹 Pour les réponses paginées (réutilisable partout)

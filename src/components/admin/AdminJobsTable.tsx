@@ -2,10 +2,10 @@
 
 "use client";
 
-import React, {useState, useEffect, useMemo, Fragment} from "react";
+import React, {useState, useEffect, useMemo, Fragment, useCallback} from "react";
 import {
     Search, Filter, Plus, MoreVertical, Edit, Trash2, Eye, ShieldCheck, Star,
-    AlertCircle,
+    AlertCircle, Briefcase, Banknote, MapPin, Clock, Calendar, Globe, Users,
 } from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
@@ -37,10 +37,9 @@ import {getSkillsForSector, EDUCATION_LEVELS, EXPERIENCE_OPTIONS} from '@/lib/jo
 import {TAG_NAMES, TagType} from '@/lib/jobTags';
 import {formatDateLong, formatDateRelative, formatDateShort} from "@/services/date";
 import {Spinner} from "@/components/ui/spinner";
-import CkEditor from "@/components/CkEditor";
-import TiptapEditor from "@/components/TiptapEditor";
 import {SerializedEditorState} from "lexical";
 import {Editor} from "@/components/blocks/editor-00/editor";
+import {ReadonlyEditor} from "@/components/ReadonlyEditor";
 
 const STEPS = [
     {id: 1, name: "Création de l'entreprise"},
@@ -53,10 +52,6 @@ type TagDto = {
     name: string;
     type: "domain" | "skill" | "tool";
 };
-
-
-
-
 
 
 const DOCUMENT_TYPES = [
@@ -73,7 +68,7 @@ const INITIAL_JOB_STATE = {
     companyName: "",
     companyEmail: "",
     companyDescription: "",
-    companyLength:"",
+    companyLength: "",
     sectorId: "",
 
     // Champs offre
@@ -83,7 +78,7 @@ const INITIAL_JOB_STATE = {
     workCityLocation: "",
     responsibilities: null as SerializedEditorState | null,
     requirements: null as SerializedEditorState | null,
-    benefits: null as SerializedEditorState | null ,
+    benefits: null as SerializedEditorState | null,
     contractType: "CDI" as const,
     status: "PENDING" as const,
     jobType: "FULL_TIME" as const,
@@ -99,10 +94,156 @@ const INITIAL_JOB_STATE = {
     requiredDocuments: [{type: "CV"}],
 };
 
+
+
+
+
 export function AdminJobsTable() {
     const router = useRouter();
     const {sectors, loading: sectorsLoading} = useSectors();
     const [companyLogo, setCompanyLogo] = useState<File | null>(null);
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [logoPreview, setLogoPreview] = useState<string | null>(null);
+    const [updateLoading, setUpdateLoading] = useState<boolean>(false);
+
+    const LogoInput = React.memo(function LogoInput({
+                                                        onChange,
+                                                    }: {
+        onChange: (file: File | null) => void;
+    }) {
+        const [preview, setPreview] = useState<string | null>(null);
+
+        useEffect(() => {
+            return () => {
+                if (preview) URL.revokeObjectURL(preview);
+            };
+        }, [preview]);
+
+        return (
+            <div className="space-y-2">
+                <Input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        const url = file ? URL.createObjectURL(file) : null;
+                        setPreview(url);
+                        onChange(file);
+                    }}
+                />
+
+                {preview && (
+                    <img
+                        src={preview}
+                        alt="Logo preview"
+                        className="w-16 h-16 rounded-lg object-cover border"
+                    />
+                )}
+            </div>
+        );
+    });
+    const handleLogoChange = useCallback((file: File | null) => {
+        setCompanyLogo(file);
+    }, []);
+
+
+
+
+
+    const canGoToNextStep = (step: number) => {
+        switch (step) {
+            case 1:
+                return (
+                    newJob.companyName?.trim() !== "" &&
+                    newJob.companyDescription?.trim() !== "" &&
+                    newJob.sectorId?.trim() !== ""
+                );
+
+            case 2:
+                return (
+                    newJob.title?.trim() !== "" &&
+                    newJob.description !== null &&
+                    newJob.workCountryLocation?.trim() !== "" &&
+                    newJob.workCityLocation?.trim() !== ""
+                );
+
+            case 3:
+                return (
+                    newJob.jobType?.trim() !== "" &&
+                    newJob.responsibilities !== null &&
+                    newJob.requirements !== null &&
+                    newJob.contractType?.trim() !== ""
+                );
+
+            case 4:
+                return newJob.requiredLanguage?.trim() !== ""
+
+            default:
+                return false;
+        }
+    };
+
+
+
+    const handleUpdateJob = async () => {
+        try {
+
+            setUpdateLoading(true);
+            if (!editJob) return;
+
+            const payload = {
+                companyName: editJob.companyName?.trim() || "",
+                companyDescription: editJob.companyDescription?.trim() || "",
+                companyLength: editJob.companyLength,
+                sectorId: editJob.sectorId,
+                companyEmail: editJob.companyEmail?.trim() || undefined,
+                title: editJob.title?.trim() || "",
+                description: JSON.stringify(editJob.description),
+                workCountryLocation: editJob.workCountryLocation || "",
+                workCityLocation: editJob.workCityLocation || "",
+                responsibilities: JSON.stringify(editJob.responsibilities),
+                requirements: JSON.stringify(editJob.requirements),
+                benefits: JSON.stringify(editJob.benefits),
+                contractType: editJob.contractType,
+                jobType: editJob.jobType,
+                salary: editJob.salary,
+                isUrgent: editJob.isUrgent,
+                isFeatured: editJob.isFeatured,
+                expirationDate: editJob.expirationDate || "",
+                requiredLanguage: editJob.requiredLanguage?.trim() || "",
+                postNumber: editJob.postNumber || 1,
+                tagDto: editJob.tagDto,
+                requiredDocuments: editJob.requiredDocuments,
+            };
+
+
+            const formData = new FormData();
+            formData.append(
+                "data",
+                new Blob([JSON.stringify(payload)], { type: "application/json" })
+            );
+
+            if (companyLogo) {
+                formData.append("companyLogo", companyLogo);
+            }
+
+            await updateJob(editJob.id, formData);
+
+            toast.success("Offre mise à jour !");
+            setIsEditDialogOpen(false);
+            setCurrentStep(1);
+            const updatedJobs = await getAllJobs();
+            setJobs(updatedJobs);
+            setUpdateLoading(false);
+        } catch (err) {
+            console.error(err);
+            toast.error("Erreur lors de la mise à jour de l'offre");
+        }
+        finally {
+            setUpdateLoading(false);
+        }
+    }
+
 
 
     function setJobField<K extends keyof typeof INITIAL_JOB_STATE>(
@@ -114,6 +255,16 @@ export function AdminJobsTable() {
             [field]: value,
         }))
     }
+    function setEditJobField<K extends keyof typeof INITIAL_JOB_STATE>(
+        field: K,
+        value: (typeof INITIAL_JOB_STATE)[K]
+    ) {
+        setEditJob((prev) => ({
+            ...prev,
+            [field]: value,
+        }));
+    }
+
     const companySizeRanges = [
         "1 - 10 employés",
         "11 - 50 employés",
@@ -157,21 +308,35 @@ export function AdminJobsTable() {
     const [editorState, setEditorState] =
         useState<SerializedEditorState>(initialValue)
 
+    function getEditorState(value?: string): SerializedEditorState {
+        if (!value) return initialValue;
+
+        try {
+            const parsed = JSON.parse(value);
+
+            if (
+                !parsed?.root ||
+                !Array.isArray(parsed.root.children) ||
+                parsed.root.children.length === 0
+            ) {
+                return initialValue;
+            }
+
+            return parsed;
+        } catch {
+            return initialValue;
+        }
+    }
+
+
     const {
         getAllJobs,
         createJob,
         publishJob,
+        updateJob,
         deleteJob,
-        loading:jobLoading,
+        loading: jobLoading,
     } = useAdminJobs();
-
-    // const handleEditorUpdate = (content: string) => {
-    //     setNewJob(prev => ({
-    //         ...prev,
-    //         description: content,
-    //     }));
-    // };
-
 
 
     const [jobs, setJobs] = useState<PublishedJob[]>([]);
@@ -184,17 +349,43 @@ export function AdminJobsTable() {
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [jobToDelete, setJobToDelete] = useState<string | null>(null);
     const [newJob, setNewJob] = useState(INITIAL_JOB_STATE);
+    const [editJob, setEditJob] = useState<PublishedJob | null>(null);
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+
 
 
     const salaryRanges: string[] = []
 
-    for (let start = 50000; start < 1000000; start += 100000) {
+    for (let start = 0; start < 1000000; start += 100000) {
         const end = start + 50000
         salaryRanges.push(`${start.toLocaleString()} - ${end.toLocaleString()} FCFA`)
     }
 
+    salaryRanges.push("+1.000.000 FCFA")
 
+    const documentLabels: Record<string, string> = {
+        CV: "Curriculum Vitae",
+        COVER_LETTER: "Lettre de motivation",
+        PORTFOLIO: "Portfolio",
+        IDENTITY_DOC: "Carte d'identite",
+        CERTIFICATE: "Certificat"
+    }
 
+    const ContractTypeLabels: Record<string, string> = {
+        CDI: "CDI (Temps plein)",
+        CDD: "CDD (Temps plein)",
+        CDI_PART_TIME: "CDI (Temps partiel)",
+        CDD_PART_TIME: "CDD (Temps partiel)",
+        INTERNSHIP: "Stage",
+        ALTERNATIVE: "Alternance",
+        FREELANCE: "Freelance",
+        INTERIM: "Intérim"
+    }
+    const getContractTypeLabel = (type?: string) =>
+        type && ContractTypeLabels[type]
+            ? ContractTypeLabels[type]
+            : "Type de contrat non spécifié"
 
 
     const [selectedCountry, setSelectedCountry] = useState("");
@@ -397,10 +588,10 @@ export function AdminJobsTable() {
             benefits: JSON.stringify(newJob.benefits),
             contractType: newJob.contractType,
             jobType: newJob.jobType,
-            salary: newJob.salary ,
+            salary: newJob.salary,
             isUrgent: newJob.isUrgent,
             isFeatured: newJob.isFeatured,
-            expirationDate: expirationDateISO ,
+            expirationDate: expirationDateISO,
             requiredLanguage: newJob.requiredLanguage.trim(),
             postNumber: newJob.postNumber || 1,
             tagDto: cleanTagDto,
@@ -437,6 +628,7 @@ export function AdminJobsTable() {
             setExperiences("");
             setOtherExperience("");
             setIsCreateDialogOpen(false);
+            setIsPreviewOpen(false);
             setCurrentStep(1);
         } catch (err) {
             // Erreur déjà affichée par le hook
@@ -547,7 +739,7 @@ export function AdminJobsTable() {
                                 <Plus className="h-4 w-4 mr-2"/> Nouvelle offre
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-2xl overflow-y-auto max-h-[90vh]">
+                        <DialogContent className="max-w-5xl overflow-y-auto max-h-[90vh]">
                             <DialogHeader>
                                 <DialogTitle>Créer une offre (Étape {currentStep}/4)</DialogTitle>
                                 <div className="flex mt-2 space-x-1">
@@ -641,7 +833,7 @@ export function AdminJobsTable() {
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Sélectionnez un secteur"/>
                                                 </SelectTrigger>
-                                                <SelectContent>
+                                                <SelectContent className="max-h-60 overflow-y-auto">
                                                     {sectors
                                                         .filter(sector => sector.id.trim() !== "")
                                                         .map((sector: Sector) => (
@@ -657,12 +849,12 @@ export function AdminJobsTable() {
                                             <Label className="mb-2">Taille de l'entreprise</Label>
                                             <Select
                                                 value={newJob.companyLength}
-                                                onValueChange={(v) => setNewJob({ ...newJob, companyLength: v })}
+                                                onValueChange={(v) => setNewJob({...newJob, companyLength: v})}
                                             >
                                                 <SelectTrigger>
-                                                    <SelectValue placeholder="Sélectionner la taille de l’entreprise" />
+                                                    <SelectValue placeholder="Sélectionner la taille de l’entreprise"/>
                                                 </SelectTrigger>
-                                                <SelectContent>
+                                                <SelectContent className="max-h-60 overflow-y-auto">
                                                     {companySizeRanges.map((range) => (
                                                         <SelectItem key={range} value={range}>
                                                             {range}
@@ -737,7 +929,7 @@ export function AdminJobsTable() {
                                                         <SelectValue placeholder="Sélectionnez une ville"/>
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        {selectedCountry && COUNTRIES_WITH_CITIES[selectedCountry as keyof typeof COUNTRIES_WITH_CITIES ]
+                                                        {selectedCountry && COUNTRIES_WITH_CITIES[selectedCountry as keyof typeof COUNTRIES_WITH_CITIES]
                                                             ? COUNTRIES_WITH_CITIES[selectedCountry as keyof typeof COUNTRIES_WITH_CITIES].map((city) => (
                                                                 <SelectItem key={city} value={city}>
                                                                     {city}
@@ -790,7 +982,8 @@ export function AdminJobsTable() {
 
                                         {/* Missions */}
                                         <div className="space-y-2">
-                                            <Label className="mb-2">Missions <span className="text-red-500">*</span></Label>
+                                            <Label className="mb-2">Missions <span
+                                                className="text-red-500">*</span></Label>
                                             <Editor
                                                 editorSerializedState={newJob.responsibilities ?? undefined}
                                                 onSerializedChange={(value) =>
@@ -801,7 +994,8 @@ export function AdminJobsTable() {
 
                                         {/* Sélection multiple de compétences */}
                                         <div className="space-y-2">
-                                            <Label className="mb-2">Competences requises<span className="text-red-500">*</span></Label>
+                                            <Label className="mb-2">Competences requises<span
+                                                className="text-red-500">*</span></Label>
                                             <Editor
                                                 editorSerializedState={newJob.requirements ?? undefined}
                                                 onSerializedChange={(value) =>
@@ -827,12 +1021,12 @@ export function AdminJobsTable() {
                                             <Label className="mb-2">Salaire</Label>
                                             <Select
                                                 value={newJob.salary}
-                                                onValueChange={(v) => setNewJob({ ...newJob, salary: v })}
+                                                onValueChange={(v) => setNewJob({...newJob, salary: v})}
                                             >
                                                 <SelectTrigger>
-                                                    <SelectValue placeholder="Sélectionner un salaire" />
+                                                    <SelectValue placeholder="Sélectionner un salaire"/>
                                                 </SelectTrigger>
-                                                <SelectContent>
+                                                <SelectContent className="max-h-60 overflow-y-auto">
                                                     {salaryRanges.map((range) => (
                                                         <SelectItem key={range} value={range}>
                                                             {range}
@@ -845,7 +1039,8 @@ export function AdminJobsTable() {
 
                                         {/* Gestion des tags (compétences, outils, domaines) */}
                                         <div className="space-y-3">
-                                            <Label className="mb-4">Tags(utile pour le referencement mais pas obligatoire) </Label>
+                                            <Label className="mb-4">Tags(utile pour le referencement mais pas
+                                                obligatoire) </Label>
                                             {/* Nouveau tag */}
                                             <div className="grid grid-cols-3 gap-2">
                                                 <Select value={newTagType}
@@ -904,15 +1099,19 @@ export function AdminJobsTable() {
 
                                         {/* Type de contrat */}
                                         <div className="space-y-2">
-                                            <Label className="mb-2">Type de contrat <span className="text-red-500">*</span></Label>
+                                            <Label className="mb-2">Type de contrat <span
+                                                className="text-red-500">*</span></Label>
                                             <Select
                                                 value={newJob.contractType}
-                                                onValueChange={(v) => setNewJob({...newJob, contractType : v as any })}
+                                                onValueChange={(v) => setNewJob({...newJob, contractType: v as any})}
                                             >
                                                 <SelectTrigger><SelectValue/></SelectTrigger>
-                                                <SelectContent>
+                                                <SelectContent className="max-h-60 overflow-y-auto">
                                                     <SelectItem value="CDI">CDI</SelectItem>
+                                                    <SelectItem value="CDI_PART_TIME">CDI (Temps partiel)</SelectItem>
                                                     <SelectItem value="CDD">CDD</SelectItem>
+                                                    <SelectItem value="CDI_PART_TIME">CDD (Temps partiel)</SelectItem>
+                                                    <SelectItem value="INTERIM">Intérim</SelectItem>
                                                     <SelectItem value="FREELANCE">Freelance</SelectItem>
                                                     <SelectItem value="INTERNSHIP">Stage</SelectItem>
                                                 </SelectContent>
@@ -1009,18 +1208,634 @@ export function AdminJobsTable() {
                                     </Button>
                                 )}
                                 {currentStep < STEPS.length ? (
-                                    <Button onClick={() => setCurrentStep(currentStep + 1)}>Suivant</Button>
+                                    <Button
+                                        onClick={() => {
+                                            if (canGoToNextStep(currentStep)) {
+                                                setCurrentStep(currentStep + 1);
+                                            } else {
+                                                toast.error(
+                                                    "Veuillez remplir tous les champs obligatoires pour passer à l’étape suivante"
+                                                );
+                                            }
+                                        }}
+                                    >
+                                        Suivant
+                                    </Button>
                                 ) : (
                                     <Button
-                                        onClick={handleCreateJob}
+                                        onClick={() => {
+                                            if (canGoToNextStep(currentStep)) {
+                                                setIsPreviewOpen(true);
+                                            } else {
+                                                toast.error(
+                                                    "Veuillez remplir tous les champs obligatoires avant la prévisualisation"
+                                                );
+                                            }
+                                        }}
                                         disabled={jobLoading}
                                     >
-                                        {jobLoading ? <><Spinner className="h-4 w-4 text-white" /> <span className="ml-2">En cours</span></>: 'Creer une offre'}
+                                        Visualiser
                                     </Button>
                                 )}
+
                             </div>
                         </DialogContent>
                     </Dialog>
+
+
+                    {/* MODAL MODIFICATION D'OFFRE */}
+                    <Dialog
+                        open={isEditDialogOpen}
+                        onOpenChange={(open) => {
+                            setIsEditDialogOpen(open);
+                            if (!open) setCurrentStep(1); // reset étapes
+                        }}
+                    >
+                        {editJob && (
+                            <DialogContent className="max-w-5xl overflow-y-auto max-h-[90vh]">
+                                <DialogHeader>
+                                    <DialogTitle>Modifier l'offre (Étape {currentStep}/4)</DialogTitle>
+                                    <div className="flex mt-2 space-x-1">
+                                        {STEPS.map((step) => (
+                                            <div
+                                                key={step.id}
+                                                className={`h-1 flex-1 rounded-full ${
+                                                    currentStep >= step.id ? "bg-[#1e3a88]" : "bg-gray-200"
+                                                }`}
+                                            />
+                                        ))}
+                                    </div>
+                                </DialogHeader>
+
+                                <div className="py-4">
+                                    {/* ÉTAPE 1 : ENTREPRISE */}
+                                    {currentStep === 1 && (
+                                        <div className="space-y-4">
+                                            <div>
+                                                <Label className="mb-2">Logo de l’entreprise</Label>
+                                                {/*<Input*/}
+                                                {/*    type="file"*/}
+                                                {/*    readOnly={true}*/}
+                                                {/*    accept="image/png,image/jpeg,image/webp"*/}
+                                                {/*    onChange={(e) => {*/}
+                                                {/*        const file = e.target.files?.[0];*/}
+                                                {/*        if (file) {*/}
+                                                {/*            setCompanyLogo(file)*/}
+                                                {/*            setLogoPreview(URL.createObjectURL(file))*/}
+                                                {/*        }*/}
+                                                {/*    }}*/}
+                                                {/*/>*/}
+                                                {logoPreview && (
+                                                    <div className="mt-3 flex items-center gap-3">
+                                                        <img
+                                                            src={logoPreview}
+                                                            alt="Logo entreprise"
+                                                            className="w-16 h-16 rounded-lg object-contain border"
+                                                        />
+                                                        {/*<button*/}
+                                                        {/*    type="button"*/}
+                                                        {/*    onClick={() => {*/}
+                                                        {/*        setCompanyLogo(null);*/}
+                                                        {/*        setLogoPreview(null);*/}
+                                                        {/*    }}*/}
+                                                        {/*    className="text-sm text-red-500 hover:underline"*/}
+                                                        {/*>*/}
+                                                        {/*    Supprimer*/}
+                                                        {/*</button>*/}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div>
+                                                <Label className="mb-2">Nom de l'entreprise <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    value={editJob.companyName ?? ""}
+                                                    onChange={(e) => setEditJob({ ...editJob, companyName: e.target.value })}
+                                                    placeholder="Ex: Irelis SARL"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <Label className="mb-2">Description de l'entreprise <span className="text-red-500">*</span></Label>
+                                                <Textarea
+                                                    rows={3}
+                                                    value={editJob.companyDescription ?? ""}
+                                                    onChange={(e) => setEditJob({ ...editJob, companyDescription: e.target.value })}
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <Label className="mb-2">Email de l'entreprise</Label>
+                                                <Input
+                                                    type="email"
+                                                    value={editJob.companyEmail ?? ""}
+                                                    onChange={(e) => setEditJob({ ...editJob, companyEmail: e.target.value })}
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <Label className="mb-2">Secteur d'activité <span className="text-red-500">*</span></Label>
+                                                <Select
+                                                    value={editJob.sectorId}
+                                                    onValueChange={(v) => setEditJob({ ...editJob, sectorId: v })}
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Sélectionnez un secteur" />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="max-h-60 overflow-y-auto">
+                                                        {sectors.map((s) => (
+                                                            <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+
+                                            <div>
+                                                <Label className="mb-2">Taille de l'entreprise</Label>
+                                                <Select
+                                                    value={editJob.companyLength}
+                                                    onValueChange={(v) => setEditJob({ ...editJob, companyLength: v })}
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Sélectionner la taille de l’entreprise"/>
+                                                    </SelectTrigger>
+                                                    <SelectContent className="max-h-60 overflow-y-auto">
+                                                        {companySizeRanges.map((range) => (
+                                                            <SelectItem key={range} value={range}>{range}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* ÉTAPE 2 : INFOS GÉNÉRALES */}
+                                    {currentStep === 2 && (
+                                        <div className="space-y-4">
+                                            <div>
+                                                <Label className="mb-2">Titre de l'offre <span className="text-red-500">*</span></Label>
+                                                <Input
+                                                    value={editJob.title ?? ""}
+                                                    placeholder="Ex: Directeur de Production"
+                                                    onChange={(e) => setEditJob({...editJob, title: e.target.value})}
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label className="mb-2">Description de l'offre <span className="text-red-500">*</span></Label>
+                                                {/*<Editor*/}
+                                                {/*    editorSerializedState={editJob.description ? JSON.parse(editJob.description) : ''}*/}
+                                                {/*    onSerializedChange={(value) =>*/}
+                                                {/*        setEditJobField("description", value)*/}
+                                                {/*    }*/}
+                                                {/*/>*/}
+                                                <Editor
+                                                    editorSerializedState={getEditorState(editJob.description)}
+                                                    onSerializedChange={(value) =>
+                                                        setEditJobField("description", value)
+                                                    }
+                                                />
+
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label className="mb-2">Pays <span className="text-red-500">*</span></Label>
+                                                    <Select
+                                                        value={editJob.workCountryLocation}
+                                                        onValueChange={(v) => {
+                                                            setEditJob({...editJob, workCountryLocation: v});
+                                                            setSelectedCountry(v);
+                                                        }}
+                                                    >
+                                                        <SelectTrigger><SelectValue placeholder="Sélectionnez un pays"/></SelectTrigger>
+                                                        <SelectContent>
+                                                            {COUNTRIES.map((country) => (
+                                                                <SelectItem key={country} value={country}>{country}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <Label className="mb-2">Ville <span className="text-red-500">*</span></Label>
+                                                    <Select
+                                                        value={editJob.workCityLocation}
+                                                        onValueChange={(v) => setEditJob({...editJob, workCityLocation: v})}
+                                                    >
+                                                        <SelectTrigger><SelectValue placeholder="Sélectionnez une ville"/></SelectTrigger>
+                                                        <SelectContent>
+                                                            {selectedCountry && COUNTRIES_WITH_CITIES[selectedCountry as keyof typeof COUNTRIES_WITH_CITIES]
+                                                                ? COUNTRIES_WITH_CITIES[selectedCountry as keyof typeof COUNTRIES_WITH_CITIES].map((city) => (
+                                                                    <SelectItem key={city} value={city}>{city}</SelectItem>
+                                                                ))
+                                                                : (
+                                                                    <SelectItem value="__placeholder__" disabled>
+                                                                        Sélectionnez d'abord un pays
+                                                                    </SelectItem>
+                                                                )
+                                                            }
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <Label className="mb-2">Date d'expiration</Label>
+                                                <Input
+                                                    type="date"
+                                                    value={editJob.expirationDate || ""}
+                                                    onChange={(e) => setEditJob({...editJob, expirationDate: e.target.value})}
+                                                />
+                                                <p className="text-sm text-gray-500 mt-1">
+                                                    Date actuelle : {editJob.expirationDate ? formatDateLong(editJob.expirationDate) : 'non spécifié'}
+                                                </p>
+
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* ÉTAPE 3 : DÉTAILS DU POSTE */}
+                                    {currentStep === 3 && (
+                                        <div className="space-y-6">
+                                            <div className="space-y-2">
+                                                <Label className="mb-2">Type de poste <span className="text-red-500">*</span></Label>
+                                                <Select
+                                                    value={editJob.jobType}
+                                                    onValueChange={(v) => setEditJob({...editJob, jobType: v as any})}
+                                                >
+                                                    <SelectTrigger><SelectValue/></SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="FULL_TIME">Temps plein</SelectItem>
+                                                        <SelectItem value="PART_TIME">Temps partiel</SelectItem>
+                                                        <SelectItem value="REMOTE">Télétravail</SelectItem>
+                                                        <SelectItem value="HYBRID">Hybride</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label className="mb-2">Missions <span className="text-red-500">*</span></Label>
+                                                {/*<Editor*/}
+                                                {/*    editorSerializedState={editJob.responsibilities ? JSON.parse(editJob.responsibilities) : ''}*/}
+                                                {/*    onSerializedChange={(value) =>*/}
+                                                {/*        setEditJobField("responsibilities", value)*/}
+                                                {/*    }*/}
+                                                {/*/>*/}
+
+                                                <Editor
+                                                    editorSerializedState={getEditorState(editJob.responsibilities)}
+                                                    onSerializedChange={(value) =>
+                                                        setEditJobField("responsibilities", value)
+                                                    }
+                                                />
+
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label className="mb-2">Compétences requises <span className="text-red-500">*</span></Label>
+                                                {/*<Editor*/}
+                                                {/*    editorSerializedState={editJob.requirements ? JSON.parse(editJob.requirements) : ''}*/}
+                                                {/*    onSerializedChange={(value) =>*/}
+                                                {/*        setEditJobField("requirements", value)*/}
+                                                {/*    }*/}
+                                                {/*/>*/}
+                                                <Editor
+                                                    editorSerializedState={getEditorState(editJob.requirements)}
+                                                    onSerializedChange={(value) =>
+                                                        setEditJobField("requirements", value)
+                                                    }
+                                                />
+
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label className="mb-2">Avantages</Label>
+                                                {/*<Editor*/}
+                                                {/*    editorSerializedState={editJob.benefits ? JSON.parse(editJob.benefits) : ''}*/}
+                                                {/*    onSerializedChange={(value) =>*/}
+                                                {/*        setEditJobField("benefits", value)*/}
+                                                {/*    }*/}
+                                                {/*/>*/}
+                                                <Editor
+                                                    editorSerializedState={getEditorState(editJob.benefits)}
+                                                    onSerializedChange={(value) =>
+                                                        setEditJobField("benefits", value)
+                                                    }
+                                                />
+
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label className="mb-2">Salaire</Label>
+                                                <Select
+                                                    value={editJob.salary}
+                                                    onValueChange={(v) => setEditJob({...editJob, salary: v})}
+                                                >
+                                                    <SelectTrigger><SelectValue placeholder="Sélectionner un salaire"/></SelectTrigger>
+                                                    <SelectContent className="max-h-60 overflow-y-auto">
+                                                        {salaryRanges.map((range) => (
+                                                            <SelectItem key={range} value={range}>{range}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+
+                                            {/* Tags */}
+                                            <div className="space-y-3">
+                                                <Label className="mb-4">Tags (facultatif)</Label>
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    <Select value={newTagType} onValueChange={(v) => setNewTagType(v as TagType)}>
+                                                        <SelectTrigger><SelectValue placeholder="Type"/></SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="skill">Compétence</SelectItem>
+                                                            <SelectItem value="tool">Outil</SelectItem>
+                                                            <SelectItem value="domain">Domaine</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+
+                                                    <Select value={newTagName} onValueChange={setNewTagName}>
+                                                        <SelectTrigger><SelectValue placeholder="Nom"/></SelectTrigger>
+                                                        <SelectContent>
+                                                            {TAG_NAMES[newTagType].map(name => (
+                                                                <SelectItem key={`${newTagType}-${name}`} value={name}>{name}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+
+                                                    <Button type="button" onClick={addTag} size="sm">+ Ajouter</Button>
+                                                </div>
+
+                                                {editJob.tagDto.length > 0 ? (
+                                                    <div className="flex flex-wrap gap-2 mt-2">
+                                                        {editJob.tagDto.map((tag, index) => (
+                                                            <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                                                                {tag.name} ({tag.type})
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => removeTag(index)}
+                                                                    className="ml-1 text-xs text-muted-foreground hover:text-foreground"
+                                                                >✕</button>
+                                                            </Badge>
+                                                        ))}
+                                                    </div>
+                                                ) : <p className="text-sm text-muted-foreground">Aucun mot-clé ajouté.</p>}
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label className="mb-2">Type de contrat <span className="text-red-500">*</span></Label>
+                                                <Select
+                                                    value={editJob.contractType}
+                                                    onValueChange={(v) => setEditJob({...editJob, contractType: v as any})}
+                                                >
+                                                    <SelectTrigger><SelectValue/></SelectTrigger>
+                                                    <SelectContent className="max-h-60 overflow-y-auto">
+                                                        <SelectItem value="CDI">CDI</SelectItem>
+                                                        <SelectItem value="CDI_PART_TIME">CDI (Temps partiel)</SelectItem>
+                                                        <SelectItem value="CDD">CDD</SelectItem>
+                                                        <SelectItem value="CDI_PART_TIME">CDD (Temps partiel)</SelectItem>
+                                                        <SelectItem value="INTERIM">Intérim</SelectItem>
+                                                        <SelectItem value="FREELANCE">Freelance</SelectItem>
+                                                        <SelectItem value="INTERNSHIP">Stage</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* ÉTAPE 4 : OPTIONS AVANCÉES */}
+                                    {currentStep === 4 && (
+                                        <div className="space-y-4">
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <Label className="mb-2">Langue requise <span className="text-red-500">*</span></Label>
+                                                    <Input
+                                                        value={editJob.requiredLanguage}
+                                                        onChange={(e) => setEditJob({...editJob, requiredLanguage: e.target.value})}
+                                                        placeholder="Ex: Français"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-4 pt-2">
+                                                <Checkbox
+                                                    id="urgent"
+                                                    checked={editJob.isUrgent}
+                                                    onCheckedChange={(checked) => setEditJob({...editJob, isUrgent: checked as boolean})}
+                                                />
+                                                <Label htmlFor="urgent">Offre urgente</Label>
+                                            </div>
+
+                                            <div>
+                                                <Label className="mb-2">Nombre de postes</Label>
+                                                <Input
+                                                    type="number"
+                                                    min="1"
+                                                    value={editJob.postNumber || 1}
+                                                    onChange={(e) => setEditJob({...editJob, postNumber: Number(e.target.value) || 1})}
+                                                />
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label className="mb-2">Documents requis <span className="text-red-500">*</span></Label>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {DOCUMENT_TYPES.map((doc) => {
+                                                        const isChecked = editJob.requiredDocuments.some(d => d.type === doc.value);
+                                                        return (
+                                                            <div key={doc.value} className="flex items-center gap-1">
+                                                                <Checkbox
+                                                                    id={`doc-${doc.value}`}
+                                                                    checked={isChecked}
+                                                                    onCheckedChange={(checked) => {
+                                                                        let updated = [...editJob.requiredDocuments];
+                                                                        if (checked) updated.push({type: doc.value});
+                                                                        else updated = updated.filter(d => d.type !== doc.value);
+                                                                        if (updated.length === 0) return;
+                                                                        setEditJob({...editJob, requiredDocuments: updated});
+                                                                    }}
+                                                                />
+                                                                <Label htmlFor={`doc-${doc.value}`} className="text-sm">{doc.label}</Label>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* BOUTONS PRÉCÉDENT / SUIVANT / ENREGISTRER */}
+                                <div className="flex justify-between gap-2 pt-2">
+                                    {currentStep > 1 && (
+                                        <Button variant="outline" onClick={() => setCurrentStep(currentStep - 1)}>Précédent</Button>
+                                    )}
+                                    {currentStep < STEPS.length ? (
+                                        <Button onClick={() => setCurrentStep(currentStep + 1)}>Suivant</Button>
+                                    ) : (
+                                        <Button
+                                            onClick={handleUpdateJob}
+                                        >
+                                            {updateLoading ? <><Spinner className="h-4 w-4 text-white"/> <span className="ml-2">En cours</span></> : "Modifier"}
+                                        </Button>
+                                    )}
+                                </div>
+                            </DialogContent>
+                        )}
+
+                    </Dialog>
+
+
+                    <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+                        <DialogContent
+                            className="max-w-5xl max-h-[90vh] overflow-y-auto p-6 rounded-xl shadow-lg bg-white">
+                            <DialogHeader className="pl-2">
+                                <DialogTitle className="text-2xl font-bold mb-2 text-[#1e3a8a] ">Prévisualisation de
+                                    l'offre</DialogTitle>
+                                <p className="text-sm text-gray-500 mb-4">Vérifiez toutes les informations avant de
+                                    publier votre offre.</p>
+                            </DialogHeader>
+
+                            {/* Card container */}
+                            <div
+                                className="bg-gradient-to-br from-blue-50/80 to-indigo-50/50 p-10 rounded-xl border border-blue-100/50 shadow-sm space-y-6">
+                                {/* Header */}
+                                <div className="flex items-center gap-4">
+                                    {companyLogo && (
+                                        <img
+                                            src={URL.createObjectURL(companyLogo)}
+                                            alt="Logo entreprise"
+                                            className="w-20 h-20 object-cover rounded-lg border object-contain "
+                                        />
+                                    )}
+                                    <div className="space-y-1">
+                                        <h3 className="text-xl font-semibold text-[#1e3a8a]">{newJob.title}</h3>
+                                        <p className="text-gray-700">{newJob.companyName}</p>
+                                    </div>
+                                </div>
+
+                                {/* Grid of fields */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2  gap-4 text-sm text-gray-700">
+                                    {[
+                                        {label: "Type de contrat", value: getContractTypeLabel(newJob.contractType), icon: Briefcase},
+                                        {label: "Salaire", value: newJob.salary || "Non spécifié", icon: Banknote},
+                                        {
+                                            label: "Lieu",
+                                            value: `${newJob.workCityLocation}, ${newJob.workCountryLocation}`,
+                                            icon: MapPin
+                                        },
+                                        {
+                                            label: "Date d'expiration",
+                                            value: formatDateLong(newJob.expirationDate) || "Non définie",
+                                            icon: Clock
+                                        },
+                                        {label: "Langue requise", value: newJob.requiredLanguage || "-", icon: Globe},
+                                        {label: "Nombre de postes", value: newJob.postNumber ?? 1, icon: Users},
+                                        {
+                                            label: "Offre urgente",
+                                            value: newJob.isUrgent ? "Oui" : "Non",
+                                            icon: AlertCircle
+                                        },
+                                    ].map((item, i) => (
+                                        <div key={i} className="flex p-2 items-start gap-4 text-base">
+                                            <item.icon className="w-4 h-4 text-[#1e3a8a]/70 flex-shrink-0 mt-1"/>
+                                            <div className="flex-1 flex gap-2">
+                                                <span className="font-medium text-gray-800">{item.label}</span>
+                                                <span className="text-gray-700 break-words">{item.value}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="grid grid-cols-1 gap-6">
+                                    {/* Description */}
+                                    {newJob.description && (
+                                        <div>
+                                            <h4 className="text-[#1e3a8a] font-semibold mb-1">Description de
+                                                l'offre</h4>
+                                            <ReadonlyEditor
+                                                value={newJob.description}
+                                                namespace={`job-description`}
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* Missions */}
+                                    {newJob.responsibilities && (
+                                        <div>
+                                            <h4 className="text-[#1e3a8a] font-semibold mb-1">Missions</h4>
+                                            <ReadonlyEditor
+                                                value={newJob.responsibilities}
+                                                namespace={`job-responsibilities`}
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* Compétences */}
+                                    {newJob.requirements && (
+                                        <div>
+                                            <h4 className="text-[#1e3a8a] font-semibold mb-1">Compétences requises</h4>
+                                            <ReadonlyEditor
+                                                value={newJob.requirements}
+                                                namespace={`job-requirements`}
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* Avantages */}
+                                    {newJob.benefits && (
+                                        <div>
+                                            <h4 className="text-[#1e3a8a] font-semibold mb-1">Avantages</h4>
+                                            <ReadonlyEditor
+                                                value={newJob.benefits}
+                                                namespace={`job-benefits`}
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* Documents requis */}
+                                    {newJob.requiredDocuments.length > 0 && (
+                                        <div>
+                                            <h4 className="text-[#1e3a8a] font-semibold mb-1">Documents requis</h4>
+                                            <ul className="list-disc pl-5 space-y-1 text-gray-700">
+                                                {newJob.requiredDocuments.map(d => (
+                                                    <li key={d.type}>{documentLabels[d.type]}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                    {newJob.tagDto.length > 0 && (
+                                        <div>
+                                            <h4 className="text-[#1e3a8a] font-semibold mb-1">Tags</h4>
+                                            <div className="flex flex-wrap gap-2">
+                                                {newJob.tagDto.map(tag => (
+                                                    <span
+                                                        key={tag.name}
+                                                        className="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded"
+                                                    >
+            {tag.name}
+          </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                            </div>
+
+                            {/* Footer */}
+                            <div className="flex justify-between gap-2 mt-6">
+                                <Button variant="outline" onClick={() => setIsPreviewOpen(false)}>
+                                    Revenir
+                                </Button>
+                                <Button onClick={handleCreateJob} disabled={jobLoading}>
+                                    {jobLoading ? <><Spinner className="h-4 w-4 text-white"/> <span className="ml-2">En cours</span></> : "Publier l'offre"}
+                                </Button>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+
+
+
+
                 </div>
             </div>
 
@@ -1066,17 +1881,17 @@ export function AdminJobsTable() {
                                     <TableCell className="font-medium">{job.companyName}</TableCell>
                                     <TableCell>{job.workCityLocation}, {job.workCountryLocation}</TableCell>
                                     <TableCell>
-                                        <Badge variant="outline">{job.contractType}</Badge>
+                                        <Badge variant="outline">{getContractTypeLabel(job.contractType)}</Badge>
                                     </TableCell>
                                     <TableCell className="">{getStatusBadge(job.status)}</TableCell>
                                     <TableCell>
                                         {job.publishedAt
-                                            ? formatDateShort(job.publishedAt)
+                                            ? formatDateRelative(job.publishedAt)
                                             : "—"}
                                     </TableCell>
                                     <TableCell className=" text-sm">
                                         {job.expirationDate
-                                            ? formatDateShort(job.expirationDate)
+                                            ? formatDateLong(job.expirationDate)
                                             : job.status === "PUBLISHED"
                                                 ? "Postuler au plutot"
                                                 : "Non publiée"}
@@ -1095,16 +1910,28 @@ export function AdminJobsTable() {
                                                         <Eye className="h-4 w-4 mr-2"/> Publier
                                                     </DropdownMenuItem>
                                                 )}
-                                                {/*<DropdownMenuItem>*/}
-                                                {/*    <Edit className="h-4 w-4 mr-2"/>*/}
-                                                {/*    Modifier (non disponible)*/}
+                                                {/*<DropdownMenuItem onClick={() => alert('view')}>*/}
+                                                {/*    <Eye className="h-4 w-4 mr-2"/>*/}
+                                                {/*    Voir les details*/}
                                                 {/*</DropdownMenuItem>*/}
-                                                {/*<DropdownMenuSeparator/>*/}
+                                                <DropdownMenuItem
+                                                    onClick={() => {
+                                                        setEditJob(job);
+                                                        setIsEditDialogOpen(true);
+                                                        setSelectedCountry(job.workCountryLocation)
+                                                        setLogoPreview(job.companyLogoUrl || null);
+                                                    }}
+                                                >
+                                                    <Edit className="h-4 w-4 mr-2" />
+                                                    Modifier
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator/>
                                                 <DropdownMenuItem
                                                     className="text-destructive"
                                                     onClick={() => {
                                                         setJobToDelete(job.id);
                                                         setDeleteModalOpen(true);
+
                                                     }}
                                                 >
                                                     <Trash2 className="h-4 w-4 mr-2"/> Supprimer

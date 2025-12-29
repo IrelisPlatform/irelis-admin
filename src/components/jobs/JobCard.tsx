@@ -24,10 +24,22 @@ export function JobCard({job, onClick, isSelected}: JobCardProps) {
     const {t} = useLanguage()
 
     const location = job.location || "Localisation non précisée";
-    const contractType = job.type || "Type non précisé";
+    const contractType = job.type
     const tags = job.tags || [];
     const company = job.company || "Entreprise confidentielle";
     const companyInitials = job.companyLogo ? job.companyLogo : company.substring(0, 2).toUpperCase();
+
+    const ContractTypeLabels: Record<string, string> = {
+        CDI: "CDI (Temps plein)",
+        CDD: "CDD (Temps plein)",
+        CDI_PART_TIME: "CDI (Temps partiel)",
+        CDD_PART_TIME: "CDD (Temps partiel)",
+        INTERNSHIP: "Stage",
+        ALTERNATIVE: "Alternance",
+        FREELANCE: "Freelance",
+        INTERIM: "Intérim"
+    }
+
 
     const handleBookmark = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -132,7 +144,7 @@ export function JobCard({job, onClick, isSelected}: JobCardProps) {
                             transition={{duration: 0.2}}
                         >
                             <Briefcase className="w-4 h-4 text-[#1e3a8a]/70 flex-shrink-0"/>
-                            {contractType}
+                            {ContractTypeLabels[contractType]}
                         </motion.span>
                         <motion.span
                             className="flex items-center gap-2"
@@ -189,7 +201,7 @@ export function JobCard({job, onClick, isSelected}: JobCardProps) {
                             <Badge
                                 key={tag}
                                 variant="secondary"
-                                className="bg-blue-50 text-[#1e3a8a] hover:bg-blue-100 transition-all duration-200 border border-blue-100 hover:border-blue-200"
+                                className="bg-blue-50 text-[#1e3a8a] hover:bg-blue-100 transition-all duration-200 border border-blue-100 hover:border-blue-200 mt-2"
                             >
                                 {tag}
                             </Badge>

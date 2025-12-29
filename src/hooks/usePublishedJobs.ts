@@ -82,6 +82,7 @@ const transformJob = (job: BackendPublishedJob): PublishedJob => {
         sector: job.sectorName,
         companySize: job.companyLength,
         companyLogo:job.companyLogoUrl,
+        requiredLanguage:job.requiredLanguage,
         tags: job.tagDto.map(t => t.name),
         responsibilities: parseListFromString(job.responsibilities),
         qualifications: parseListFromString(job.requirements),
