@@ -775,7 +775,7 @@ export function AdminJobsTable() {
                                                     <img
                                                         src={URL.createObjectURL(companyLogo)}
                                                         alt="Logo entreprise"
-                                                        className="w-16 h-16 rounded-lg object-cover border"
+                                                        className="w-16 h-16 rounded-lg object-contain border"
                                                     />
                                                     <button
                                                         type="button"
@@ -1703,7 +1703,7 @@ export function AdminJobsTable() {
                                         <img
                                             src={URL.createObjectURL(companyLogo)}
                                             alt="Logo entreprise"
-                                            className="w-20 h-20 object-cover rounded-lg border object-contain "
+                                            className="w-16 h-16 rounded-lg border"
                                         />
                                     )}
                                     <div className="space-y-1">
