@@ -31,7 +31,7 @@ import {toast} from "sonner";
 import {useRouter} from "next/navigation";
 import useSectors, {Sector} from '@/hooks/useSectors';
 import {useAdminJobs} from '@/hooks/admin/useAdminJobs';
-import {PublishedJob} from '@/types/job';
+import {PublishedJob, PublishedJobEditor} from '@/types/job';
 import {COUNTRIES_WITH_CITIES, COUNTRIES} from '@/lib/countries';
 import {getSkillsForSector, EDUCATION_LEVELS, EXPERIENCE_OPTIONS} from '@/lib/jobRequirements';
 import {TAG_NAMES, TagType} from '@/lib/jobTags';
@@ -93,9 +93,36 @@ const INITIAL_JOB_STATE = {
     tagDto: [] as TagDto[],
     requiredDocuments: [{type: "CV"}],
 };
+const INITIAL_EDIT_JOB_STATE = {
+    // Champs entreprise (étape 1)
+    companyName: "",
+    companyEmail: "",
+    companyDescription: "",
+    companyLength: "",
+    sectorId: "",
 
-
-
+    // Champs offre
+    title: "",
+    description: null as SerializedEditorState | null,
+    workCountryLocation: "",
+    workCityLocation: "",
+    responsibilities: null as SerializedEditorState | null,
+    requirements: null as SerializedEditorState | null,
+    benefits: null as SerializedEditorState | null,
+    contractType: "CDI" as const,
+    status: "PENDING" as const,
+    jobType: "FULL_TIME" as const,
+    salary: "",
+    publishedAt: "",
+    expirationDate: "",
+    isFeatured: false,
+    isUrgent: false,
+    requiredLanguage: "",
+    sectorName: "",
+    postNumber: 1,
+    tagDto: [] as TagDto[],
+    requiredDocuments: [{type: "CV"}],
+};
 
 
 export function AdminJobsTable() {
@@ -105,50 +132,6 @@ export function AdminJobsTable() {
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
     const [updateLoading, setUpdateLoading] = useState<boolean>(false);
-
-    const LogoInput = React.memo(function LogoInput({
-                                                        onChange,
-                                                    }: {
-        onChange: (file: File | null) => void;
-    }) {
-        const [preview, setPreview] = useState<string | null>(null);
-
-        useEffect(() => {
-            return () => {
-                if (preview) URL.revokeObjectURL(preview);
-            };
-        }, [preview]);
-
-        return (
-            <div className="space-y-2">
-                <Input
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    onChange={(e) => {
-                        const file = e.target.files?.[0] || null;
-                        const url = file ? URL.createObjectURL(file) : null;
-                        setPreview(url);
-                        onChange(file);
-                    }}
-                />
-
-                {preview && (
-                    <img
-                        src={preview}
-                        alt="Logo preview"
-                        className="w-16 h-16 rounded-lg object-cover border"
-                    />
-                )}
-            </div>
-        );
-    });
-    const handleLogoChange = useCallback((file: File | null) => {
-        setCompanyLogo(file);
-    }, []);
-
-
-
-
 
     const canGoToNextStep = (step: number) => {
         switch (step) {
@@ -190,7 +173,6 @@ export function AdminJobsTable() {
 
             setUpdateLoading(true);
             if (!editJob) return;
-
             const payload = {
                 companyName: editJob.companyName?.trim() || "",
                 companyDescription: editJob.companyDescription?.trim() || "",
@@ -255,9 +237,9 @@ export function AdminJobsTable() {
             [field]: value,
         }))
     }
-    function setEditJobField<K extends keyof typeof INITIAL_JOB_STATE>(
+    function setEditJobField<K extends keyof typeof INITIAL_EDIT_JOB_STATE>(
         field: K,
-        value: (typeof INITIAL_JOB_STATE)[K]
+        value: (typeof INITIAL_EDIT_JOB_STATE)[K]
     ) {
         setEditJob((prev) => ({
             ...prev,
@@ -349,10 +331,14 @@ export function AdminJobsTable() {
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [jobToDelete, setJobToDelete] = useState<string | null>(null);
     const [newJob, setNewJob] = useState(INITIAL_JOB_STATE);
-    const [editJob, setEditJob] = useState<PublishedJob | null>(null);
+    const [editJob, setEditJob] = useState(INITIAL_EDIT_JOB_STATE);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
 
+    // console.log("description ",editJob.description);
+    // console.log("missions ",editJob.responsibilities);
+    // console.log("competences ",editJob.requirements)
+    // console.log("benefits ",editJob.benefits);
 
 
     const salaryRanges: string[] = []
@@ -397,30 +383,30 @@ export function AdminJobsTable() {
     const [otherExperience, setOtherExperience] = useState("");
 
     // État pour stocker les compétences sélectionnées (tableau)
-    const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
-    // Ajouter une compétence
-    const addSkill = (skill: string) => {
-        if (skill.trim() && !selectedSkills.includes(skill.trim())) {
-            const updated = [...selectedSkills, skill.trim()];
-            setSelectedSkills(updated);
-            // Synchronise avec newJob.requirements
-            setNewJob(prev => ({...prev, requirements: updated.join(', ')}));
-        }
-    };
+    // const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+    // // Ajouter une compétence
+    // const addSkill = (skill: string) => {
+    //     if (skill.trim() && !selectedSkills.includes(skill.trim())) {
+    //         const updated = [...selectedSkills, skill.trim()];
+    //         setSelectedSkills(updated);
+    //         // Synchronise avec newJob.requirements
+    //         setNewJob(prev => ({...prev, requirements: updated.join(', ')}));
+    //     }
+    // };
 
     // Supprimer une compétence
-    const removeSkill = (skillToRemove: string) => {
-        const updated = selectedSkills.filter(s => s !== skillToRemove);
-        setSelectedSkills(updated);
-        setNewJob(prev => ({...prev, requirements: updated.join(', ')}));
-    };
+    // const removeSkill = (skillToRemove: string) => {
+    //     const updated = selectedSkills.filter(s => s !== skillToRemove);
+    //     setSelectedSkills(updated);
+    //     setNewJob(prev => ({...prev, requirements: updated.join(', ')}));
+    // };
 
     // Réinitialiser quand le secteur change
-    useEffect(() => {
-        setSelectedSkills([]);
-        setOtherCompetence(null);
-        setNewJob(prev => ({...prev, requirements: ""}));
-    }, [selectedSectorName]);
+    // useEffect(() => {
+    //     setSelectedSkills([]);
+    //     setOtherCompetence(null);
+    //     setNewJob(prev => ({...prev, requirements: ""}));
+    // }, [selectedSectorName]);
 
     const [newTagType, setNewTagType] = useState<"skill" | "tool" | "domain">("skill");
     const [newTagName, setNewTagName] = useState("");
@@ -450,30 +436,30 @@ export function AdminJobsTable() {
     }, [newJob.sectorId, sectors]);
 
 
-    const skillsForSector = useMemo(() => {
-        return getSkillsForSector(selectedSectorName);
-    }, [selectedSectorName]);
+    // const skillsForSector = useMemo(() => {
+    //     return getSkillsForSector(selectedSectorName);
+    // }, [selectedSectorName]);
 
-
-    useEffect(() => {
-        const parts: string[] = [];
-
-        if (selectedSkills.length > 0) {
-            parts.push(...selectedSkills);
-        }
-
-        if (formationDetail) {
-            parts.push(formationDetail);
-        }
-
-        if (experiences && experiences !== "Autre") {
-            parts.push(experiences);
-        } else if (experiences === "Autre" && otherExperience.trim()) {
-            parts.push(otherExperience.trim());
-        }
-
-        setNewJob(prev => ({...prev, requirements: parts.join(', ')}));
-    }, [selectedSkills, formationDetail, experiences, otherExperience]);
+    //
+    // useEffect(() => {
+    //     const parts: string[] = [];
+    //
+    //     if (selectedSkills.length > 0) {
+    //         parts.push(...selectedSkills);
+    //     }
+    //
+    //     if (formationDetail) {
+    //         parts.push(formationDetail);
+    //     }
+    //
+    //     if (experiences && experiences !== "Autre") {
+    //         parts.push(experiences);
+    //     } else if (experiences === "Autre" && otherExperience.trim()) {
+    //         parts.push(otherExperience.trim());
+    //     }
+    //
+    //     setNewJob(prev => ({...prev, requirements: parts.join(', ')}));
+    // }, [selectedSkills, formationDetail, experiences, otherExperience]);
 
     useEffect(() => {
 
@@ -622,16 +608,16 @@ export function AdminJobsTable() {
             setNewJob(INITIAL_JOB_STATE);
             setSelectedCountry("");
             setSelectedSectorName("");
-            setOtherCompetence("");
+            // setOtherCompetence("");
             // setFormationLevel(null);
-            setFormationDetail("");
-            setExperiences("");
-            setOtherExperience("");
+            // setFormationDetail("");
+            // setExperiences("");
+            // setOtherExperience("");
             setIsCreateDialogOpen(false);
             setIsPreviewOpen(false);
             setCurrentStep(1);
         } catch (err) {
-            // Erreur déjà affichée par le hook
+            console.error(err);
         }
     };
 
@@ -1273,18 +1259,17 @@ export function AdminJobsTable() {
                                         <div className="space-y-4">
                                             <div>
                                                 <Label className="mb-2">Logo de l’entreprise</Label>
-                                                {/*<Input*/}
-                                                {/*    type="file"*/}
-                                                {/*    readOnly={true}*/}
-                                                {/*    accept="image/png,image/jpeg,image/webp"*/}
-                                                {/*    onChange={(e) => {*/}
-                                                {/*        const file = e.target.files?.[0];*/}
-                                                {/*        if (file) {*/}
-                                                {/*            setCompanyLogo(file)*/}
-                                                {/*            setLogoPreview(URL.createObjectURL(file))*/}
-                                                {/*        }*/}
-                                                {/*    }}*/}
-                                                {/*/>*/}
+                                                <Input
+                                                    type="file"
+                                                    accept="image/png,image/jpeg,image/webp"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) {
+                                                            setCompanyLogo(file)
+                                                            setLogoPreview(URL.createObjectURL(file))
+                                                        }
+                                                    }}
+                                                />
                                                 {logoPreview && (
                                                     <div className="mt-3 flex items-center gap-3">
                                                         <img
@@ -1292,16 +1277,16 @@ export function AdminJobsTable() {
                                                             alt="Logo entreprise"
                                                             className="w-16 h-16 rounded-lg object-contain border"
                                                         />
-                                                        {/*<button*/}
-                                                        {/*    type="button"*/}
-                                                        {/*    onClick={() => {*/}
-                                                        {/*        setCompanyLogo(null);*/}
-                                                        {/*        setLogoPreview(null);*/}
-                                                        {/*    }}*/}
-                                                        {/*    className="text-sm text-red-500 hover:underline"*/}
-                                                        {/*>*/}
-                                                        {/*    Supprimer*/}
-                                                        {/*</button>*/}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setCompanyLogo(null);
+                                                                setLogoPreview(null);
+                                                            }}
+                                                            className="text-sm text-red-500 hover:underline"
+                                                        >
+                                                            Supprimer
+                                                        </button>
                                                     </div>
                                                 )}
                                             </div>
@@ -1383,13 +1368,13 @@ export function AdminJobsTable() {
                                             <div>
                                                 <Label className="mb-2">Description de l'offre <span className="text-red-500">*</span></Label>
                                                 {/*<Editor*/}
-                                                {/*    editorSerializedState={editJob.description ? JSON.parse(editJob.description) : ''}*/}
+                                                {/*    editorSerializedState={editJob.description ? JSON.parse(editJob.description) : undefined}*/}
                                                 {/*    onSerializedChange={(value) =>*/}
                                                 {/*        setEditJobField("description", value)*/}
                                                 {/*    }*/}
                                                 {/*/>*/}
                                                 <Editor
-                                                    editorSerializedState={getEditorState(editJob.description)}
+                                                    editorSerializedState={editJob.description}
                                                     onSerializedChange={(value) =>
                                                         setEditJobField("description", value)
                                                     }
@@ -1475,53 +1460,53 @@ export function AdminJobsTable() {
 
                                             <div className="space-y-2">
                                                 <Label className="mb-2">Missions <span className="text-red-500">*</span></Label>
-                                                {/*<Editor*/}
-                                                {/*    editorSerializedState={editJob.responsibilities ? JSON.parse(editJob.responsibilities) : ''}*/}
-                                                {/*    onSerializedChange={(value) =>*/}
-                                                {/*        setEditJobField("responsibilities", value)*/}
-                                                {/*    }*/}
-                                                {/*/>*/}
-
                                                 <Editor
-                                                    editorSerializedState={getEditorState(editJob.responsibilities)}
+                                                    editorSerializedState={editJob.responsibilities}
                                                     onSerializedChange={(value) =>
                                                         setEditJobField("responsibilities", value)
                                                     }
                                                 />
 
+                                                {/*<Editor*/}
+                                                {/*    editorSerializedState={getEditorState(editJob.responsibilities)}*/}
+                                                {/*    onSerializedChange={(value) =>*/}
+                                                {/*        setEditJobField("responsibilities", value)*/}
+                                                {/*    }*/}
+                                                {/*/>*/}
+
                                             </div>
 
                                             <div className="space-y-2">
                                                 <Label className="mb-2">Compétences requises <span className="text-red-500">*</span></Label>
-                                                {/*<Editor*/}
-                                                {/*    editorSerializedState={editJob.requirements ? JSON.parse(editJob.requirements) : ''}*/}
-                                                {/*    onSerializedChange={(value) =>*/}
-                                                {/*        setEditJobField("requirements", value)*/}
-                                                {/*    }*/}
-                                                {/*/>*/}
                                                 <Editor
-                                                    editorSerializedState={getEditorState(editJob.requirements)}
+                                                    editorSerializedState={editJob.requirements}
                                                     onSerializedChange={(value) =>
                                                         setEditJobField("requirements", value)
                                                     }
                                                 />
+                                                {/*<Editor*/}
+                                                {/*    editorSerializedState={getEditorState(editJob.requirements)}*/}
+                                                {/*    onSerializedChange={(value) =>*/}
+                                                {/*        setEditJobField("requirements", value)*/}
+                                                {/*    }*/}
+                                                {/*/>*/}
 
                                             </div>
 
                                             <div className="space-y-2">
                                                 <Label className="mb-2">Avantages</Label>
-                                                {/*<Editor*/}
-                                                {/*    editorSerializedState={editJob.benefits ? JSON.parse(editJob.benefits) : ''}*/}
-                                                {/*    onSerializedChange={(value) =>*/}
-                                                {/*        setEditJobField("benefits", value)*/}
-                                                {/*    }*/}
-                                                {/*/>*/}
                                                 <Editor
-                                                    editorSerializedState={getEditorState(editJob.benefits)}
+                                                    editorSerializedState={editJob.benefits}
                                                     onSerializedChange={(value) =>
                                                         setEditJobField("benefits", value)
                                                     }
                                                 />
+                                                {/*<Editor*/}
+                                                {/*    editorSerializedState={getEditorState(editJob.benefits)}*/}
+                                                {/*    onSerializedChange={(value) =>*/}
+                                                {/*        setEditJobField("benefits", value)*/}
+                                                {/*    }*/}
+                                                {/*/>*/}
 
                                             </div>
 
@@ -1916,7 +1901,13 @@ export function AdminJobsTable() {
                                                 {/*</DropdownMenuItem>*/}
                                                 <DropdownMenuItem
                                                     onClick={() => {
-                                                        setEditJob(job);
+                                                        setEditJob({
+                                                            ...job,
+                                                            description: job.description ? JSON.parse(job.description) : undefined,
+                                                            responsibilities: job.responsibilities ? JSON.parse(job.responsibilities) : undefined,
+                                                            requirements: job.requirements ? JSON.parse(job.requirements) : undefined,
+                                                            benefits: job.benefits ? JSON.parse(job.benefits) : undefined,
+                                                        });
                                                         setIsEditDialogOpen(true);
                                                         setSelectedCountry(job.workCountryLocation)
                                                         setLogoPreview(job.companyLogoUrl || null);
