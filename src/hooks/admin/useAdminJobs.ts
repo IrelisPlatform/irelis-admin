@@ -118,7 +118,7 @@ export function useAdminJobs() {
         setLoading(true);
         try {
             const response = await api.post<AdminJob>(
-                '/admin/jobs/create',
+                '/admin/jobs',
                 formData,
                 {
                     headers: {
