@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, {useState, useEffect, useMemo, Fragment, useCallback} from "react";
+import React, {useState, useEffect, useMemo, Fragment, useCallback, useRef} from "react";
 import {
     Search, Filter, Plus, MoreVertical, Edit, Trash2, Eye, ShieldCheck, Star,
     AlertCircle, Briefcase, Banknote, MapPin, Clock, Calendar, Globe, Users,
@@ -31,7 +31,7 @@ import {toast} from "sonner";
 import {useRouter} from "next/navigation";
 import useSectors, {Sector} from '@/hooks/useSectors';
 import {useAdminJobs} from '@/hooks/admin/useAdminJobs';
-import {PublishedJob, PublishedJobEditor} from '@/types/job';
+import {PublishedJob} from '@/types/job';
 import {COUNTRIES_WITH_CITIES, COUNTRIES} from '@/lib/countries';
 import {getSkillsForSector, EDUCATION_LEVELS, EXPERIENCE_OPTIONS} from '@/lib/jobRequirements';
 import {TAG_NAMES, TagType} from '@/lib/jobTags';
@@ -132,6 +132,7 @@ export function AdminJobsTable() {
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
     const [updateLoading, setUpdateLoading] = useState<boolean>(false);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     const canGoToNextStep = (step: number) => {
         switch (step) {
@@ -614,6 +615,7 @@ export function AdminJobsTable() {
             // setExperiences("");
             // setOtherExperience("");
             setIsCreateDialogOpen(false);
+            setCompanyLogo(null)
             setIsPreviewOpen(false);
             setCurrentStep(1);
         } catch (err) {
@@ -748,14 +750,34 @@ export function AdminJobsTable() {
                                             <Label className="mb-2">Logo de l’entreprise</Label>
                                             <Input
                                                 type="file"
+                                                ref={fileInputRef}
                                                 accept="image/png,image/jpeg,image/webp"
                                                 onChange={(e) => {
                                                     const file = e.target.files?.[0];
-                                                    if (file) {
-                                                        setCompanyLogo(file);
+                                                    if (!file) return;
+
+                                                    const MAX_SIZE = 2 * 1024 * 1024;
+                                                    const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+
+                                                    if (!allowedTypes.includes(file.type)) {
+                                                        toast.error("Format non supporté (PNG, JPEG, WEBP uniquement)");
+                                                        e.target.value = "";
+                                                        return;
                                                     }
+
+                                                    if (file.size > MAX_SIZE) {
+                                                        toast.error("Le logo ne doit pas dépasser 2 Mo");
+                                                        e.target.value = "";
+                                                        return;
+                                                    }
+
+                                                    setCompanyLogo(file);
                                                 }}
                                             />
+                                            <p className="mt-1 text-sm text-gray-500">
+                                               Taille maximale : 2 Mo
+                                            </p>
+
                                             {companyLogo && (
                                                 <div className="mt-3 flex items-center gap-3">
                                                     <img
@@ -765,11 +787,17 @@ export function AdminJobsTable() {
                                                     />
                                                     <button
                                                         type="button"
-                                                        onClick={() => setCompanyLogo(null)}
+                                                        onClick={() => {
+                                                            setCompanyLogo(null);
+                                                            if (fileInputRef.current) {
+                                                                fileInputRef.current.value = "";
+                                                            }
+                                                        }}
                                                         className="text-sm text-red-500 hover:underline"
                                                     >
                                                         Supprimer
                                                     </button>
+
                                                 </div>
                                             )}
                                         </div>
@@ -1270,6 +1298,9 @@ export function AdminJobsTable() {
                                                         }
                                                     }}
                                                 />
+                                                <p className="text-xs text-gray-500 mt-1">
+                                                   Taille max : 2 Mo
+                                                </p>
                                                 {logoPreview && (
                                                     <div className="mt-3 flex items-center gap-3">
                                                         <img
@@ -1671,7 +1702,7 @@ export function AdminJobsTable() {
 
                     <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
                         <DialogContent
-                            className="max-w-5xl max-h-[90vh] overflow-y-auto p-6 rounded-xl shadow-lg bg-white">
+                            className="max-w-5xl max-h-[90vh] overflow-y-auto p-6 rounded-xl bg-white">
                             <DialogHeader className="pl-2">
                                 <DialogTitle className="text-2xl font-bold mb-2 text-[#1e3a8a] ">Prévisualisation de
                                     l'offre</DialogTitle>
