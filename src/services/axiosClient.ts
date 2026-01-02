@@ -11,7 +11,8 @@ api.interceptors.response.use(
     async error => {
         const originalRequest = error.config;
 
-        if (originalRequest.url?.includes('/auth/otp/refresh')) {
+        if (originalRequest.url?.includes('/api/v1/auth/refresh')) {
+            console.log(originalRequest.url)
             return Promise.reject(error);
         }
         if (error.response?.status === 401 && !originalRequest._retry) {
@@ -24,9 +25,8 @@ api.interceptors.response.use(
                     throw new Error("Refresh token manquant");
                 }
 
-
                 const refreshRes = await axios.post(
-                    `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/otp/refresh`,
+                    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/refresh`,
                     { refreshToken },
                     {
                         headers: { "Content-Type": "application/json" },
@@ -52,7 +52,6 @@ api.interceptors.response.use(
 
                 Cookies.remove("access_token");
                 Cookies.remove("refresh_token");
-
                 return Promise.reject(refreshError);
             }
         }

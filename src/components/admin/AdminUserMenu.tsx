@@ -21,33 +21,9 @@ export default function AdminUserMenu() {
     const router = useRouter();
     const token = Cookies.get("access_token");
 
-    // const fetchUser = async () => {
-    //     try {
-    //         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/otp/user`, {
-    //             method: "GET",
-    //             credentials: "include",
-    //         });
-    //
-    //         if (!response.ok) throw new Error("Erreur récupération utilisateur");
-    //
-    //         const data = await response.json();
-    //         setUser(data);
-    //     } catch (error) {
-    //         console.log(error);
-    //     }
-    // };
-
-    // const fetchUser = async () => {
-    //     try {
-    //         const { data } = await api.get("/auth/otp/user");
-    //         setUser(data);
-    //     } catch (err) {
-    //         console.error("Erreur lors de la récupération de l'utilisateur :", err);
-    //     }
-    // };
     const fetchUser = async () => {
         try {
-            const { data } = await api.get("/auth/otp/user",{
+            const { data } = await api.get("/api/v1/users/me",{
                 method: "GET",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -63,18 +39,7 @@ export default function AdminUserMenu() {
         fetchUser();
     }, []);
 
-    // const logout = async () => {
-    //     try {
-    //         await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/otp/logout`, {
-    //             method: "POST",
-    //             credentials: "include"
-    //         });
-    //     } catch (err) {
-    //         console.error("Erreur lors de la déconnexion", err);
-    //     }
-    //     setUser(null);
-    //     router.push("/admin/login");
-    // };
+
 
     const logout = () => {
 
