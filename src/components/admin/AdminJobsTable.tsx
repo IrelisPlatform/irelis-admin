@@ -218,6 +218,7 @@ export function AdminJobsTable() {
             const updatedJobs = await getAllJobs();
             setJobs(updatedJobs);
             setUpdateLoading(false);
+            setCompanyLogo(null)
         } catch (err) {
             console.error(err);
             toast.error("Erreur lors de la mise à jour de l'offre");
@@ -1124,7 +1125,7 @@ export function AdminJobsTable() {
                                                     <SelectItem value="CDI">CDI</SelectItem>
                                                     <SelectItem value="CDI_PART_TIME">CDI (Temps partiel)</SelectItem>
                                                     <SelectItem value="CDD">CDD</SelectItem>
-                                                    <SelectItem value="CDI_PART_TIME">CDD (Temps partiel)</SelectItem>
+                                                    <SelectItem value="CDD_PART_TIME">CDD (Temps partiel)</SelectItem>
                                                     <SelectItem value="INTERIM">Intérim</SelectItem>
                                                     <SelectItem value="FREELANCE">Freelance</SelectItem>
                                                     <SelectItem value="INTERNSHIP">Stage</SelectItem>
@@ -1608,7 +1609,7 @@ export function AdminJobsTable() {
                                                         <SelectItem value="CDI">CDI</SelectItem>
                                                         <SelectItem value="CDI_PART_TIME">CDI (Temps partiel)</SelectItem>
                                                         <SelectItem value="CDD">CDD</SelectItem>
-                                                        <SelectItem value="CDI_PART_TIME">CDD (Temps partiel)</SelectItem>
+                                                        <SelectItem value="CDD_PART_TIME">CDD (Temps partiel)</SelectItem>
                                                         <SelectItem value="INTERIM">Intérim</SelectItem>
                                                         <SelectItem value="FREELANCE">Freelance</SelectItem>
                                                         <SelectItem value="INTERNSHIP">Stage</SelectItem>
