@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo, Fragment, useCallback } from "react";
+import React, { useState, useEffect, useMemo, Fragment, useCallback, useRef } from "react";
 import {
     Search, Filter, Plus, MoreVertical, Edit, Trash2, Eye, ShieldCheck, Star,
     AlertCircle, Briefcase, Banknote, MapPin, Clock, Calendar, Globe, Users,
@@ -40,6 +40,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { SerializedEditorState } from "lexical";
 import { Editor } from "@/components/blocks/editor-00/editor";
 import { ReadonlyEditor } from "@/components/ReadonlyEditor";
+import { MultiSelect } from "@/components/ui/multi-select";
 
 /**
  * ============================================================================
@@ -86,7 +87,7 @@ const INITIAL_JOB_STATE = {
     title: "",
     description: null as SerializedEditorState | null,
     workCountryLocation: "",
-    workCityLocation: "",
+    workCityLocation: [] as string[],
     responsibilities: null as SerializedEditorState | null,
     requirements: null as SerializedEditorState | null,
     benefits: null as SerializedEditorState | null,
@@ -105,6 +106,8 @@ const INITIAL_JOB_STATE = {
     requiredDocuments: [{ type: "CV" }],
 };
 const INITIAL_EDIT_JOB_STATE = {
+    // ID for the job being edited
+    id: "",
     // Champs entreprise (étape 1)
     companyName: "",
     companyEmail: "",
@@ -116,7 +119,7 @@ const INITIAL_EDIT_JOB_STATE = {
     title: "",
     description: null as SerializedEditorState | null,
     workCountryLocation: "",
-    workCityLocation: "",
+    workCityLocation: [] as string[],
     responsibilities: null as SerializedEditorState | null,
     requirements: null as SerializedEditorState | null,
     benefits: null as SerializedEditorState | null,
@@ -151,6 +154,7 @@ export function AdminJobsTable() {
     // --- États pour la gestion des fichiers (Upload Logo) ---
     const [companyLogo, setCompanyLogo] = useState<File | null>(null);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
     const [updateLoading, setUpdateLoading] = useState<boolean>(false);
 
@@ -207,7 +211,6 @@ export function AdminJobsTable() {
             case 1:
                 return (
                     newJob.companyName?.trim() !== "" &&
-                    newJob.companyDescription?.trim() !== "" &&
                     newJob.sectorId?.trim() !== ""
                 );
 
@@ -216,7 +219,7 @@ export function AdminJobsTable() {
                     newJob.title?.trim() !== "" &&
                     newJob.description !== null &&
                     newJob.workCountryLocation?.trim() !== "" &&
-                    newJob.workCityLocation?.trim() !== ""
+                    newJob.workCityLocation?.length > 0
                 );
 
             case 3:
@@ -255,7 +258,7 @@ export function AdminJobsTable() {
                 title: editJob.title?.trim() || "",
                 description: JSON.stringify(editJob.description),
                 workCountryLocation: editJob.workCountryLocation || "",
-                workCityLocation: editJob.workCityLocation || "",
+                workCityLocation: Array.isArray(editJob.workCityLocation) ? editJob.workCityLocation.join(", ") : editJob.workCityLocation || "",
                 responsibilities: JSON.stringify(editJob.responsibilities),
                 requirements: JSON.stringify(editJob.requirements),
                 benefits: JSON.stringify(editJob.benefits),
@@ -565,8 +568,8 @@ export function AdminJobsTable() {
 
     // Filtrage local des offres (Recherche + Filtres)
     const filteredJobs = jobs.filter((job) => {
-        const matchesSearch = gith
-        job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        const matchesSearch =
+            job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
             job.workCityLocation.toLowerCase().includes(searchTerm.toLowerCase()) ||
             job.workCityLocation.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = statusFilter === "all" || job.status === statusFilter;
@@ -586,11 +589,7 @@ export function AdminJobsTable() {
             setCurrentStep(1);
             return;
         }
-        if (!newJob.companyDescription.trim()) {
-            toast.error("La description de l'entreprise est obligatoire.");
-            setCurrentStep(1);
-            return;
-        }
+        // Company description is optional
         if (!newJob.sectorId || newJob.sectorId === "") {
             toast.error("Veuillez sélectionner un secteur d'activité.");
             setCurrentStep(1);
@@ -612,7 +611,7 @@ export function AdminJobsTable() {
         if (
             !newJob.title.trim() ||
             !newJob.description ||
-            !newJob.workCityLocation.trim() ||
+            newJob.workCityLocation.length === 0 ||
             !newJob.workCountryLocation.trim() ||
             !newJob.responsibilities ||
             !newJob.requirements ||
@@ -658,7 +657,7 @@ export function AdminJobsTable() {
             title: newJob.title.trim(),
             description: JSON.stringify(newJob.description),
             workCountryLocation: newJob.workCountryLocation,
-            workCityLocation: newJob.workCityLocation,
+            workCityLocation: newJob.workCityLocation.join(", "),
             responsibilities: JSON.stringify(newJob.responsibilities),
             requirements: JSON.stringify(newJob.requirements),
             benefits: JSON.stringify(newJob.benefits),
@@ -915,7 +914,7 @@ export function AdminJobsTable() {
                                         </div>
                                         <div>
                                             <Label className="mb-2">
-                                                Description de l'entreprise <span className="text-red-500">*</span>
+                                                Description de l'entreprise
                                             </Label>
                                             <Textarea
                                                 placeholder="Décrivez votre entreprise en quelques lignes... Ex: Nous sommes une startup tech basée à Douala, spécialisée dans l’IA appliquée aux ressources humaines."
@@ -1034,29 +1033,17 @@ export function AdminJobsTable() {
                                             </div>
                                             <div className="space-y-2">
                                                 <Label className="mb-2">
-                                                    Ville <span className="text-red-500">*</span>
+                                                    Villes <span className="text-red-500">*</span>
                                                 </Label>
-                                                <Select
-                                                    value={newJob.workCityLocation}
-                                                    onValueChange={(v) => setNewJob({ ...newJob, workCityLocation: v })}
-                                                >
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Sélectionnez une ville" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {selectedCountry && COUNTRIES_WITH_CITIES[selectedCountry as keyof typeof COUNTRIES_WITH_CITIES]
-                                                            ? COUNTRIES_WITH_CITIES[selectedCountry as keyof typeof COUNTRIES_WITH_CITIES].map((city) => (
-                                                                <SelectItem key={city} value={city}>
-                                                                    {city}
-                                                                </SelectItem>
-                                                            ))
-                                                            : (
-                                                                <SelectItem value="__placeholder__" disabled>
-                                                                    Sélectionnez d'abord un pays
-                                                                </SelectItem>
-                                                            )}
-                                                    </SelectContent>
-                                                </Select>
+                                                <MultiSelect
+                                                    options={selectedCountry && COUNTRIES_WITH_CITIES[selectedCountry as keyof typeof COUNTRIES_WITH_CITIES]
+                                                        ? COUNTRIES_WITH_CITIES[selectedCountry as keyof typeof COUNTRIES_WITH_CITIES]
+                                                        : []}
+                                                    selected={newJob.workCityLocation}
+                                                    onChange={(cities) => setNewJob({ ...newJob, workCityLocation: cities })}
+                                                    placeholder="Sélectionnez une ou plusieurs villes"
+                                                    disabled={!selectedCountry}
+                                                />
                                             </div>
 
                                         </div>
@@ -1243,14 +1230,22 @@ export function AdminJobsTable() {
                                                 <Label className="mb-2">
                                                     Langue requise <span className="text-red-500">*</span>
                                                 </Label>
-                                                <Input
+                                                <Select
                                                     value={newJob.requiredLanguage}
-                                                    onChange={(e) => setNewJob({
+                                                    onValueChange={(v) => setNewJob({
                                                         ...newJob,
-                                                        requiredLanguage: e.target.value
+                                                        requiredLanguage: v
                                                     })}
-                                                    placeholder="Ex: Français"
-                                                />
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Sélectionnez une langue" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="Français">Français</SelectItem>
+                                                        <SelectItem value="Anglais">Anglais</SelectItem>
+                                                        <SelectItem value="Bilingue">Bilingue (Français/Anglais)</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
                                             </div>
                                         </div>
 
@@ -1434,7 +1429,7 @@ export function AdminJobsTable() {
                                             </div>
 
                                             <div>
-                                                <Label className="mb-2">Description de l'entreprise <span className="text-red-500">*</span></Label>
+                                                <Label className="mb-2">Description de l'entreprise</Label>
                                                 <Textarea
                                                     rows={3}
                                                     value={editJob.companyDescription ?? ""}
@@ -1535,25 +1530,16 @@ export function AdminJobsTable() {
                                                 </div>
 
                                                 <div className="space-y-2">
-                                                    <Label className="mb-2">Ville <span className="text-red-500">*</span></Label>
-                                                    <Select
-                                                        value={editJob.workCityLocation}
-                                                        onValueChange={(v) => setEditJob({ ...editJob, workCityLocation: v })}
-                                                    >
-                                                        <SelectTrigger><SelectValue placeholder="Sélectionnez une ville" /></SelectTrigger>
-                                                        <SelectContent>
-                                                            {selectedCountry && COUNTRIES_WITH_CITIES[selectedCountry as keyof typeof COUNTRIES_WITH_CITIES]
-                                                                ? COUNTRIES_WITH_CITIES[selectedCountry as keyof typeof COUNTRIES_WITH_CITIES].map((city) => (
-                                                                    <SelectItem key={city} value={city}>{city}</SelectItem>
-                                                                ))
-                                                                : (
-                                                                    <SelectItem value="__placeholder__" disabled>
-                                                                        Sélectionnez d'abord un pays
-                                                                    </SelectItem>
-                                                                )
-                                                            }
-                                                        </SelectContent>
-                                                    </Select>
+                                                    <Label className="mb-2">Villes <span className="text-red-500">*</span></Label>
+                                                    <MultiSelect
+                                                        options={selectedCountry && COUNTRIES_WITH_CITIES[selectedCountry as keyof typeof COUNTRIES_WITH_CITIES]
+                                                            ? COUNTRIES_WITH_CITIES[selectedCountry as keyof typeof COUNTRIES_WITH_CITIES]
+                                                            : []}
+                                                        selected={Array.isArray(editJob.workCityLocation) ? editJob.workCityLocation : []}
+                                                        onChange={(cities) => setEditJob({ ...editJob, workCityLocation: cities })}
+                                                        placeholder="Sélectionnez une ou plusieurs villes"
+                                                        disabled={!selectedCountry}
+                                                    />
                                                 </div>
                                             </div>
 
@@ -1726,11 +1712,19 @@ export function AdminJobsTable() {
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
                                                     <Label className="mb-2">Langue requise <span className="text-red-500">*</span></Label>
-                                                    <Input
+                                                    <Select
                                                         value={editJob.requiredLanguage}
-                                                        onChange={(e) => setEditJob({ ...editJob, requiredLanguage: e.target.value })}
-                                                        placeholder="Ex: Français"
-                                                    />
+                                                        onValueChange={(v) => setEditJob({ ...editJob, requiredLanguage: v })}
+                                                    >
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Sélectionnez une langue" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="Français">Français</SelectItem>
+                                                            <SelectItem value="Anglais">Anglais</SelectItem>
+                                                            <SelectItem value="Bilingue">Bilingue (Français/Anglais)</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
                                                 </div>
                                             </div>
 
