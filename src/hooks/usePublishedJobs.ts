@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { BackendPublishedJob, PublishedJob } from "@/types/job";
 
-interface JobPage {
+export interface JobPage {
   content: BackendPublishedJob[];
   page: number;
   size: number;
@@ -26,7 +26,7 @@ const parseListFromString = (input: string): string[] => {
     );
 };
 
-const transformJob = (job: BackendPublishedJob): PublishedJob => {
+export const transformJob = (job: BackendPublishedJob): PublishedJob => {
   const now = new Date();
   const publishedAt = job.publishedAt ? new Date(job.publishedAt) : null;
   const isNew = publishedAt
