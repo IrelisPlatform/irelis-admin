@@ -2,20 +2,20 @@
 
 "use client";
 
-import React, {useState, useEffect, useMemo, Fragment, useCallback, useRef} from "react";
+import React, { useState, useEffect, useMemo, Fragment, useCallback } from "react";
 import {
     Search, Filter, Plus, MoreVertical, Edit, Trash2, Eye, ShieldCheck, Star,
     AlertCircle, Briefcase, Banknote, MapPin, Clock, Calendar, Globe, Users,
 } from "lucide-react";
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
-import {Badge} from "@/components/ui/badge";
-import {Checkbox} from "@/components/ui/checkbox";
-import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
     Dialog,
     DialogContent,
@@ -24,28 +24,35 @@ import {
     DialogDescription,
     DialogTrigger
 } from "@/components/ui/dialog";
-import {Label} from "@/components/ui/label";
-import {Textarea} from "@/components/ui/textarea";
-import {Alert, AlertDescription} from "@/components/ui/alert";
-import {toast} from "sonner";
-import {useRouter} from "next/navigation";
-import useSectors, {Sector} from '@/hooks/useSectors';
-import {useAdminJobs} from '@/hooks/admin/useAdminJobs';
-import {PublishedJob} from '@/types/job';
-import {COUNTRIES_WITH_CITIES, COUNTRIES} from '@/lib/countries';
-import {getSkillsForSector, EDUCATION_LEVELS, EXPERIENCE_OPTIONS} from '@/lib/jobRequirements';
-import {TAG_NAMES, TagType} from '@/lib/jobTags';
-import {formatDateLong, formatDateRelative, formatDateShort} from "@/services/date";
-import {Spinner} from "@/components/ui/spinner";
-import {SerializedEditorState} from "lexical";
-import {Editor} from "@/components/blocks/editor-00/editor";
-import {ReadonlyEditor} from "@/components/ReadonlyEditor";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import useSectors, { Sector } from '@/hooks/useSectors';
+import { useAdminJobs } from '@/hooks/admin/useAdminJobs';
+import { PublishedJob } from '@/types/job';
+import { COUNTRIES_WITH_CITIES, COUNTRIES } from '@/lib/countries';
+import { getSkillsForSector, EDUCATION_LEVELS, EXPERIENCE_OPTIONS } from '@/lib/jobRequirements';
+import { TAG_NAMES, TagType } from '@/lib/jobTags';
+import { formatDateLong, formatDateRelative, formatDateShort } from "@/services/date";
+import { Spinner } from "@/components/ui/spinner";
+import { SerializedEditorState } from "lexical";
+import { Editor } from "@/components/blocks/editor-00/editor";
+import { ReadonlyEditor } from "@/components/ReadonlyEditor";
 
+/**
+ * ============================================================================
+ * CONSTANTES & CONFIGURATION
+ * ============================================================================
+ */
+
+// Étapes du formulaire de création/édition
 const STEPS = [
-    {id: 1, name: "Création de l'entreprise"},
-    {id: 2, name: "Informations générales"},
-    {id: 3, name: "Détails du poste"},
-    {id: 4, name: "Options avancées"},
+    { id: 1, name: "Création de l'entreprise" },
+    { id: 2, name: "Informations générales" },
+    { id: 3, name: "Détails du poste" },
+    { id: 4, name: "Options avancées" },
 ];
 
 type TagDto = {
@@ -54,15 +61,19 @@ type TagDto = {
 };
 
 
+// Types de documents pouvant être requis pour une candidature
 const DOCUMENT_TYPES = [
-    {value: "CV", label: "CV"},
-    {value: "COVER_LETTER", label: "Lettre de motivation"},
-    {value: "PORTFOLIO", label: "Portfolio"},
-    {value: "CERTIFICATE", label: "Certificat"},
-    {value: "IDENTITY_DOC", label: "Pièce d'identité"},
+    { value: "CV", label: "CV" },
+    { value: "COVER_LETTER", label: "Lettre de motivation" },
+    { value: "PORTFOLIO", label: "Portfolio" },
+    { value: "CERTIFICATE", label: "Certificat" },
+    { value: "IDENTITY_DOC", label: "Pièce d'identité" },
 ] as const;
 
-// État initial du formulaire
+/**
+ * État initial du formulaire de création d'offre.
+ * Ce constant définit toutes les valeurs par défaut.
+ */
 const INITIAL_JOB_STATE = {
     // Champs entreprise (étape 1)
     companyName: "",
@@ -91,7 +102,7 @@ const INITIAL_JOB_STATE = {
     sectorName: "",
     postNumber: 1,
     tagDto: [] as TagDto[],
-    requiredDocuments: [{type: "CV"}],
+    requiredDocuments: [{ type: "CV" }],
 };
 const INITIAL_EDIT_JOB_STATE = {
     // Champs entreprise (étape 1)
@@ -121,19 +132,76 @@ const INITIAL_EDIT_JOB_STATE = {
     sectorName: "",
     postNumber: 1,
     tagDto: [] as TagDto[],
-    requiredDocuments: [{type: "CV"}],
+    requiredDocuments: [{ type: "CV" }],
 };
 
 
+/**
+ * ============================================================================
+ * COMPOSANT PRINCIPAL : AdminJobsTable
+ * ============================================================================
+ * Ce composant gère l'affichage, la création, l'édition et la suppression des offres d'emploi.
+ * Il contient un tableau de bord complet pour l'administrateur.
+ */
 export function AdminJobsTable() {
+    // --- Hooks & Navigation ---
     const router = useRouter();
-    const {sectors, loading: sectorsLoading} = useSectors();
+    const { sectors, loading: sectorsLoading } = useSectors();
+
+    // --- États pour la gestion des fichiers (Upload Logo) ---
     const [companyLogo, setCompanyLogo] = useState<File | null>(null);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
     const [updateLoading, setUpdateLoading] = useState<boolean>(false);
-    const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+    const LogoInput = React.memo(function LogoInput({
+        onChange,
+    }: {
+        onChange: (file: File | null) => void;
+    }) {
+        const [preview, setPreview] = useState<string | null>(null);
+
+        useEffect(() => {
+            return () => {
+                if (preview) URL.revokeObjectURL(preview);
+            };
+        }, [preview]);
+
+        return (
+            <div className="space-y-2">
+                <Input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        const url = file ? URL.createObjectURL(file) : null;
+                        setPreview(url);
+                        onChange(file);
+                    }}
+                />
+
+                {preview && (
+                    <img
+                        src={preview}
+                        alt="Logo preview"
+                        className="w-16 h-16 rounded-lg object-cover border"
+                    />
+                )}
+            </div>
+        );
+    });
+    const handleLogoChange = useCallback((file: File | null) => {
+        setCompanyLogo(file);
+    }, []);
+
+
+
+
+
+    /**
+     * Vérifie si l'utilisateur peut passer à l'étape suivante du formulaire (wizard).
+     * Valide les champs requis pour chaque étape.
+     */
     const canGoToNextStep = (step: number) => {
         switch (step) {
             case 1:
@@ -169,6 +237,10 @@ export function AdminJobsTable() {
 
 
 
+    /**
+     * Gère la mise à jour d'une offre existante.
+     * Prépare les données (FormData) et appelle l'API.
+     */
     const handleUpdateJob = async () => {
         try {
 
@@ -313,6 +385,7 @@ export function AdminJobsTable() {
     }
 
 
+    // --- Hooks API (CRUD) ---
     const {
         getAllJobs,
         createJob,
@@ -323,15 +396,22 @@ export function AdminJobsTable() {
     } = useAdminJobs();
 
 
+    // --- États Globaux du Tableau de bord ---
     const [jobs, setJobs] = useState<PublishedJob[]>([]);
     const [loading, setLoading] = useState(true);
+
+    // --- Filtres et Recherche ---
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [typeFilter, setTypeFilter] = useState("all");
+
+    // --- États des Modales ---
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [currentStep, setCurrentStep] = useState(1);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [jobToDelete, setJobToDelete] = useState<string | null>(null);
+
+    // --- États des Formulaires ---
     const [newJob, setNewJob] = useState(INITIAL_JOB_STATE);
     const [editJob, setEditJob] = useState(INITIAL_EDIT_JOB_STATE);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -360,6 +440,7 @@ export function AdminJobsTable() {
         CERTIFICATE: "Certificat"
     }
 
+    // --- Helpers de formatage ---
     const ContractTypeLabels: Record<string, string> = {
         CDI: "CDI (Temps plein)",
         CDD: "CDD (Temps plein)",
@@ -376,6 +457,7 @@ export function AdminJobsTable() {
             : "Type de contrat non spécifié"
 
 
+    // --- États pour les champs dynamiques et tags ---
     const [selectedCountry, setSelectedCountry] = useState("");
     const [selectedSectorName, setSelectedSectorName] = useState("");
     const [otherCompetence, setOtherCompetence] = useState<string | null>(null);
@@ -385,30 +467,30 @@ export function AdminJobsTable() {
     const [otherExperience, setOtherExperience] = useState("");
 
     // État pour stocker les compétences sélectionnées (tableau)
-    // const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
-    // // Ajouter une compétence
-    // const addSkill = (skill: string) => {
-    //     if (skill.trim() && !selectedSkills.includes(skill.trim())) {
-    //         const updated = [...selectedSkills, skill.trim()];
-    //         setSelectedSkills(updated);
-    //         // Synchronise avec newJob.requirements
-    //         setNewJob(prev => ({...prev, requirements: updated.join(', ')}));
-    //     }
-    // };
+    const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+    // Ajouter une compétence
+    const addSkill = (skill: string) => {
+        if (skill.trim() && !selectedSkills.includes(skill.trim())) {
+            const updated = [...selectedSkills, skill.trim()];
+            setSelectedSkills(updated);
+            // Synchronise avec newJob.requirements
+            setNewJob(prev => ({ ...prev, requirements: updated.join(', ') }));
+        }
+    };
 
     // Supprimer une compétence
-    // const removeSkill = (skillToRemove: string) => {
-    //     const updated = selectedSkills.filter(s => s !== skillToRemove);
-    //     setSelectedSkills(updated);
-    //     setNewJob(prev => ({...prev, requirements: updated.join(', ')}));
-    // };
+    const removeSkill = (skillToRemove: string) => {
+        const updated = selectedSkills.filter(s => s !== skillToRemove);
+        setSelectedSkills(updated);
+        setNewJob(prev => ({ ...prev, requirements: updated.join(', ') }));
+    };
 
     // Réinitialiser quand le secteur change
-    // useEffect(() => {
-    //     setSelectedSkills([]);
-    //     setOtherCompetence(null);
-    //     setNewJob(prev => ({...prev, requirements: ""}));
-    // }, [selectedSectorName]);
+    useEffect(() => {
+        setSelectedSkills([]);
+        setOtherCompetence(null);
+        setNewJob(prev => ({ ...prev, requirements: "" }));
+    }, [selectedSectorName]);
 
     const [newTagType, setNewTagType] = useState<"skill" | "tool" | "domain">("skill");
     const [newTagName, setNewTagName] = useState("");
@@ -418,7 +500,7 @@ export function AdminJobsTable() {
         if (newTagName.trim()) {
             setNewJob(prev => ({
                 ...prev,
-                tagDto: [...prev.tagDto, {name: newTagName.trim(), type: newTagType}]
+                tagDto: [...prev.tagDto, { name: newTagName.trim(), type: newTagType }]
             }));
             setNewTagName("");
         }
@@ -442,29 +524,31 @@ export function AdminJobsTable() {
     //     return getSkillsForSector(selectedSectorName);
     // }, [selectedSectorName]);
 
-    //
-    // useEffect(() => {
-    //     const parts: string[] = [];
-    //
-    //     if (selectedSkills.length > 0) {
-    //         parts.push(...selectedSkills);
-    //     }
-    //
-    //     if (formationDetail) {
-    //         parts.push(formationDetail);
-    //     }
-    //
-    //     if (experiences && experiences !== "Autre") {
-    //         parts.push(experiences);
-    //     } else if (experiences === "Autre" && otherExperience.trim()) {
-    //         parts.push(otherExperience.trim());
-    //     }
-    //
-    //     setNewJob(prev => ({...prev, requirements: parts.join(', ')}));
-    // }, [selectedSkills, formationDetail, experiences, otherExperience]);
 
     useEffect(() => {
+        const parts: string[] = [];
 
+        if (selectedSkills.length > 0) {
+            parts.push(...selectedSkills);
+        }
+
+        if (formationDetail) {
+            parts.push(formationDetail);
+        }
+
+        if (experiences && experiences !== "Autre") {
+            parts.push(experiences);
+        } else if (experiences === "Autre" && otherExperience.trim()) {
+            parts.push(otherExperience.trim());
+        }
+
+        setNewJob(prev => ({ ...prev, requirements: parts.join(', ') }));
+    }, [selectedSkills, formationDetail, experiences, otherExperience]);
+
+    // --- Effets de bord (Data Fetching & Synchro) ---
+
+    // Chargement initial des offres
+    useEffect(() => {
         const fetchJobs = async () => {
             try {
                 const data = await getAllJobs();
@@ -479,9 +563,10 @@ export function AdminJobsTable() {
         fetchJobs();
     }, []);
 
+    // Filtrage local des offres (Recherche + Filtres)
     const filteredJobs = jobs.filter((job) => {
-        const matchesSearch =
-            job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        const matchesSearch = gith
+        job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
             job.workCityLocation.toLowerCase().includes(searchTerm.toLowerCase()) ||
             job.workCityLocation.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = statusFilter === "all" || job.status === statusFilter;
@@ -490,7 +575,10 @@ export function AdminJobsTable() {
     });
 
 
-    // Validation et création d'une offre
+    /**
+     * Gère la validation et la création d'une nouvelle offre.
+     * Effectue une validation manuelle des champs avant l'envoi.
+     */
     const handleCreateJob = async () => {
         // Validation champs entreprise (étape 1)
         if (!newJob.companyName.trim()) {
@@ -624,6 +712,9 @@ export function AdminJobsTable() {
         }
     };
 
+    /**
+     * Publie une offre (change le statut en PUBLISHED).
+     */
     const handlePublishClick = (id: string) => {
         publishJob(id);
         setTimeout(async () => {
@@ -633,6 +724,9 @@ export function AdminJobsTable() {
     };
 
 
+    /**
+     * Confirme et exécute la suppression d'une offre.
+     */
     const confirmDelete = async () => {
         if (!jobToDelete) return;
         await deleteJob(jobToDelete);
@@ -668,9 +762,12 @@ export function AdminJobsTable() {
     return (
         <div className="space-y-4">
 
-            {/* Alerte */}
+            {/* -------------------------------------------------------------------------- */}
+            {/* HEADER & INFO BAR                                                          */}
+            {/* -------------------------------------------------------------------------- */}
+            {/* Alerte d'information mode Admin */}
             <Alert className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-300">
-                <ShieldCheck className="h-5 w-5 text-green-600"/>
+                <ShieldCheck className="h-5 w-5 text-green-600" />
                 <AlertDescription className="ml-2">
                     <p className="text-sm text-green-900">
                         <span className="font-semibold">Espace administration :</span> Vous gérez toutes les offres de
@@ -679,11 +776,13 @@ export function AdminJobsTable() {
                 </AlertDescription>
             </Alert>
 
-            {/* Toolbar */}
+            {/* -------------------------------------------------------------------------- */}
+            {/* TOOLBAR (Recherche, Filtres, Bouton Créer)                                 */}
+            {/* -------------------------------------------------------------------------- */}
             <div className="flex flex-col lg:flex-row gap-4 justify-between">
                 <div className="flex-1 max-w-md">
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"/>
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
                             placeholder="Rechercher par titre ou localisation..."
                             value={searchTerm}
@@ -696,7 +795,7 @@ export function AdminJobsTable() {
                 <div className="flex flex-wrap gap-2">
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
                         <SelectTrigger className="w-40">
-                            <Filter className="h-4 w-4 mr-2"/> Statut
+                            <Filter className="h-4 w-4 mr-2" /> Statut
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">Tous les statuts</SelectItem>
@@ -708,7 +807,7 @@ export function AdminJobsTable() {
 
                     <Select value={typeFilter} onValueChange={setTypeFilter}>
                         <SelectTrigger className="w-40">
-                            <Filter className="h-4 w-4 mr-2"/> Type
+                            <Filter className="h-4 w-4 mr-2" /> Type
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">Tous les types</SelectItem>
@@ -719,25 +818,26 @@ export function AdminJobsTable() {
                         </SelectContent>
                     </Select>
 
+                    {/* BOUTON + MODALE DE CRÉATION */}
                     <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
                         setIsCreateDialogOpen(open);
                         if (!open) setCurrentStep(1);
                     }}>
                         <DialogTrigger asChild>
                             <Button>
-                                <Plus className="h-4 w-4 mr-2"/> Nouvelle offre
+                                <Plus className="h-4 w-4 mr-2" /> Nouvelle offre
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-5xl overflow-y-auto max-h-[90vh]">
+                            {/* En-tête du Wizard (Étapes) */}
                             <DialogHeader>
                                 <DialogTitle>Créer une offre (Étape {currentStep}/4)</DialogTitle>
                                 <div className="flex mt-2 space-x-1">
                                     {STEPS.map((step) => (
                                         <div
                                             key={step.id}
-                                            className={`h-1 flex-1 rounded-full ${
-                                                currentStep >= step.id ? "bg-[#1e3a88]" : "bg-gray-200"
-                                            }`}
+                                            className={`h-1 flex-1 rounded-full ${currentStep >= step.id ? "bg-[#1e3a88]" : "bg-gray-200"
+                                                }`}
                                         />
                                     ))}
                                 </div>
@@ -776,7 +876,7 @@ export function AdminJobsTable() {
                                                 }}
                                             />
                                             <p className="mt-1 text-sm text-gray-500">
-                                               Taille maximale : 2 Mo
+                                                Taille maximale : 2 Mo
                                             </p>
 
                                             {companyLogo && (
@@ -809,7 +909,7 @@ export function AdminJobsTable() {
                                             </Label>
                                             <Input
                                                 value={newJob.companyName}
-                                                onChange={(e) => setNewJob({...newJob, companyName: e.target.value})}
+                                                onChange={(e) => setNewJob({ ...newJob, companyName: e.target.value })}
                                                 placeholder="Ex: Irelis SARL"
                                             />
                                         </div>
@@ -832,7 +932,7 @@ export function AdminJobsTable() {
                                             <Input
                                                 type="email"
                                                 value={newJob.companyEmail}
-                                                onChange={(e) => setNewJob({...newJob, companyEmail: e.target.value})}
+                                                onChange={(e) => setNewJob({ ...newJob, companyEmail: e.target.value })}
                                                 placeholder="contact@entreprise.com"
                                             />
                                         </div>
@@ -842,11 +942,11 @@ export function AdminJobsTable() {
                                             </Label>
                                             <Select
                                                 value={newJob.sectorId}
-                                                onValueChange={(v) => setNewJob({...newJob, sectorId: v})}
+                                                onValueChange={(v) => setNewJob({ ...newJob, sectorId: v })}
                                                 disabled={sectorsLoading}
                                             >
                                                 <SelectTrigger>
-                                                    <SelectValue placeholder="Sélectionnez un secteur"/>
+                                                    <SelectValue placeholder="Sélectionnez un secteur" />
                                                 </SelectTrigger>
                                                 <SelectContent className="max-h-60 overflow-y-auto">
                                                     {sectors
@@ -864,10 +964,10 @@ export function AdminJobsTable() {
                                             <Label className="mb-2">Taille de l'entreprise</Label>
                                             <Select
                                                 value={newJob.companyLength}
-                                                onValueChange={(v) => setNewJob({...newJob, companyLength: v})}
+                                                onValueChange={(v) => setNewJob({ ...newJob, companyLength: v })}
                                             >
                                                 <SelectTrigger>
-                                                    <SelectValue placeholder="Sélectionner la taille de l’entreprise"/>
+                                                    <SelectValue placeholder="Sélectionner la taille de l’entreprise" />
                                                 </SelectTrigger>
                                                 <SelectContent className="max-h-60 overflow-y-auto">
                                                     {companySizeRanges.map((range) => (
@@ -891,7 +991,7 @@ export function AdminJobsTable() {
                                             <Input
                                                 value={newJob.title}
                                                 placeholder="Ex: Directeur de Production"
-                                                onChange={(e) => setNewJob({...newJob, title: e.target.value})}
+                                                onChange={(e) => setNewJob({ ...newJob, title: e.target.value })}
                                             />
                                         </div>
                                         <div>
@@ -916,12 +1016,12 @@ export function AdminJobsTable() {
                                                 <Select
                                                     value={newJob.workCountryLocation}
                                                     onValueChange={(v) => {
-                                                        setNewJob({...newJob, workCountryLocation: v});
+                                                        setNewJob({ ...newJob, workCountryLocation: v });
                                                         setSelectedCountry(v);
                                                     }}
                                                 >
                                                     <SelectTrigger>
-                                                        <SelectValue placeholder="Sélectionnez un pays"/>
+                                                        <SelectValue placeholder="Sélectionnez un pays" />
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         {COUNTRIES.map((country) => (
@@ -938,10 +1038,10 @@ export function AdminJobsTable() {
                                                 </Label>
                                                 <Select
                                                     value={newJob.workCityLocation}
-                                                    onValueChange={(v) => setNewJob({...newJob, workCityLocation: v})}
+                                                    onValueChange={(v) => setNewJob({ ...newJob, workCityLocation: v })}
                                                 >
                                                     <SelectTrigger>
-                                                        <SelectValue placeholder="Sélectionnez une ville"/>
+                                                        <SelectValue placeholder="Sélectionnez une ville" />
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         {selectedCountry && COUNTRIES_WITH_CITIES[selectedCountry as keyof typeof COUNTRIES_WITH_CITIES]
@@ -967,7 +1067,7 @@ export function AdminJobsTable() {
                                             <Input
                                                 type="date"
                                                 value={newJob.expirationDate || ""}
-                                                onChange={(e) => setNewJob({...newJob, expirationDate: e.target.value})}
+                                                onChange={(e) => setNewJob({ ...newJob, expirationDate: e.target.value })}
                                             />
                                         </div>
                                     </div>
@@ -983,9 +1083,9 @@ export function AdminJobsTable() {
                                             </Label>
                                             <Select
                                                 value={newJob.jobType}
-                                                onValueChange={(v) => setNewJob({...newJob, jobType: v as any})}
+                                                onValueChange={(v) => setNewJob({ ...newJob, jobType: v as any })}
                                             >
-                                                <SelectTrigger><SelectValue/></SelectTrigger>
+                                                <SelectTrigger><SelectValue /></SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value="FULL_TIME">Temps plein</SelectItem>
                                                     <SelectItem value="PART_TIME">Temps partiel</SelectItem>
@@ -1036,10 +1136,10 @@ export function AdminJobsTable() {
                                             <Label className="mb-2">Salaire</Label>
                                             <Select
                                                 value={newJob.salary}
-                                                onValueChange={(v) => setNewJob({...newJob, salary: v})}
+                                                onValueChange={(v) => setNewJob({ ...newJob, salary: v })}
                                             >
                                                 <SelectTrigger>
-                                                    <SelectValue placeholder="Sélectionner un salaire"/>
+                                                    <SelectValue placeholder="Sélectionner un salaire" />
                                                 </SelectTrigger>
                                                 <SelectContent className="max-h-60 overflow-y-auto">
                                                     {salaryRanges.map((range) => (
@@ -1059,9 +1159,9 @@ export function AdminJobsTable() {
                                             {/* Nouveau tag */}
                                             <div className="grid grid-cols-3 gap-2">
                                                 <Select value={newTagType}
-                                                        onValueChange={(v) => setNewTagType(v as TagType)}>
+                                                    onValueChange={(v) => setNewTagType(v as TagType)}>
                                                     <SelectTrigger>
-                                                        <SelectValue placeholder="Type"/>
+                                                        <SelectValue placeholder="Type" />
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         <SelectItem value="skill">Compétence</SelectItem>
@@ -1072,7 +1172,7 @@ export function AdminJobsTable() {
 
                                                 <Select value={newTagName} onValueChange={setNewTagName}>
                                                     <SelectTrigger>
-                                                        <SelectValue placeholder="Nom"/>
+                                                        <SelectValue placeholder="Nom" />
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         {TAG_NAMES[newTagType].map(name => (
@@ -1092,7 +1192,7 @@ export function AdminJobsTable() {
                                                 <div className="flex flex-wrap gap-2 mt-2">
                                                     {newJob.tagDto.map((tag, index) => (
                                                         <Badge key={index} variant="secondary"
-                                                               className="flex items-center gap-1">
+                                                            className="flex items-center gap-1">
                                                             {tag.name} ({tag.type})
                                                             <button
                                                                 type="button"
@@ -1118,9 +1218,9 @@ export function AdminJobsTable() {
                                                 className="text-red-500">*</span></Label>
                                             <Select
                                                 value={newJob.contractType}
-                                                onValueChange={(v) => setNewJob({...newJob, contractType: v as any})}
+                                                onValueChange={(v) => setNewJob({ ...newJob, contractType: v as any })}
                                             >
-                                                <SelectTrigger><SelectValue/></SelectTrigger>
+                                                <SelectTrigger><SelectValue /></SelectTrigger>
                                                 <SelectContent className="max-h-60 overflow-y-auto">
                                                     <SelectItem value="CDI">CDI</SelectItem>
                                                     <SelectItem value="CDI_PART_TIME">CDI (Temps partiel)</SelectItem>
@@ -1196,12 +1296,12 @@ export function AdminJobsTable() {
                                                                 onCheckedChange={(checked) => {
                                                                     let updated = [...newJob.requiredDocuments];
                                                                     if (checked) {
-                                                                        updated.push({type: doc.value});
+                                                                        updated.push({ type: doc.value });
                                                                     } else {
                                                                         updated = updated.filter(d => d.type !== doc.value);
                                                                     }
                                                                     if (updated.length === 0) return;
-                                                                    setNewJob({...newJob, requiredDocuments: updated});
+                                                                    setNewJob({ ...newJob, requiredDocuments: updated });
                                                                 }}
                                                             />
                                                             <Label htmlFor={`doc-${doc.value}`} className="text-sm">
@@ -1258,7 +1358,9 @@ export function AdminJobsTable() {
                     </Dialog>
 
 
-                    {/* MODAL MODIFICATION D'OFFRE */}
+                    {/* -------------------------------------------------------------------------- */}
+                    {/* MODAL MODIFICATION D'OFFRE (Similaire à la création mais pré-rempli)       */}
+                    {/* -------------------------------------------------------------------------- */}
                     <Dialog
                         open={isEditDialogOpen}
                         onOpenChange={(open) => {
@@ -1274,9 +1376,8 @@ export function AdminJobsTable() {
                                         {STEPS.map((step) => (
                                             <div
                                                 key={step.id}
-                                                className={`h-1 flex-1 rounded-full ${
-                                                    currentStep >= step.id ? "bg-[#1e3a88]" : "bg-gray-200"
-                                                }`}
+                                                className={`h-1 flex-1 rounded-full ${currentStep >= step.id ? "bg-[#1e3a88]" : "bg-gray-200"
+                                                    }`}
                                             />
                                         ))}
                                     </div>
@@ -1300,7 +1401,7 @@ export function AdminJobsTable() {
                                                     }}
                                                 />
                                                 <p className="text-xs text-gray-500 mt-1">
-                                                   Taille max : 2 Mo
+                                                    Taille max : 2 Mo
                                                 </p>
                                                 {logoPreview && (
                                                     <div className="mt-3 flex items-center gap-3">
@@ -1374,7 +1475,7 @@ export function AdminJobsTable() {
                                                     onValueChange={(v) => setEditJob({ ...editJob, companyLength: v })}
                                                 >
                                                     <SelectTrigger>
-                                                        <SelectValue placeholder="Sélectionner la taille de l’entreprise"/>
+                                                        <SelectValue placeholder="Sélectionner la taille de l’entreprise" />
                                                     </SelectTrigger>
                                                     <SelectContent className="max-h-60 overflow-y-auto">
                                                         {companySizeRanges.map((range) => (
@@ -1394,7 +1495,7 @@ export function AdminJobsTable() {
                                                 <Input
                                                     value={editJob.title ?? ""}
                                                     placeholder="Ex: Directeur de Production"
-                                                    onChange={(e) => setEditJob({...editJob, title: e.target.value})}
+                                                    onChange={(e) => setEditJob({ ...editJob, title: e.target.value })}
                                                 />
                                             </div>
                                             <div>
@@ -1420,11 +1521,11 @@ export function AdminJobsTable() {
                                                     <Select
                                                         value={editJob.workCountryLocation}
                                                         onValueChange={(v) => {
-                                                            setEditJob({...editJob, workCountryLocation: v});
+                                                            setEditJob({ ...editJob, workCountryLocation: v });
                                                             setSelectedCountry(v);
                                                         }}
                                                     >
-                                                        <SelectTrigger><SelectValue placeholder="Sélectionnez un pays"/></SelectTrigger>
+                                                        <SelectTrigger><SelectValue placeholder="Sélectionnez un pays" /></SelectTrigger>
                                                         <SelectContent>
                                                             {COUNTRIES.map((country) => (
                                                                 <SelectItem key={country} value={country}>{country}</SelectItem>
@@ -1437,9 +1538,9 @@ export function AdminJobsTable() {
                                                     <Label className="mb-2">Ville <span className="text-red-500">*</span></Label>
                                                     <Select
                                                         value={editJob.workCityLocation}
-                                                        onValueChange={(v) => setEditJob({...editJob, workCityLocation: v})}
+                                                        onValueChange={(v) => setEditJob({ ...editJob, workCityLocation: v })}
                                                     >
-                                                        <SelectTrigger><SelectValue placeholder="Sélectionnez une ville"/></SelectTrigger>
+                                                        <SelectTrigger><SelectValue placeholder="Sélectionnez une ville" /></SelectTrigger>
                                                         <SelectContent>
                                                             {selectedCountry && COUNTRIES_WITH_CITIES[selectedCountry as keyof typeof COUNTRIES_WITH_CITIES]
                                                                 ? COUNTRIES_WITH_CITIES[selectedCountry as keyof typeof COUNTRIES_WITH_CITIES].map((city) => (
@@ -1461,7 +1562,7 @@ export function AdminJobsTable() {
                                                 <Input
                                                     type="date"
                                                     value={editJob.expirationDate || ""}
-                                                    onChange={(e) => setEditJob({...editJob, expirationDate: e.target.value})}
+                                                    onChange={(e) => setEditJob({ ...editJob, expirationDate: e.target.value })}
                                                 />
                                                 <p className="text-sm text-gray-500 mt-1">
                                                     Date actuelle : {editJob.expirationDate ? formatDateLong(editJob.expirationDate) : 'non spécifié'}
@@ -1478,9 +1579,9 @@ export function AdminJobsTable() {
                                                 <Label className="mb-2">Type de poste <span className="text-red-500">*</span></Label>
                                                 <Select
                                                     value={editJob.jobType}
-                                                    onValueChange={(v) => setEditJob({...editJob, jobType: v as any})}
+                                                    onValueChange={(v) => setEditJob({ ...editJob, jobType: v as any })}
                                                 >
-                                                    <SelectTrigger><SelectValue/></SelectTrigger>
+                                                    <SelectTrigger><SelectValue /></SelectTrigger>
                                                     <SelectContent>
                                                         <SelectItem value="FULL_TIME">Temps plein</SelectItem>
                                                         <SelectItem value="PART_TIME">Temps partiel</SelectItem>
@@ -1546,9 +1647,9 @@ export function AdminJobsTable() {
                                                 <Label className="mb-2">Salaire</Label>
                                                 <Select
                                                     value={editJob.salary}
-                                                    onValueChange={(v) => setEditJob({...editJob, salary: v})}
+                                                    onValueChange={(v) => setEditJob({ ...editJob, salary: v })}
                                                 >
-                                                    <SelectTrigger><SelectValue placeholder="Sélectionner un salaire"/></SelectTrigger>
+                                                    <SelectTrigger><SelectValue placeholder="Sélectionner un salaire" /></SelectTrigger>
                                                     <SelectContent className="max-h-60 overflow-y-auto">
                                                         {salaryRanges.map((range) => (
                                                             <SelectItem key={range} value={range}>{range}</SelectItem>
@@ -1562,7 +1663,7 @@ export function AdminJobsTable() {
                                                 <Label className="mb-4">Tags (facultatif)</Label>
                                                 <div className="grid grid-cols-3 gap-2">
                                                     <Select value={newTagType} onValueChange={(v) => setNewTagType(v as TagType)}>
-                                                        <SelectTrigger><SelectValue placeholder="Type"/></SelectTrigger>
+                                                        <SelectTrigger><SelectValue placeholder="Type" /></SelectTrigger>
                                                         <SelectContent>
                                                             <SelectItem value="skill">Compétence</SelectItem>
                                                             <SelectItem value="tool">Outil</SelectItem>
@@ -1571,7 +1672,7 @@ export function AdminJobsTable() {
                                                     </Select>
 
                                                     <Select value={newTagName} onValueChange={setNewTagName}>
-                                                        <SelectTrigger><SelectValue placeholder="Nom"/></SelectTrigger>
+                                                        <SelectTrigger><SelectValue placeholder="Nom" /></SelectTrigger>
                                                         <SelectContent>
                                                             {TAG_NAMES[newTagType].map(name => (
                                                                 <SelectItem key={`${newTagType}-${name}`} value={name}>{name}</SelectItem>
@@ -1602,9 +1703,9 @@ export function AdminJobsTable() {
                                                 <Label className="mb-2">Type de contrat <span className="text-red-500">*</span></Label>
                                                 <Select
                                                     value={editJob.contractType}
-                                                    onValueChange={(v) => setEditJob({...editJob, contractType: v as any})}
+                                                    onValueChange={(v) => setEditJob({ ...editJob, contractType: v as any })}
                                                 >
-                                                    <SelectTrigger><SelectValue/></SelectTrigger>
+                                                    <SelectTrigger><SelectValue /></SelectTrigger>
                                                     <SelectContent className="max-h-60 overflow-y-auto">
                                                         <SelectItem value="CDI">CDI</SelectItem>
                                                         <SelectItem value="CDI_PART_TIME">CDI (Temps partiel)</SelectItem>
@@ -1627,7 +1728,7 @@ export function AdminJobsTable() {
                                                     <Label className="mb-2">Langue requise <span className="text-red-500">*</span></Label>
                                                     <Input
                                                         value={editJob.requiredLanguage}
-                                                        onChange={(e) => setEditJob({...editJob, requiredLanguage: e.target.value})}
+                                                        onChange={(e) => setEditJob({ ...editJob, requiredLanguage: e.target.value })}
                                                         placeholder="Ex: Français"
                                                     />
                                                 </div>
@@ -1637,7 +1738,7 @@ export function AdminJobsTable() {
                                                 <Checkbox
                                                     id="urgent"
                                                     checked={editJob.isUrgent}
-                                                    onCheckedChange={(checked) => setEditJob({...editJob, isUrgent: checked as boolean})}
+                                                    onCheckedChange={(checked) => setEditJob({ ...editJob, isUrgent: checked as boolean })}
                                                 />
                                                 <Label htmlFor="urgent">Offre urgente</Label>
                                             </div>
@@ -1648,7 +1749,7 @@ export function AdminJobsTable() {
                                                     type="number"
                                                     min="1"
                                                     value={editJob.postNumber || 1}
-                                                    onChange={(e) => setEditJob({...editJob, postNumber: Number(e.target.value) || 1})}
+                                                    onChange={(e) => setEditJob({ ...editJob, postNumber: Number(e.target.value) || 1 })}
                                                 />
                                             </div>
 
@@ -1664,10 +1765,10 @@ export function AdminJobsTable() {
                                                                     checked={isChecked}
                                                                     onCheckedChange={(checked) => {
                                                                         let updated = [...editJob.requiredDocuments];
-                                                                        if (checked) updated.push({type: doc.value});
+                                                                        if (checked) updated.push({ type: doc.value });
                                                                         else updated = updated.filter(d => d.type !== doc.value);
                                                                         if (updated.length === 0) return;
-                                                                        setEditJob({...editJob, requiredDocuments: updated});
+                                                                        setEditJob({ ...editJob, requiredDocuments: updated });
                                                                     }}
                                                                 />
                                                                 <Label htmlFor={`doc-${doc.value}`} className="text-sm">{doc.label}</Label>
@@ -1691,7 +1792,7 @@ export function AdminJobsTable() {
                                         <Button
                                             onClick={handleUpdateJob}
                                         >
-                                            {updateLoading ? <><Spinner className="h-4 w-4 text-white"/> <span className="ml-2">En cours</span></> : "Modifier"}
+                                            {updateLoading ? <><Spinner className="h-4 w-4 text-white" /> <span className="ml-2">En cours</span></> : "Modifier"}
                                         </Button>
                                     )}
                                 </div>
@@ -1701,6 +1802,9 @@ export function AdminJobsTable() {
                     </Dialog>
 
 
+                    {/* -------------------------------------------------------------------------- */}
+                    {/* MODAL PRÉVISUALISATION (Résumé avant publication)                          */}
+                    {/* -------------------------------------------------------------------------- */}
                     <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
                         <DialogContent
                             className="max-w-5xl max-h-[90vh] overflow-y-auto p-6 rounded-xl bg-white">
@@ -1732,8 +1836,8 @@ export function AdminJobsTable() {
                                 {/* Grid of fields */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2  gap-4 text-sm text-gray-700">
                                     {[
-                                        {label: "Type de contrat", value: getContractTypeLabel(newJob.contractType), icon: Briefcase},
-                                        {label: "Salaire", value: newJob.salary || "Non spécifié", icon: Banknote},
+                                        { label: "Type de contrat", value: getContractTypeLabel(newJob.contractType), icon: Briefcase },
+                                        { label: "Salaire", value: newJob.salary || "Non spécifié", icon: Banknote },
                                         {
                                             label: "Lieu",
                                             value: `${newJob.workCityLocation}, ${newJob.workCountryLocation}`,
@@ -1744,8 +1848,8 @@ export function AdminJobsTable() {
                                             value: formatDateLong(newJob.expirationDate) || "Non définie",
                                             icon: Clock
                                         },
-                                        {label: "Langue requise", value: newJob.requiredLanguage || "-", icon: Globe},
-                                        {label: "Nombre de postes", value: newJob.postNumber ?? 1, icon: Users},
+                                        { label: "Langue requise", value: newJob.requiredLanguage || "-", icon: Globe },
+                                        { label: "Nombre de postes", value: newJob.postNumber ?? 1, icon: Users },
                                         {
                                             label: "Offre urgente",
                                             value: newJob.isUrgent ? "Oui" : "Non",
@@ -1753,7 +1857,7 @@ export function AdminJobsTable() {
                                         },
                                     ].map((item, i) => (
                                         <div key={i} className="flex p-2 items-start gap-4 text-base">
-                                            <item.icon className="w-4 h-4 text-[#1e3a8a]/70 flex-shrink-0 mt-1"/>
+                                            <item.icon className="w-4 h-4 text-[#1e3a8a]/70 flex-shrink-0 mt-1" />
                                             <div className="flex-1 flex gap-2">
                                                 <span className="font-medium text-gray-800">{item.label}</span>
                                                 <span className="text-gray-700 break-words">{item.value}</span>
@@ -1828,8 +1932,8 @@ export function AdminJobsTable() {
                                                         key={tag.name}
                                                         className="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded"
                                                     >
-            {tag.name}
-          </span>
+                                                        {tag.name}
+                                                    </span>
                                                 ))}
                                             </div>
                                         </div>
@@ -1844,7 +1948,7 @@ export function AdminJobsTable() {
                                     Revenir
                                 </Button>
                                 <Button onClick={handleCreateJob} disabled={jobLoading}>
-                                    {jobLoading ? <><Spinner className="h-4 w-4 text-white"/> <span className="ml-2">En cours</span></> : "Publier l'offre"}
+                                    {jobLoading ? <><Spinner className="h-4 w-4 text-white" /> <span className="ml-2">En cours</span></> : "Publier l'offre"}
                                 </Button>
                             </div>
                         </DialogContent>
@@ -1856,7 +1960,9 @@ export function AdminJobsTable() {
                 </div>
             </div>
 
-            {/* Table */}
+            {/* -------------------------------------------------------------------------- */}
+            {/* TABLEAU DES OFFRES (Liste Principale)                                      */}
+            {/* -------------------------------------------------------------------------- */}
             <div className="border rounded-lg overflow-hidden">
                 <Table>
                     <TableHeader>
@@ -1918,13 +2024,13 @@ export function AdminJobsTable() {
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <Button variant="ghost" size="sm">
-                                                    <MoreVertical className="h-4 w-4"/>
+                                                    <MoreVertical className="h-4 w-4" />
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 {job.status !== "PUBLISHED" && (
                                                     <DropdownMenuItem onClick={() => handlePublishClick(job.id)}>
-                                                        <Eye className="h-4 w-4 mr-2"/> Publier
+                                                        <Eye className="h-4 w-4 mr-2" /> Publier
                                                     </DropdownMenuItem>
                                                 )}
                                                 {/*<DropdownMenuItem onClick={() => alert('view')}>*/}
@@ -1948,7 +2054,7 @@ export function AdminJobsTable() {
                                                     <Edit className="h-4 w-4 mr-2" />
                                                     Modifier
                                                 </DropdownMenuItem>
-                                                <DropdownMenuSeparator/>
+                                                <DropdownMenuSeparator />
                                                 <DropdownMenuItem
                                                     className="text-destructive"
                                                     onClick={() => {
@@ -1957,7 +2063,7 @@ export function AdminJobsTable() {
 
                                                     }}
                                                 >
-                                                    <Trash2 className="h-4 w-4 mr-2"/> Supprimer
+                                                    <Trash2 className="h-4 w-4 mr-2" /> Supprimer
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
@@ -1968,7 +2074,9 @@ export function AdminJobsTable() {
                     </TableBody>
                 </Table>
             </div>
-            {/* Modal suppression */}
+            {/* -------------------------------------------------------------------------- */}
+            {/* MODAL SUPPRESSION (Confirmation)                                           */}
+            {/* -------------------------------------------------------------------------- */}
             <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
                 <DialogContent>
                     <DialogHeader>
