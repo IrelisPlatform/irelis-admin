@@ -30,7 +30,7 @@ export const generalInfoStepSchema = z.object({
   description: z.custom<SerializedEditorState>(
     (val) => val !== null && val !== undefined,
     {
-      message: "La description est obligatoire",
+      message: "La description de l'offre est obligatoire",
     }
   ),
   workCountryLocation: z.string().min(1, {
@@ -47,30 +47,7 @@ export const jobDetailsStepSchema = z.object({
   jobType: z.enum(["FULL_TIME", "PART_TIME", "REMOTE", "HYBRID"], {
     message: "Le type de poste est obligatoire",
   }),
-  responsibilities: z.custom<SerializedEditorState>(
-    (val) => val !== null && val !== undefined,
-    {
-      message: "Les missions sont obligatoires",
-    }
-  ),
-  requirements: z.custom<SerializedEditorState>(
-    (val) => val !== null && val !== undefined,
-    {
-      message: "Les compétences requises sont obligatoires",
-    }
-  ),
-  benefits: z
-    .custom<SerializedEditorState | null>(
-      (val) =>
-        val === null ||
-        val === undefined ||
-        (typeof val === "object" && val !== null),
-      {
-        message: "Format invalide pour les avantages",
-      }
-    )
-    .nullable()
-    .optional(),
+
   salary: z.string().optional(),
   contractType: z.enum(
     [

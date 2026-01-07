@@ -94,11 +94,8 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
       workCityLocation: [],
       expirationDate: "",
       jobType: "FULL_TIME",
-      responsibilities: null,
-      requirements: null,
-      benefits: null,
       salary: "",
-      contractType: "CDI",
+      contractType: "",
       tagDto: [],
       requiredLanguage: "",
       isUrgent: false,
@@ -260,7 +257,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
     title: form.watch("title") || "",
     companyName: form.watch("companyName") || "",
     companyLogo: companyLogo,
-    contractType: form.watch("contractType") || "CDI",
+    contractType: form.watch("contractType") || null,
     salary: form.watch("salary") || "",
     workCityLocation: form.watch("workCityLocation") || [],
     workCountryLocation: form.watch("workCountryLocation") || "",
@@ -269,9 +266,6 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
     postNumber: form.watch("postNumber") || 1,
     isUrgent: form.watch("isUrgent") || false,
     description: form.watch("description"),
-    responsibilities: form.watch("responsibilities"),
-    requirements: form.watch("requirements"),
-    benefits: form.watch("benefits"),
     requiredDocuments: form.watch("requiredDocuments") || [],
     tagDto: form.watch("tagDto") || [],
   };
@@ -674,7 +668,8 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Type de poste <span className="text-red-500">*</span>
+                          conditions de travail{" "}
+                          <span className="text-red-500">*</span>
                         </FormLabel>
                         <Select
                           onValueChange={field.onChange}
@@ -696,62 +691,6 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                             <SelectItem value="HYBRID">Hybride</SelectItem>
                           </SelectContent>
                         </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="responsibilities"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Missions <span className="text-red-500">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Editor
-                            editorSerializedState={field.value ?? undefined}
-                            onSerializedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="requirements"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Compétences requises{" "}
-                          <span className="text-red-500">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Editor
-                            editorSerializedState={field.value ?? undefined}
-                            onSerializedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="benefits"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Avantages</FormLabel>
-                        <FormControl>
-                          <Editor
-                            editorSerializedState={field.value ?? undefined}
-                            onSerializedChange={field.onChange}
-                          />
-                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
