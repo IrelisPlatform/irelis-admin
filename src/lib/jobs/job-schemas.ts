@@ -16,9 +16,7 @@ export const companyStepSchema = z.object({
     .optional()
     .or(z.literal("")),
   companyDescription: z.string().optional(),
-  sectorId: z.string().min(1, {
-    message: "Veuillez sélectionner un secteur d'activité",
-  }),
+  sectorId: z.string().optional().nullable(),
   companyLength: z.string().optional(),
 });
 
@@ -44,13 +42,14 @@ export const generalInfoStepSchema = z.object({
 
 // Schema pour l'étape 3 : Détails du poste
 export const jobDetailsStepSchema = z.object({
-  jobType: z.enum(["FULL_TIME", "PART_TIME", "REMOTE", "HYBRID"], {
-    message: "Le type de poste est obligatoire",
-  }),
+  jobType: z
+    .enum(["FULL_TIME", "PART_TIME", "REMOTE", "HYBRID"])
+    .optional()
+    .nullable(),
 
   salary: z.string().optional(),
-  contractType: z.enum(
-    [
+  contractType: z
+    .enum([
       "CDI",
       "CDD",
       "CDI_PART_TIME",
@@ -59,11 +58,9 @@ export const jobDetailsStepSchema = z.object({
       "ALTERNATIVE",
       "FREELANCE",
       "INTERIM",
-    ],
-    {
-      message: "Le type de contrat est obligatoire",
-    }
-  ),
+    ])
+    .optional()
+    .nullable(),
   tagDto: z
     .array(
       z.object({
@@ -76,9 +73,21 @@ export const jobDetailsStepSchema = z.object({
 
 // Schema pour l'étape 4 : Options avancées
 export const advancedOptionsStepSchema = z.object({
-  requiredLanguage: z.string().min(1, {
-    message: "La langue requise est obligatoire",
-  }),
+  requiredLanguage: z
+    .array(z.string())
+    .optional()
+    .refine(
+      (langs) => {
+        if (!langs || langs.length === 0) return true;
+        // Si "Bilingue" est sélectionné, il ne peut pas être combiné avec d'autres langues
+        const hasBilingue = langs.includes("Bilingue");
+        if (hasBilingue && langs.length > 1) return false;
+        return true;
+      },
+      {
+        message: "Bilingue ne peut pas être combiné avec d'autres langues",
+      }
+    ),
   isUrgent: z.boolean().default(false),
   postNumber: z.number().int().positive().default(1),
   requiredDocuments: z

@@ -95,7 +95,7 @@ export const transformJob = (job: BackendPublishedJob): PublishedJob => {
     postNumber: job.postNumber,
     companyLength: job.companyLength,
     workCountryLocation: job.workCountryLocation,
-    /* workCityLocation: job.workCityLocation, */
+    workCities: job.workCities,
     jobType: job.jobType,
     companyEmail: job.companyEmail,
     status: job.status,

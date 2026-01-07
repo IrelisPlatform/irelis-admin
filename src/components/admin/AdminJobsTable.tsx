@@ -113,9 +113,15 @@ function AdminJobsTableContent(props: { jobs: PublishedJob[] }) {
         <TableRow key={job.id}>
           <TableCell className="font-medium">{job.title}</TableCell>
           <TableCell className="font-medium">{job.companyName}</TableCell>
-          {/*   {<TableCell>
-            {job.workCityLocation}, {job.workCountryLocation}
-          </TableCell>} */}
+          <TableCell>
+            {job.workCities.length === 0 ? (
+              <>{job.workCountryLocation}</>
+            ) : (
+              <>
+                {job.workCountryLocation} - {job.workCities.join(", ")}
+              </>
+            )}
+          </TableCell>
           <TableCell>
             <Badge variant="outline">
               {getContractTypeLabel(job.contractType)}

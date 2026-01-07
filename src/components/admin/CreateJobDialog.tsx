@@ -58,7 +58,10 @@ import { COUNTRIES, COUNTRIES_WITH_CITIES } from "@/lib/countries";
 import useSectors, { Sector } from "@/hooks/useSectors";
 import { JobPreviewDialog } from "./JobPreviewDialog";
 import type { TagDto, RequiredDocument } from "@/types/job";
-import { Plus } from "lucide-react";
+import { Plus, Eye } from "lucide-react";
+import { BasicImageUploader } from "@/components/ui/basic-image-uploader";
+import { SelectWithSearch } from "@/components/ui/select-with-search";
+import { SelectWithSearchAndButton } from "@/components/ui/select-with-search-and-button";
 
 type CreateJobDialogProps = {
   children?: React.ReactNode;
@@ -78,7 +81,8 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
   const [newTagName, setNewTagName] = useState("");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isFormStateOpen, setIsFormStateOpen] = useState(false);
+  const [customCities, setCustomCities] = useState<string[]>([]);
 
   const form = useForm<CreateJobFormData>({
     resolver: zodResolver(createJobSchema),
@@ -86,18 +90,18 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
       companyName: "",
       companyEmail: "",
       companyDescription: "",
-      sectorId: "",
+      sectorId: null,
       companyLength: "",
       title: "",
       description: null,
       workCountryLocation: "",
       workCityLocation: [],
       expirationDate: "",
-      jobType: "FULL_TIME",
+      jobType: null,
       salary: "",
-      contractType: "",
+      contractType: null,
       tagDto: [],
-      requiredLanguage: "",
+      requiredLanguage: [],
       isUrgent: false,
       postNumber: 1,
       requiredDocuments: [{ type: "CV" }],
@@ -200,22 +204,21 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
         companyName: values.companyName.trim(),
         companyDescription: values.companyDescription?.trim() || "",
         companyLength: values.companyLength || "",
-        sectorId: values.sectorId,
+        sectorId: values.sectorId || undefined,
         companyEmail: values.companyEmail?.trim() || undefined,
         title: values.title.trim(),
         description: JSON.stringify(values.description),
         workCountryLocation: values.workCountryLocation,
         workCityLocation: values.workCityLocation.join(", "),
-        responsibilities: JSON.stringify(values.responsibilities),
-        requirements: JSON.stringify(values.requirements),
-        benefits: values.benefits ? JSON.stringify(values.benefits) : undefined,
-        contractType: values.contractType,
-        jobType: values.jobType,
+        contractType: values.contractType || undefined,
+        jobType: values.jobType || undefined,
         salary: values.salary || "",
         isUrgent: values.isUrgent,
         isFeatured: false,
         expirationDate: expirationDateISO,
-        requiredLanguage: values.requiredLanguage.trim(),
+        requiredLanguage: Array.isArray(values.requiredLanguage)
+          ? values.requiredLanguage.join(", ")
+          : values.requiredLanguage || undefined,
         postNumber: values.postNumber || 1,
         tagDto: values.tagDto || [],
         requiredDocuments: values.requiredDocuments,
@@ -253,6 +256,11 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
     }
   };
 
+  const requiredLanguageValue = form.watch("requiredLanguage");
+  const requiredLanguageString: string = Array.isArray(requiredLanguageValue)
+    ? requiredLanguageValue.join(", ")
+    : requiredLanguageValue || "";
+
   const jobPreviewData = {
     title: form.watch("title") || "",
     companyName: form.watch("companyName") || "",
@@ -262,7 +270,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
     workCityLocation: form.watch("workCityLocation") || [],
     workCountryLocation: form.watch("workCountryLocation") || "",
     expirationDate: form.watch("expirationDate") || "",
-    requiredLanguage: form.watch("requiredLanguage") || "",
+    requiredLanguage: requiredLanguageString,
     postNumber: form.watch("postNumber") || 1,
     isUrgent: form.watch("isUrgent") || false,
     description: form.watch("description"),
@@ -281,6 +289,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
             form.reset();
             setCompanyLogo(null);
             setLogoPreview(null);
+            setCustomCities([]);
           }
         }}
       >
@@ -291,9 +300,22 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
             </Button>
           )}
         </DialogTrigger>
-        <DialogContent className="max-w-5xl overflow-y-auto max-h-[90vh]">
+        <DialogContent className="max-w-full sm:max-w-xl lg:max-w-5xl overflow-y-auto max-h-[90vh]">
           <DialogHeader>
-            <DialogTitle>Créer une offre (Étape {currentStep}/4)</DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-primary">
+                Créer une offre (Étape {currentStep}/4)
+              </DialogTitle>
+              {/*     <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsFormStateOpen(true)}
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                État du formulaire
+              </Button> */}
+            </div>
             <div className="flex mt-2 space-x-1">
               {STEPS.map((step) => (
                 <div
@@ -311,75 +333,37 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
               {/* ÉTAPE 1 : ENTREPRISE */}
               {currentStep === 1 && (
                 <div className="space-y-4">
-                  <div>
+                  <div className="*:not-first:mt-2">
                     <Label className="mb-2">Logo de l'entreprise</Label>
-                    <Input
-                      type="file"
-                      ref={fileInputRef}
-                      accept="image/png,image/jpeg,image/webp"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-
-                        const MAX_SIZE = 2 * 1024 * 1024;
-                        const allowedTypes = [
-                          "image/png",
-                          "image/jpeg",
-                          "image/jpg",
-                          "image/webp",
-                        ];
-
-                        if (!allowedTypes.includes(file.type)) {
-                          toast.error(
-                            "Format non supporté (PNG, JPEG, WEBP uniquement)"
-                          );
-                          e.target.value = "";
-                          return;
-                        }
-
-                        if (file.size > MAX_SIZE) {
-                          toast.error("Le logo ne doit pas dépasser 2 Mo");
-                          e.target.value = "";
-                          return;
-                        }
-
-                        setCompanyLogo(file);
-                        setLogoPreview(URL.createObjectURL(file));
-                      }}
-                    />
-                    <p className="mt-1 text-sm text-gray-500">
-                      Taille maximale : 2 Mo
-                    </p>
-
-                    {logoPreview && (
-                      <div className="mt-3 flex items-center gap-3">
-                        <img
-                          src={logoPreview}
-                          alt="Logo entreprise"
-                          className="w-16 h-16 rounded-lg object-contain border"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
+                    <div>
+                      <BasicImageUploader
+                        accept="image/png,image/jpeg,image/webp"
+                        maxSize={2 * 1024 * 1024}
+                        onFileChange={(file) => {
+                          if (file) {
+                            setCompanyLogo(file);
+                            setLogoPreview(URL.createObjectURL(file));
+                          } else {
                             setCompanyLogo(null);
                             setLogoPreview(null);
-                            if (fileInputRef.current) {
-                              fileInputRef.current.value = "";
-                            }
-                          }}
-                          className="text-sm text-red-500 hover:underline"
-                        >
-                          Supprimer
-                        </button>
-                      </div>
-                    )}
+                          }
+                        }}
+                        defaultPreview={logoPreview || undefined}
+                        uploadButtonLabel="Ajouter un logo"
+                        changeButtonLabel="Changer le logo"
+                        removeButtonLabel="Supprimer"
+                      />
+                      <p className="mt-1 text-sm text-gray-500">
+                        Taille maximale : 2 Mo
+                      </p>
+                    </div>
                   </div>
 
                   <FormField
                     control={form.control}
                     name="companyName"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="*:not-first:mt-2">
                         <FormLabel>
                           Nom de l'entreprise{" "}
                           <span className="text-red-500">*</span>
@@ -396,10 +380,11 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                     control={form.control}
                     name="companyDescription"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="*:not-first:mt-2">
                         <FormLabel>Description de l'entreprise</FormLabel>
                         <FormControl>
                           <Textarea
+                            className=""
                             placeholder="Décrivez votre entreprise en quelques lignes..."
                             rows={3}
                             {...field}
@@ -414,7 +399,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                     control={form.control}
                     name="companyEmail"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="*:not-first:mt-2">
                         <FormLabel>Email de l'entreprise</FormLabel>
                         <FormControl>
                           <Input
@@ -433,31 +418,25 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                     control={form.control}
                     name="sectorId"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Secteur d'activité{" "}
-                          <span className="text-red-500">*</span>
-                        </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          disabled={sectorsLoading}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Sélectionnez un secteur" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="max-h-60 overflow-y-auto">
-                            {sectors
+                      <FormItem className="*:not-first:mt-2">
+                        <FormLabel>Secteur d'activité</FormLabel>
+                        <FormControl>
+                          <SelectWithSearch
+                            options={sectors
                               .filter((sector) => sector.id.trim() !== "")
-                              .map((sector: Sector) => (
-                                <SelectItem key={sector.id} value={sector.id}>
-                                  {sector.name}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
+                              .map((sector: Sector) => ({
+                                label: sector.name,
+                                value: sector.id,
+                              }))}
+                            value={field.value}
+                            onValueChange={(value) => field.onChange(value)}
+                            placeholder="Sélectionnez un secteur"
+                            searchPlaceholder="Rechercher un secteur..."
+                            hasNotSpecified={true}
+                            notSpecifiedLabel="Pas spécifié"
+                            disabled={sectorsLoading}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -467,25 +446,24 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                     control={form.control}
                     name="companyLength"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="*:not-first:mt-2">
                         <FormLabel>Taille de l'entreprise</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value || ""}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Sélectionner la taille de l'entreprise" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="max-h-60 overflow-y-auto">
-                            {companySizeRanges.map((range) => (
-                              <SelectItem key={range} value={range}>
-                                {range}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <SelectWithSearch
+                            options={companySizeRanges.map((range) => ({
+                              label: range,
+                              value: range,
+                            }))}
+                            value={field.value || null}
+                            onValueChange={(value) =>
+                              field.onChange(value || "")
+                            }
+                            placeholder="Sélectionner la taille de l'entreprise"
+                            searchPlaceholder="Rechercher..."
+                            hasNotSpecified={true}
+                            notSpecifiedLabel="Pas spécifié"
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -500,7 +478,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                     control={form.control}
                     name="title"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="*:not-first:mt-2">
                         <FormLabel>
                           Titre du poste <span className="text-red-500">*</span>
                         </FormLabel>
@@ -519,7 +497,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                     control={form.control}
                     name="description"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="*:not-first:mt-2">
                         <FormLabel>
                           Description de l'offre{" "}
                           <span className="text-red-500">*</span>
@@ -540,7 +518,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                       control={form.control}
                       name="workCountryLocation"
                       render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="*:not-first:mt-2">
                           <FormLabel>
                             Pays <span className="text-red-500">*</span>
                           </FormLabel>
@@ -573,69 +551,86 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                     <FormField
                       control={form.control}
                       name="workCityLocation"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            Villes <span className="text-red-500">*</span>
-                          </FormLabel>
-                          <Select
-                            onValueChange={(v) => {
-                              const currentCities = field.value || [];
-                              if (!currentCities.includes(v)) {
-                                field.onChange([...currentCities, v]);
-                              }
-                            }}
-                            value=""
-                            disabled={!selectedCountry}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Sélectionnez une ville" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {selectedCountry &&
-                              COUNTRIES_WITH_CITIES[
-                                selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
+                      render={({ field }) => {
+                        const availableCities =
+                          selectedCountry &&
+                          COUNTRIES_WITH_CITIES[
+                            selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
+                          ]
+                            ? [
+                                ...COUNTRIES_WITH_CITIES[
+                                  selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
+                                ].filter((city) => city !== "Autre"),
+                                ...customCities.filter(
+                                  (city) =>
+                                    !COUNTRIES_WITH_CITIES[
+                                      selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
+                                    ]?.includes(city)
+                                ),
                               ]
-                                ? COUNTRIES_WITH_CITIES[
-                                    selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
-                                  ].map((city) => (
-                                    <SelectItem key={city} value={city}>
-                                      {city}
-                                    </SelectItem>
-                                  ))
-                                : null}
-                            </SelectContent>
-                          </Select>
-                          {field.value && field.value.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              {field.value.map((city, index) => (
-                                <Badge
-                                  key={index}
-                                  variant="secondary"
-                                  className="flex items-center gap-1"
-                                >
-                                  {city}
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const updated = field.value.filter(
-                                        (_, i) => i !== index
-                                      );
-                                      field.onChange(updated);
-                                    }}
-                                    className="ml-1 text-xs text-muted-foreground hover:text-foreground"
+                            : [];
+
+                        return (
+                          <FormItem className="*:not-first:mt-2">
+                            <FormLabel>
+                              Villes <span className="text-red-500">*</span>
+                            </FormLabel>
+                            <SelectWithSearchAndButton
+                              options={availableCities.map((city) => ({
+                                label: city,
+                                value: city,
+                              }))}
+                              value=""
+                              onValueChange={(v) => {
+                                const currentCities = field.value || [];
+                                if (!currentCities.includes(v)) {
+                                  field.onChange([...currentCities, v]);
+                                }
+                              }}
+                              onAddItem={(newCity) => {
+                                if (!customCities.includes(newCity)) {
+                                  setCustomCities([...customCities, newCity]);
+                                }
+                                const currentCities = field.value || [];
+                                if (!currentCities.includes(newCity)) {
+                                  field.onChange([...currentCities, newCity]);
+                                }
+                              }}
+                              placeholder="Sélectionnez une ville"
+                              searchPlaceholder="Rechercher une ville..."
+                              addItemPlaceholder="Entrer une ville..."
+                              buttonLabel="Ajouter une ville"
+                              disabled={!selectedCountry}
+                            />
+                            {field.value && field.value.length > 0 && (
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {field.value.map((city, index) => (
+                                  <Badge
+                                    key={index}
+                                    variant="secondary"
+                                    className="flex items-center gap-1"
                                   >
-                                    ✕
-                                  </button>
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                                    {city}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const updated = field.value.filter(
+                                          (_, i) => i !== index
+                                        );
+                                        field.onChange(updated);
+                                      }}
+                                      className="ml-1 text-xs text-muted-foreground hover:text-foreground"
+                                    >
+                                      ✕
+                                    </button>
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
                     />
                   </div>
 
@@ -643,7 +638,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                     control={form.control}
                     name="expirationDate"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="*:not-first:mt-2">
                         <FormLabel>Date d'expiration</FormLabel>
                         <FormControl>
                           <Input
@@ -666,31 +661,24 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                     control={form.control}
                     name="jobType"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          conditions de travail{" "}
-                          <span className="text-red-500">*</span>
-                        </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="FULL_TIME">
-                              Temps plein
-                            </SelectItem>
-                            <SelectItem value="PART_TIME">
-                              Temps partiel
-                            </SelectItem>
-                            <SelectItem value="REMOTE">Télétravail</SelectItem>
-                            <SelectItem value="HYBRID">Hybride</SelectItem>
-                          </SelectContent>
-                        </Select>
+                      <FormItem className="*:not-first:mt-2">
+                        <FormLabel>Conditions de travail</FormLabel>
+                        <FormControl>
+                          <SelectWithSearch
+                            options={[
+                              { label: "Temps plein", value: "FULL_TIME" },
+                              { label: "Temps partiel", value: "PART_TIME" },
+                              { label: "Télétravail", value: "REMOTE" },
+                              { label: "Hybride", value: "HYBRID" },
+                            ]}
+                            value={field.value}
+                            onValueChange={(value) => field.onChange(value)}
+                            placeholder="Sélectionnez les conditions de travail"
+                            searchPlaceholder="Rechercher..."
+                            hasNotSpecified={true}
+                            notSpecifiedLabel="Pas spécifié"
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -700,7 +688,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                     control={form.control}
                     name="salary"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="*:not-first:mt-2">
                         <FormLabel>Salaire</FormLabel>
                         <Select
                           onValueChange={field.onChange}
@@ -797,34 +785,33 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                     control={form.control}
                     name="contractType"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Type de contrat{" "}
-                          <span className="text-red-500">*</span>
-                        </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="max-h-60 overflow-y-auto">
-                            <SelectItem value="CDI">CDI</SelectItem>
-                            <SelectItem value="CDI_PART_TIME">
-                              CDI (Temps partiel)
-                            </SelectItem>
-                            <SelectItem value="CDD">CDD</SelectItem>
-                            <SelectItem value="CDD_PART_TIME">
-                              CDD (Temps partiel)
-                            </SelectItem>
-                            <SelectItem value="INTERIM">Intérim</SelectItem>
-                            <SelectItem value="FREELANCE">Freelance</SelectItem>
-                            <SelectItem value="INTERNSHIP">Stage</SelectItem>
-                          </SelectContent>
-                        </Select>
+                      <FormItem className="*:not-first:mt-2">
+                        <FormLabel>Type de contrat</FormLabel>
+                        <FormControl>
+                          <SelectWithSearch
+                            options={[
+                              { label: "CDI", value: "CDI" },
+                              {
+                                label: "CDI (Temps partiel)",
+                                value: "CDI_PART_TIME",
+                              },
+                              { label: "CDD", value: "CDD" },
+                              {
+                                label: "CDD (Temps partiel)",
+                                value: "CDD_PART_TIME",
+                              },
+                              { label: "Intérim", value: "INTERIM" },
+                              { label: "Freelance", value: "FREELANCE" },
+                              { label: "Stage", value: "INTERNSHIP" },
+                            ]}
+                            value={field.value}
+                            onValueChange={(value) => field.onChange(value)}
+                            placeholder="Sélectionnez un type de contrat"
+                            searchPlaceholder="Rechercher..."
+                            hasNotSpecified={true}
+                            notSpecifiedLabel="Pas spécifié"
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -838,56 +825,88 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                   <FormField
                     control={form.control}
                     name="requiredLanguage"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Langue requise <span className="text-red-500">*</span>
-                        </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Sélectionnez une langue" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Français">Français</SelectItem>
-                            <SelectItem value="Anglais">Anglais</SelectItem>
-                            <SelectItem value="Bilingue">
-                              Bilingue (Français/Anglais)
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    render={({ field }) => {
+                      const currentLanguages = field.value || [];
+                      const hasBilingue = currentLanguages.includes("Bilingue");
 
-                  <FormField
-                    control={form.control}
-                    name="isUrgent"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Offre urgente</FormLabel>
-                        </div>
-                      </FormItem>
-                    )}
+                      return (
+                        <FormItem className="*:not-first:mt-2">
+                          <FormLabel>Langue requise</FormLabel>
+                          <div className="flex flex-wrap gap-2">
+                            {[
+                              { value: "Français", label: "Français" },
+                              { value: "Anglais", label: "Anglais" },
+                              {
+                                value: "Bilingue",
+                                label: "Bilingue (Français/Anglais)",
+                              },
+                            ].map((lang) => {
+                              const isChecked = currentLanguages.includes(
+                                lang.value
+                              );
+                              const isDisabled =
+                                lang.value !== "Bilingue" && hasBilingue;
+
+                              return (
+                                <div
+                                  key={lang.value}
+                                  className="flex items-center gap-1"
+                                >
+                                  <Checkbox
+                                    id={`lang-${lang.value}`}
+                                    checked={isChecked}
+                                    disabled={isDisabled}
+                                    onCheckedChange={(checked) => {
+                                      let updated: string[] = [
+                                        ...currentLanguages,
+                                      ];
+                                      if (checked) {
+                                        if (lang.value === "Bilingue") {
+                                          // Si on sélectionne Bilingue, on supprime les autres
+                                          updated = ["Bilingue"];
+                                        } else {
+                                          // Si on sélectionne une autre langue, on ajoute si Bilingue n'est pas sélectionné
+                                          if (!hasBilingue) {
+                                            updated.push(lang.value);
+                                          }
+                                        }
+                                      } else {
+                                        updated = updated.filter(
+                                          (l) => l !== lang.value
+                                        );
+                                      }
+                                      field.onChange(updated);
+                                    }}
+                                  />
+                                  <Label
+                                    htmlFor={`lang-${lang.value}`}
+                                    className={`text-sm cursor-pointer ${
+                                      isDisabled ? "opacity-50" : ""
+                                    }`}
+                                  >
+                                    {lang.label}
+                                  </Label>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          {hasBilingue && currentLanguages.length > 1 && (
+                            <p className="text-sm text-destructive mt-1">
+                              Bilingue ne peut pas être combiné avec d'autres
+                              langues
+                            </p>
+                          )}
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
 
                   <FormField
                     control={form.control}
                     name="postNumber"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="*:not-first:mt-2">
                         <FormLabel>Nombre de postes</FormLabel>
                         <FormControl>
                           <Input
@@ -909,7 +928,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                     control={form.control}
                     name="requiredDocuments"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="*:not-first:mt-2">
                         <FormLabel>
                           Documents requis{" "}
                           <span className="text-red-500">*</span>
@@ -954,6 +973,24 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                       </FormItem>
                     )}
                   />
+
+                  <FormField
+                    control={form.control}
+                    name="isUrgent"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Offre urgente</FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
                 </div>
               )}
             </div>
@@ -983,6 +1020,19 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
         onPublish={handleCreateJob}
         isLoading={isLoading}
       />
+      {/*Modal d'état du formulaire*/}
+      <Dialog open={isFormStateOpen} onOpenChange={setIsFormStateOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>État du formulaire</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            <pre className="bg-muted p-4 rounded-md overflow-auto text-xs">
+              {JSON.stringify(form.getValues(), null, 2)}
+            </pre>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

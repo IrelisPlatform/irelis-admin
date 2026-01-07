@@ -42,6 +42,7 @@ export async function createJobAction(formData: FormData) {
       "Error creating job:",
       error?.response?.data || error.message
     );
+    console.log(error?.response?.data?.code);
     return {
       success: false,
       error:

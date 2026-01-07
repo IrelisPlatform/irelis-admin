@@ -49,6 +49,7 @@ export interface BackendPublishedJob {
   companyDescription: string;
   companyEmail: string;
   sectorId: string;
+  workCities: string[];
 }
 
 // 🔹 Version transformée pour le frontend
@@ -63,6 +64,7 @@ export interface PublishedJob {
   postNumber: number;
   companyLength: string;
   workCountryLocation: string;
+  workCities: string[];
   /* workCityLocation: string; */
   jobType: string;
   type: string;
