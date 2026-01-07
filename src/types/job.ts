@@ -30,9 +30,6 @@ export interface BackendPublishedJob {
   description: string;
   workCountryLocation: string;
   workCityLocation: string;
-  responsibilities: string;
-  requirements: string;
-  benefits: string;
   contractType: string;
   status: string;
   jobType: string;
@@ -66,9 +63,8 @@ export interface PublishedJob {
   postNumber: number;
   companyLength: string;
   workCountryLocation: string;
-  workCityLocation: string;
+  /* workCityLocation: string; */
   jobType: string;
-  location: string;
   type: string;
   salary: string;
   publishedAt: string | null;
@@ -81,11 +77,9 @@ export interface PublishedJob {
   companyLogo?: string;
   companyEmail: string;
   tags: string[];
-  responsibilities: string[];
   status: string;
-  // competences (requirements)
-  qualifications: string[];
-  benefits: string[];
+  // competences (requirements) (à revoir)
+  /* qualifications: string[]; */
   requiredLanguage: string;
   requiredDocuments: RequiredDocument[];
   tagDto: Array<{ name: string; type: string }>;
@@ -113,9 +107,7 @@ export interface AdminJobOfferRequest {
   description: string;
   workCountryLocation: string;
   workCityLocation: string;
-  responsibilities: string;
   requirements: string;
-  benefits?: string;
   status: string;
   contractType: "CDI" | "CDD" | "INTERNSHIP" | "ALTERNATIVE" | "FREELANCE";
   jobType: "FULL_TIME" | "PART_TIME" | "REMOTE" | "HYBRID";

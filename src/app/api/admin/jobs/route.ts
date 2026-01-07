@@ -4,18 +4,6 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { BackendPublishedJob, PublishedJob, JobPage } from "@/types/job";
 
-const parseListFromString = (input: string): string[] => {
-  if (!input) return [];
-  return input
-    .split(/[\n•*—\-–]+/)
-    .map((s) => s.trim())
-    .filter(
-      (s) =>
-        s.length > 0 &&
-        !/^(responsibilités?|qualifications?|avantages?)$/i.test(s)
-    );
-};
-
 const transformJob = (job: BackendPublishedJob): PublishedJob => {
   const now = new Date();
   const publishedAt = job.publishedAt ? new Date(job.publishedAt) : null;
@@ -29,7 +17,6 @@ const transformJob = (job: BackendPublishedJob): PublishedJob => {
     offerDescription: job.description,
     companyName: job.companyName || "Entreprise confidentielle",
     companyDescription: job.companyDescription,
-    location: `${job.workCityLocation}, ${job.workCountryLocation}`,
     type: job.contractType,
     salary: job.salary,
     publishedAt: job.publishedAt,
@@ -42,20 +29,17 @@ const transformJob = (job: BackendPublishedJob): PublishedJob => {
     companyLogo: job.companyLogoUrl,
     requiredLanguage: job.requiredLanguage,
     tags: job.tagDto?.map((t) => t.name) || [],
-    responsibilities: parseListFromString(job.responsibilities),
-    qualifications: parseListFromString(job.requirements),
-    benefits: parseListFromString(job.benefits),
     requiredDocuments: job.requiredDocuments,
     companyLogoUrl: job.companyLogoUrl,
     sectorId: job.sectorId,
     postNumber: job.postNumber,
     companyLength: job.companyLength,
     workCountryLocation: job.workCountryLocation,
-    workCityLocation: job.workCityLocation,
+    /* workCityLocation: job.workCityLocation, */
     jobType: job.jobType,
     companyEmail: job.companyEmail,
     status: job.status,
-    tagDto: job.tagDto,
+    tagDto: job.tagDto || [],
     contractType: job.contractType,
   };
 };
@@ -88,7 +72,7 @@ export async function GET(request: NextRequest) {
 
     if (!response.ok) {
       return NextResponse.json(
-        { error: response.statusText ?? "Falide to fetch jobs" },
+        { error: response.statusText ?? "Failed to fetch jobs" },
         { status: response.status }
       );
     }
