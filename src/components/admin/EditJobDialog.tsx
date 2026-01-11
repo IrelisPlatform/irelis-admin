@@ -2,9 +2,12 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { SerializedEditorState } from "lexical";
 import {
   Dialog,
@@ -26,19 +29,37 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Editor } from "@/components/blocks/editor-00/editor";
-import { updateJobAction } from "@/app/_actions/jobs";
 import {
   STEPS,
   DOCUMENT_TYPES,
   companySizeRanges,
   salaryRanges,
 } from "@/lib/jobs/job-helpers";
+import {
+  createJobSchema,
+  type CreateJobFormData,
+  companyStepSchema,
+  generalInfoStepSchema,
+  jobDetailsStepSchema,
+  advancedOptionsStepSchema,
+} from "@/lib/jobs/job-schemas";
 import { TAG_NAMES, TagType } from "@/lib/jobTags";
 import { COUNTRIES, COUNTRIES_WITH_CITIES } from "@/lib/countries";
-import { formatDateLong } from "@/services/date";
-import useSectors, { Sector } from "@/hooks/useSectors";
+import { BasicImageUploader } from "@/components/ui/basic-image-uploader";
+import { SelectWithSearch } from "@/components/ui/select-with-search";
+import { SelectWithSearchAndButton } from "@/components/ui/select-with-search-and-button";
+import { updateJobAction } from "@/app/_actions/jobs";
 import type { TagDto, RequiredDocument, PublishedJob } from "@/types/job";
+import type { Sector } from "@/app/api/sectors/route";
 
 type EditJobDialogProps = {
   open: boolean;
@@ -46,182 +67,262 @@ type EditJobDialogProps = {
   job: PublishedJob | null;
 };
 
-const INITIAL_EDIT_JOB_STATE = {
-  id: "",
-  companyName: "",
-  companyEmail: "",
-  companyDescription: "",
-  companyLength: "",
-  sectorId: "",
-  title: "",
-  description: null as SerializedEditorState | null,
-  workCountryLocation: "",
-  workCityLocation: [] as string[],
-  responsibilities: null as SerializedEditorState | null,
-  requirements: null as SerializedEditorState | null,
-  benefits: null as SerializedEditorState | null,
-  contractType: "CDI" as const,
-  status: "PENDING" as const,
-  jobType: "FULL_TIME" as const,
-  salary: "",
-  expirationDate: "",
-  isUrgent: false,
-  requiredLanguage: "",
-  postNumber: 1,
-  tagDto: [] as TagDto[],
-  requiredDocuments: [{ type: "CV" }] as RequiredDocument[],
-};
-
 export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
   const router = useRouter();
-  const { sectors, loading: sectorsLoading } = useSectors();
+  const queryClient = useQueryClient();
+  const { data: sectors = [], isLoading: sectorsLoading } = useQuery<Sector[]>({
+    queryKey: ["sectors"],
+    queryFn: async () => {
+      const response = await fetch("/api/sectors");
+      if (!response.ok) {
+        throw new Error("Failed to fetch sectors");
+      }
+      return response.json();
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+  const [isPending, startTransition] = useTransition();
   const [currentStep, setCurrentStep] = useState(1);
-  const [editJob, setEditJob] = useState(INITIAL_EDIT_JOB_STATE);
   const [companyLogo, setCompanyLogo] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoFileName, setLogoFileName] = useState<string | null>(null);
   const [selectedCountry, setSelectedCountry] = useState("");
   const [newTagType, setNewTagType] = useState<"skill" | "tool" | "domain">(
     "skill"
   );
   const [newTagName, setNewTagName] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [customCities, setCustomCities] = useState<string[]>([]);
+
+  const form = useForm<CreateJobFormData>({
+    resolver: zodResolver(createJobSchema),
+    defaultValues: {
+      companyName: "",
+      companyEmail: "",
+      companyDescription: "",
+      sectorId: null,
+      companyLength: "",
+      title: "",
+      description: null,
+      workCountryLocation: "",
+      workCityLocation: [],
+      expirationDate: "",
+      jobType: null,
+      salary: "",
+      contractType: null,
+      tagDto: [],
+      requiredLanguage: [],
+      isUrgent: false,
+      postNumber: 1,
+      requiredDocuments: [{ type: "CV" }],
+    },
+    mode: "onChange",
+  });
+
+  const watchedValues = form.watch();
 
   useEffect(() => {
+    if (watchedValues.workCountryLocation) {
+      setSelectedCountry(watchedValues.workCountryLocation);
+    }
+  }, [watchedValues.workCountryLocation]);
+
+  // Pré-remplir le formulaire avec les données du job
+  useEffect(() => {
     if (job && open) {
-      setEditJob({
-        id: job.id,
+      let description: SerializedEditorState | null = null;
+      try {
+        if (job.offerDescription) {
+          description =
+            typeof job.offerDescription === "string"
+              ? JSON.parse(job.offerDescription)
+              : job.offerDescription;
+        }
+      } catch (e) {
+        console.error("Error parsing description:", e);
+        description = null;
+      }
+
+      const workCities = Array.isArray(job.workCities) ? job.workCities : [];
+
+      form.reset({
         companyName: job.companyName || "",
         companyEmail: job.companyEmail || "",
         companyDescription: job.companyDescription || "",
-        companyLength: job.companyLength || "",
-        sectorId: job.sectorId || "",
+        sectorId: job.sectorId || null,
+        companyLength: job.companySize || "",
         title: job.title || "",
-        description: job.description
-          ? typeof job.description === "string"
-            ? JSON.parse(job.description)
-            : job.description
-          : null,
+        description: description,
         workCountryLocation: job.workCountryLocation || "",
-        workCityLocation: Array.isArray(job.workCityLocation)
-          ? job.workCityLocation
-          : job.workCityLocation
-          ? [job.workCityLocation]
-          : [],
-        responsibilities: job.responsibilities
-          ? typeof job.responsibilities === "string"
-            ? JSON.parse(job.responsibilities)
-            : job.responsibilities
-          : null,
-        requirements: job.requirements
-          ? typeof job.requirements === "string"
-            ? JSON.parse(job.requirements)
-            : job.requirements
-          : null,
-        benefits: job.benefits
-          ? typeof job.benefits === "string"
-            ? JSON.parse(job.benefits)
-            : job.benefits
-          : null,
-        contractType: (job.contractType as any) || "CDI",
-        status: job.status || "PENDING",
-        jobType: (job.jobType as any) || "FULL_TIME",
+        workCityLocation: workCities,
+        expirationDate: job.expirationDate
+          ? new Date(job.expirationDate).toISOString().split("T")[0]
+          : "",
+        jobType: (job.jobType as any) || null,
         salary: job.salary || "",
-        expirationDate: job.expirationDate || "",
+        contractType: (job.contractType as any) || null,
+        tagDto: (job.tagDto || []).map((tag) => ({
+          name: tag.name,
+          type: tag.type as "skill" | "tool" | "domain",
+        })),
+        requiredLanguage: Array.isArray(job.requiredLanguages)
+          ? job.requiredLanguages
+          : [],
         isUrgent: job.isUrgent || false,
-        requiredLanguage: job.requiredLanguage || "",
         postNumber: job.postNumber || 1,
-        tagDto: job.tagDto || [],
-        requiredDocuments: job.requiredDocuments || [{ type: "CV" }],
+        requiredDocuments: (job.requiredDocuments || [{ type: "CV" }]).map(
+          (doc) => ({
+            type: (doc.type === "CV" ||
+            doc.type === "COVER_LETTER" ||
+            doc.type === "PORTFOLIO" ||
+            doc.type === "CERTIFICATE" ||
+            doc.type === "IDENTITY_DOC"
+              ? doc.type
+              : "CV") as
+              | "CV"
+              | "COVER_LETTER"
+              | "PORTFOLIO"
+              | "CERTIFICATE"
+              | "IDENTITY_DOC",
+          })
+        ),
       });
+
       setSelectedCountry(job.workCountryLocation || "");
       setLogoPreview(job.companyLogoUrl || null);
       setCurrentStep(1);
+      setCustomCities(
+        workCities.filter(
+          (city) =>
+            !COUNTRIES_WITH_CITIES[
+              job.workCountryLocation as keyof typeof COUNTRIES_WITH_CITIES
+            ]?.includes(city)
+        )
+      );
     }
-  }, [job, open]);
+  }, [job, open, form]);
 
-  const setEditJobField = <K extends keyof typeof INITIAL_EDIT_JOB_STATE>(
-    field: K,
-    value: (typeof INITIAL_EDIT_JOB_STATE)[K]
-  ) => {
-    setEditJob((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+  const validateStep = async (step: number): Promise<boolean> => {
+    let schema;
+    switch (step) {
+      case 1:
+        schema = companyStepSchema;
+        break;
+      case 2:
+        schema = generalInfoStepSchema;
+        break;
+      case 3:
+        schema = jobDetailsStepSchema;
+        break;
+      case 4:
+        schema = advancedOptionsStepSchema;
+        break;
+      default:
+        return false;
+    }
+
+    const fields = Object.keys(schema.shape);
+    const result = await form.trigger(fields as any);
+    return result;
+  };
+
+  const handleNext = async () => {
+    const isValid = await validateStep(currentStep);
+    if (isValid) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      toast.error(
+        "Veuillez remplir tous les champs obligatoires pour passer à l'étape suivante"
+      );
+    }
+  };
+
+  const handlePrevious = () => {
+    setCurrentStep(currentStep - 1);
   };
 
   const addTag = () => {
     if (newTagName.trim()) {
-      setEditJob((prev) => ({
-        ...prev,
-        tagDto: [...prev.tagDto, { name: newTagName.trim(), type: newTagType }],
-      }));
+      const currentTags = form.getValues("tagDto") || [];
+      form.setValue("tagDto", [
+        ...currentTags,
+        { name: newTagName.trim(), type: newTagType },
+      ]);
       setNewTagName("");
     }
   };
 
   const removeTag = (index: number) => {
-    setEditJob((prev) => ({
-      ...prev,
-      tagDto: prev.tagDto.filter((_, i) => i !== index),
-    }));
+    const currentTags = form.getValues("tagDto") || [];
+    form.setValue(
+      "tagDto",
+      currentTags.filter((_, i) => i !== index)
+    );
   };
 
   const handleUpdateJob = async () => {
-    if (!editJob.id) return;
+    if (!job) return;
 
-    setIsLoading(true);
-    try {
-      const payload = {
-        companyName: editJob.companyName?.trim() || "",
-        companyDescription: editJob.companyDescription?.trim() || "",
-        companyLength: editJob.companyLength,
-        sectorId: editJob.sectorId,
-        companyEmail: editJob.companyEmail?.trim() || undefined,
-        title: editJob.title?.trim() || "",
-        description: JSON.stringify(editJob.description),
-        workCountryLocation: editJob.workCountryLocation || "",
-        workCityLocation: Array.isArray(editJob.workCityLocation)
-          ? editJob.workCityLocation.join(", ")
-          : editJob.workCityLocation || "",
-        responsibilities: JSON.stringify(editJob.responsibilities),
-        requirements: JSON.stringify(editJob.requirements),
-        benefits: JSON.stringify(editJob.benefits),
-        contractType: editJob.contractType,
-        jobType: editJob.jobType,
-        salary: editJob.salary,
-        isUrgent: editJob.isUrgent,
-        isFeatured: false,
-        expirationDate: editJob.expirationDate || "",
-        requiredLanguage: editJob.requiredLanguage?.trim() || "",
-        postNumber: editJob.postNumber || 1,
-        tagDto: editJob.tagDto,
-        requiredDocuments: editJob.requiredDocuments,
-      };
+    const values = form.getValues();
 
-      const formData = new FormData();
-      formData.append(
-        "data",
-        new Blob([JSON.stringify(payload)], { type: "application/json" })
-      );
-
-      if (companyLogo) {
-        formData.append("companyLogo", companyLogo);
+    let expirationDateISO: string | null = null;
+    if (values.expirationDate) {
+      const expDate = new Date(values.expirationDate);
+      if (!isNaN(expDate.getTime())) {
+        expDate.setHours(23, 59, 59, 999);
+        expirationDateISO = expDate.toISOString();
       }
-
-      const result = await updateJobAction(editJob.id, formData);
-      if (result.success) {
-        toast.success("Offre mise à jour !");
-        onOpenChange(false);
-        router.refresh();
-      } else {
-        toast.error(result.error || "Erreur lors de la mise à jour");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Erreur lors de la mise à jour de l'offre");
-    } finally {
-      setIsLoading(false);
     }
+
+    const payload = {
+      companyName: values.companyName.trim(),
+      companyDescription: values.companyDescription?.trim() || null,
+      companyLength: values.companyLength || null,
+      sectorId: values.sectorId || null,
+      companyEmail: values.companyEmail?.trim() || null,
+      title: values.title.trim(),
+      description: JSON.stringify(values.description),
+      workCountryLocation: values.workCountryLocation,
+      workCities: values.workCityLocation,
+      contractType: values.contractType || null,
+      jobType: values.jobType || null,
+      salary: values.salary || null,
+      isUrgent: values.isUrgent,
+      isFeatured: false,
+      expirationDate: expirationDateISO,
+      requiredLanguages: values.requiredLanguage,
+      postNumber: values.postNumber || 1,
+      tagDto: values.tagDto || [],
+      requiredDocuments: values.requiredDocuments,
+    };
+
+    const formData = new FormData();
+    formData.append(
+      "data",
+      new Blob([JSON.stringify(payload)], {
+        type: "application/json",
+      })
+    );
+    if (companyLogo) {
+      formData.append("file", companyLogo);
+    }
+
+    startTransition(async () => {
+      const result = await updateJobAction(job.id, formData);
+      if (result.success) {
+        toast.success("Offre mise à jour avec succès !");
+        // Invalider la query pour rafraîchir la table
+        await queryClient.invalidateQueries({ queryKey: ["admin-jobs"] });
+        form.reset();
+        setCompanyLogo(null);
+        setLogoPreview(null);
+        setLogoFileName(null);
+        setSelectedCountry("");
+        setCurrentStep(1);
+        onOpenChange(false);
+      } else {
+        toast.error(result.error || "Erreur lors de la mise à jour de l'offre");
+      }
+    });
   };
 
   if (!job) return null;
@@ -231,12 +332,23 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
       open={open}
       onOpenChange={(open) => {
         onOpenChange(open);
-        if (!open) setCurrentStep(1);
+        if (!open) {
+          setCurrentStep(1);
+          form.reset();
+          setCompanyLogo(null);
+          setLogoPreview(null);
+          setLogoFileName(null);
+          setCustomCities([]);
+        }
       }}
     >
-      <DialogContent className="max-w-5xl overflow-y-auto max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle>Modifier l'offre (Étape {currentStep}/4)</DialogTitle>
+      <DialogContent className="max-w-full sm:max-w-xl lg:max-w-5xl max-h-[90vh] flex flex-col">
+        <DialogHeader className="px-8">
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-primary">
+              Modifier l&apos;offre (Étape {currentStep}/4)
+            </DialogTitle>
+          </div>
           <div className="flex mt-2 space-x-1">
             {STEPS.map((step) => (
               <div
@@ -249,536 +361,711 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
           </div>
         </DialogHeader>
 
-        <div className="py-4">
-          {/* ÉTAPE 1 : ENTREPRISE */}
-          {currentStep === 1 && (
-            <div className="space-y-4">
-              <div>
-                <Label className="mb-2">Logo de l'entreprise</Label>
-                <Input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      setCompanyLogo(file);
-                      setLogoPreview(URL.createObjectURL(file));
-                    }
-                  }}
-                />
-                <p className="text-xs text-gray-500 mt-1">Taille max : 2 Mo</p>
-                {logoPreview && (
-                  <div className="mt-3 flex items-center gap-3">
-                    <img
-                      src={logoPreview}
-                      alt="Logo entreprise"
-                      className="w-16 h-16 rounded-lg object-contain border"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCompanyLogo(null);
-                        setLogoPreview(null);
+        <Form {...form}>
+          <div className="py-2 px-8 overflow-y-auto flex-1 min-h-0">
+            {/* ÉTAPE 1 : ENTREPRISE */}
+            {currentStep === 1 && (
+              <div className="space-y-4">
+                <div className="*:not-first:mt-2">
+                  <Label className="mb-2">Logo de l&apos;entreprise</Label>
+                  <div>
+                    <BasicImageUploader
+                      accept="image/png,image/jpeg,image/webp"
+                      maxSize={2 * 1024 * 1024}
+                      onFileChange={(file) => {
+                        if (file) {
+                          setCompanyLogo(file);
+                          setLogoPreview(URL.createObjectURL(file));
+                          setLogoFileName(file.name);
+                        } else {
+                          setCompanyLogo(null);
+                          setLogoPreview(null);
+                          setLogoFileName(null);
+                        }
                       }}
-                      className="text-sm text-red-500 hover:underline"
-                    >
-                      Supprimer
-                    </button>
+                      defaultPreview={logoPreview || undefined}
+                      uploadButtonLabel="Ajouter un logo"
+                      changeButtonLabel="Changer le logo"
+                      removeButtonLabel="Supprimer"
+                    />
+                    <p className="mt-1 text-sm text-gray-500">
+                      Taille maximale : 2 Mo
+                    </p>
                   </div>
-                )}
-              </div>
-
-              <div>
-                <Label className="mb-2">
-                  Nom de l'entreprise <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  value={editJob.companyName}
-                  onChange={(e) =>
-                    setEditJob({ ...editJob, companyName: e.target.value })
-                  }
-                  placeholder="Ex: Irelis SARL"
-                />
-              </div>
-
-              <div>
-                <Label className="mb-2">Description de l'entreprise</Label>
-                <Textarea
-                  rows={3}
-                  value={editJob.companyDescription}
-                  onChange={(e) =>
-                    setEditJob({
-                      ...editJob,
-                      companyDescription: e.target.value,
-                    })
-                  }
-                />
-              </div>
-
-              <div>
-                <Label className="mb-2">Email de l'entreprise</Label>
-                <Input
-                  type="email"
-                  value={editJob.companyEmail}
-                  onChange={(e) =>
-                    setEditJob({ ...editJob, companyEmail: e.target.value })
-                  }
-                />
-              </div>
-
-              <div>
-                <Label className="mb-2">
-                  Secteur d'activité <span className="text-red-500">*</span>
-                </Label>
-                <Select
-                  value={editJob.sectorId}
-                  onValueChange={(v) => setEditJob({ ...editJob, sectorId: v })}
-                  disabled={sectorsLoading}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionnez un secteur" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60 overflow-y-auto">
-                    {sectors.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
-                        {s.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label className="mb-2">Taille de l'entreprise</Label>
-                <Select
-                  value={editJob.companyLength}
-                  onValueChange={(v) =>
-                    setEditJob({ ...editJob, companyLength: v })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner la taille de l'entreprise" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60 overflow-y-auto">
-                    {companySizeRanges.map((range) => (
-                      <SelectItem key={range} value={range}>
-                        {range}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-
-          {/* ÉTAPE 2 : INFOS GÉNÉRALES */}
-          {currentStep === 2 && (
-            <div className="space-y-4">
-              <div>
-                <Label className="mb-2">
-                  Titre de l'offre <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  value={editJob.title}
-                  placeholder="Ex: Directeur de Production"
-                  onChange={(e) =>
-                    setEditJob({ ...editJob, title: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label className="mb-2">
-                  Description de l'offre <span className="text-red-500">*</span>
-                </Label>
-                <Editor
-                  editorSerializedState={editJob.description}
-                  onSerializedChange={(value) =>
-                    setEditJobField("description", value)
-                  }
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="mb-2">
-                    Pays <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    value={editJob.workCountryLocation}
-                    onValueChange={(v) => {
-                      setEditJob({ ...editJob, workCountryLocation: v });
-                      setSelectedCountry(v);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionnez un pays" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {COUNTRIES.map((country) => (
-                        <SelectItem key={country} value={country}>
-                          {country}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="mb-2">
-                    Ville <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    value={
-                      Array.isArray(editJob.workCityLocation)
-                        ? editJob.workCityLocation[0] || ""
-                        : editJob.workCityLocation
-                    }
-                    onValueChange={(v) =>
-                      setEditJob({
-                        ...editJob,
-                        workCityLocation: [v],
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionnez une ville" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {selectedCountry &&
-                      COUNTRIES_WITH_CITIES[
-                        selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
-                      ] ? (
+                <FormField
+                  control={form.control}
+                  name="companyName"
+                  render={({ field }) => (
+                    <FormItem className="*:not-first:mt-2">
+                      <FormLabel>
+                        Nom de l&apos;entreprise{" "}
+                        <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ex: Irelis SARL" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="companyDescription"
+                  render={({ field }) => (
+                    <FormItem className="*:not-first:mt-2">
+                      <FormLabel>Description de l&apos;entreprise</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          className=""
+                          placeholder="Décrivez votre entreprise en quelques lignes..."
+                          rows={3}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="companyEmail"
+                  render={({ field }) => (
+                    <FormItem className="*:not-first:mt-2">
+                      <FormLabel>Email de l&apos;entreprise</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder="contact@entreprise.com"
+                          {...field}
+                          value={field.value || ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="sectorId"
+                  render={({ field }) => (
+                    <FormItem className="*:not-first:mt-2">
+                      <FormLabel>Secteur d&apos;activité</FormLabel>
+                      <FormControl>
+                        <SelectWithSearch
+                          options={sectors
+                            .filter((sector) => sector.id.trim() !== "")
+                            .map((sector) => ({
+                              label: sector.name,
+                              value: sector.id,
+                            }))}
+                          value={field.value}
+                          onValueChange={(value) => field.onChange(value)}
+                          placeholder="Sélectionnez un secteur"
+                          searchPlaceholder="Rechercher un secteur..."
+                          hasNotSpecified={true}
+                          notSpecifiedLabel="Pas spécifié"
+                          disabled={sectorsLoading}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="companyLength"
+                  render={({ field }) => (
+                    <FormItem className="*:not-first:mt-2">
+                      <FormLabel>Taille de l&apos;entreprise</FormLabel>
+                      <Select
+                        onValueChange={(value) =>
+                          field.onChange(value === "not-specified" ? "" : value)
+                        }
+                        value={field.value || "not-specified"}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner la taille de l'entreprise" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="not-specified">
+                            Pas spécifié
+                          </SelectItem>
+                          {companySizeRanges.map((range) => (
+                            <SelectItem key={range} value={range}>
+                              {range}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
+            {/* ÉTAPE 2 : INFOS GÉNÉRALES */}
+            {currentStep === 2 && (
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem className="*:not-first:mt-2">
+                      <FormLabel>
+                        Titre du poste <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Ex: Directeur de Production"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem className="*:not-first:mt-2">
+                      <FormLabel>
+                        Description de l&apos;offre{" "}
+                        <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Editor
+                          editorSerializedState={field.value ?? undefined}
+                          onSerializedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="workCountryLocation"
+                    render={({ field }) => (
+                      <FormItem className="*:not-first:mt-2">
+                        <FormLabel>
+                          Pays <span className="text-red-500">*</span>
+                        </FormLabel>
+                        <Select
+                          onValueChange={(v) => {
+                            field.onChange(v);
+                            setSelectedCountry(v);
+                            form.setValue("workCityLocation", []);
+                          }}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Sélectionnez un pays" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {COUNTRIES.map((country) => (
+                              <SelectItem key={country} value={country}>
+                                {country}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="workCityLocation"
+                    render={({ field }) => {
+                      const availableCities =
+                        selectedCountry &&
                         COUNTRIES_WITH_CITIES[
                           selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
-                        ].map((city) => (
-                          <SelectItem key={city} value={city}>
-                            {city}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="__placeholder__" disabled>
-                          Sélectionnez d'abord un pays
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+                        ]
+                          ? [
+                              ...COUNTRIES_WITH_CITIES[
+                                selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
+                              ].filter((city) => city !== "Autre"),
+                              ...customCities.filter(
+                                (city) =>
+                                  !COUNTRIES_WITH_CITIES[
+                                    selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
+                                  ]?.includes(city)
+                              ),
+                            ]
+                          : [];
 
-              <div>
-                <Label className="mb-2">Date d'expiration</Label>
-                <Input
-                  type="date"
-                  value={editJob.expirationDate || ""}
-                  onChange={(e) =>
-                    setEditJob({ ...editJob, expirationDate: e.target.value })
-                  }
-                />
-                <p className="text-sm text-gray-500 mt-1">
-                  Date actuelle :{" "}
-                  {editJob.expirationDate
-                    ? formatDateLong(editJob.expirationDate)
-                    : "non spécifié"}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* ÉTAPE 3 : DÉTAILS DU POSTE */}
-          {currentStep === 3 && (
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <Label className="mb-2">
-                  Type de poste <span className="text-red-500">*</span>
-                </Label>
-                <Select
-                  value={editJob.jobType}
-                  onValueChange={(v) =>
-                    setEditJob({ ...editJob, jobType: v as any })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="FULL_TIME">Temps plein</SelectItem>
-                    <SelectItem value="PART_TIME">Temps partiel</SelectItem>
-                    <SelectItem value="REMOTE">Télétravail</SelectItem>
-                    <SelectItem value="HYBRID">Hybride</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="mb-2">
-                  Missions <span className="text-red-500">*</span>
-                </Label>
-                <Editor
-                  editorSerializedState={editJob.responsibilities}
-                  onSerializedChange={(value) =>
-                    setEditJobField("responsibilities", value)
-                  }
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="mb-2">
-                  Compétences requises <span className="text-red-500">*</span>
-                </Label>
-                <Editor
-                  editorSerializedState={editJob.requirements}
-                  onSerializedChange={(value) =>
-                    setEditJobField("requirements", value)
-                  }
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="mb-2">Avantages</Label>
-                <Editor
-                  editorSerializedState={editJob.benefits}
-                  onSerializedChange={(value) =>
-                    setEditJobField("benefits", value)
-                  }
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="mb-2">Salaire</Label>
-                <Select
-                  value={editJob.salary}
-                  onValueChange={(v) => setEditJob({ ...editJob, salary: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un salaire" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60 overflow-y-auto">
-                    {salaryRanges.map((range) => (
-                      <SelectItem key={range} value={range}>
-                        {range}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Tags */}
-              <div className="space-y-3">
-                <Label className="mb-4">Tags (facultatif)</Label>
-                <div className="grid grid-cols-3 gap-2">
-                  <Select
-                    value={newTagType}
-                    onValueChange={(v) => setNewTagType(v as TagType)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="skill">Compétence</SelectItem>
-                      <SelectItem value="tool">Outil</SelectItem>
-                      <SelectItem value="domain">Domaine</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <Select value={newTagName} onValueChange={setNewTagName}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Nom" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TAG_NAMES[newTagType].map((name) => (
-                        <SelectItem key={`${newTagType}-${name}`} value={name}>
-                          {name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Button type="button" onClick={addTag} size="sm">
-                    + Ajouter
-                  </Button>
+                      return (
+                        <FormItem className="*:not-first:mt-2">
+                          <FormLabel>
+                            Villes <span className="text-red-500">*</span>
+                          </FormLabel>
+                          <SelectWithSearchAndButton
+                            options={availableCities.map((city) => ({
+                              label: city,
+                              value: city,
+                            }))}
+                            value=""
+                            onValueChange={(v) => {
+                              const currentCities = field.value || [];
+                              if (!currentCities.includes(v)) {
+                                field.onChange([...currentCities, v]);
+                              }
+                            }}
+                            onAddItem={(newCity) => {
+                              if (!customCities.includes(newCity)) {
+                                setCustomCities([...customCities, newCity]);
+                              }
+                              const currentCities = field.value || [];
+                              if (!currentCities.includes(newCity)) {
+                                field.onChange([...currentCities, newCity]);
+                              }
+                            }}
+                            placeholder="Sélectionnez une ville"
+                            searchPlaceholder="Rechercher une ville..."
+                            addItemPlaceholder="Entrer une ville..."
+                            buttonLabel="Ajouter une ville"
+                            disabled={!selectedCountry}
+                          />
+                          {field.value && field.value.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {field.value.map((city, index) => (
+                                <Badge
+                                  key={index}
+                                  variant="secondary"
+                                  className="flex items-center gap-1"
+                                >
+                                  {city}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const updated = field.value.filter(
+                                        (_, i) => i !== index
+                                      );
+                                      field.onChange(updated);
+                                    }}
+                                    className="ml-1 text-xs text-muted-foreground hover:text-foreground"
+                                  >
+                                    ✕
+                                  </button>
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
+                  />
                 </div>
 
-                {editJob.tagDto.length > 0 ? (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {editJob.tagDto.map((tag, index) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        className="flex items-center gap-1"
-                      >
-                        {tag.name} ({tag.type})
-                        <button
-                          type="button"
-                          onClick={() => removeTag(index)}
-                          className="ml-1 text-xs text-muted-foreground hover:text-foreground"
-                        >
-                          ✕
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Aucun mot-clé ajouté.
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label className="mb-2">
-                  Type de contrat <span className="text-red-500">*</span>
-                </Label>
-                <Select
-                  value={editJob.contractType}
-                  onValueChange={(v) =>
-                    setEditJob({ ...editJob, contractType: v as any })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60 overflow-y-auto">
-                    <SelectItem value="CDI">CDI</SelectItem>
-                    <SelectItem value="CDI_PART_TIME">
-                      CDI (Temps partiel)
-                    </SelectItem>
-                    <SelectItem value="CDD">CDD</SelectItem>
-                    <SelectItem value="CDD_PART_TIME">
-                      CDD (Temps partiel)
-                    </SelectItem>
-                    <SelectItem value="INTERIM">Intérim</SelectItem>
-                    <SelectItem value="FREELANCE">Freelance</SelectItem>
-                    <SelectItem value="INTERNSHIP">Stage</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-
-          {/* ÉTAPE 4 : OPTIONS AVANCÉES */}
-          {currentStep === 4 && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="mb-2">
-                    Langue requise <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    value={editJob.requiredLanguage}
-                    onValueChange={(v) =>
-                      setEditJob({ ...editJob, requiredLanguage: v })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionnez une langue" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Français">Français</SelectItem>
-                      <SelectItem value="Anglais">Anglais</SelectItem>
-                      <SelectItem value="Bilingue">
-                        Bilingue (Français/Anglais)
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4 pt-2">
-                <Checkbox
-                  id="urgent"
-                  checked={editJob.isUrgent}
-                  onCheckedChange={(checked) =>
-                    setEditJob({
-                      ...editJob,
-                      isUrgent: checked as boolean,
-                    })
-                  }
-                />
-                <Label htmlFor="urgent">Offre urgente</Label>
-              </div>
-
-              <div>
-                <Label className="mb-2">Nombre de postes</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  value={editJob.postNumber || 1}
-                  onChange={(e) =>
-                    setEditJob({
-                      ...editJob,
-                      postNumber: Number(e.target.value) || 1,
-                    })
-                  }
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="mb-2">
-                  Documents requis <span className="text-red-500">*</span>
-                </Label>
-                <div className="flex flex-wrap gap-2">
-                  {DOCUMENT_TYPES.map((doc) => {
-                    const isChecked = editJob.requiredDocuments.some(
-                      (d) => d.type === doc.value
-                    );
-                    return (
-                      <div key={doc.value} className="flex items-center gap-1">
-                        <Checkbox
-                          id={`doc-${doc.value}`}
-                          checked={isChecked}
-                          onCheckedChange={(checked) => {
-                            let updated = [...editJob.requiredDocuments];
-                            if (checked) updated.push({ type: doc.value });
-                            else
-                              updated = updated.filter(
-                                (d) => d.type !== doc.value
-                              );
-                            if (updated.length === 0) return;
-                            setEditJob({
-                              ...editJob,
-                              requiredDocuments: updated,
-                            });
-                          }}
+                <FormField
+                  control={form.control}
+                  name="expirationDate"
+                  render={({ field }) => (
+                    <FormItem className="*:not-first:mt-2">
+                      <FormLabel>Date d&apos;expiration</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          {...field}
+                          value={field.value || ""}
                         />
-                        <Label htmlFor={`doc-${doc.value}`} className="text-sm">
-                          {doc.label}
-                        </Label>
-                      </div>
-                    );
-                  })}
-                </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-            </div>
-          )}
-        </div>
+            )}
 
-        {/* BOUTONS PRÉCÉDENT / SUIVANT / ENREGISTRER */}
-        <div className="flex justify-between gap-2 pt-2">
-          {currentStep > 1 && (
-            <Button
-              variant="outline"
-              onClick={() => setCurrentStep(currentStep - 1)}
-            >
-              Précédent
-            </Button>
-          )}
-          {currentStep < STEPS.length ? (
-            <Button onClick={() => setCurrentStep(currentStep + 1)}>
-              Suivant
-            </Button>
-          ) : (
-            <Button onClick={handleUpdateJob} disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Spinner className="h-4 w-4 text-white" />{" "}
-                  <span className="ml-2">En cours</span>
-                </>
-              ) : (
-                "Modifier"
-              )}
-            </Button>
-          )}
-        </div>
+            {/* ÉTAPE 3 : DÉTAILS DU POSTE */}
+            {currentStep === 3 && (
+              <div className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="jobType"
+                  render={({ field }) => (
+                    <FormItem className="*:not-first:mt-2">
+                      <FormLabel>Conditions de travail</FormLabel>
+                      <FormControl>
+                        <SelectWithSearch
+                          options={[
+                            { label: "Temps plein", value: "FULL_TIME" },
+                            { label: "Temps partiel", value: "PART_TIME" },
+                            { label: "Télétravail", value: "REMOTE" },
+                            { label: "Hybride", value: "HYBRID" },
+                          ]}
+                          value={field.value}
+                          onValueChange={(value) => field.onChange(value)}
+                          placeholder="Sélectionnez les conditions de travail"
+                          searchPlaceholder="Rechercher..."
+                          hasNotSpecified={true}
+                          notSpecifiedLabel="Pas spécifié"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="salary"
+                  render={({ field }) => (
+                    <FormItem className="*:not-first:mt-2">
+                      <FormLabel>Salaire</FormLabel>
+                      <Select
+                        onValueChange={(value) =>
+                          field.onChange(value === "not-specified" ? "" : value)
+                        }
+                        value={field.value || "not-specified"}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue
+                              className="text-muted-foreground"
+                              placeholder="Sélectionner un salaire"
+                            />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="max-h-60 overflow-y-auto">
+                          <SelectItem
+                            className="text-muted-foreground"
+                            value="not-specified"
+                          >
+                            Non spécifié
+                          </SelectItem>
+                          {salaryRanges.map((range) => (
+                            <SelectItem key={range} value={range}>
+                              {range}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="space-y-3">
+                  <Label className="mb-4">
+                    Tags (utile pour le référencement mais pas obligatoire)
+                  </Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Select
+                      value={newTagType}
+                      onValueChange={(v) => setNewTagType(v as TagType)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="skill">Compétence</SelectItem>
+                        <SelectItem value="tool">Outil</SelectItem>
+                        <SelectItem value="domain">Domaine</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    <Select value={newTagName} onValueChange={setNewTagName}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Nom" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TAG_NAMES[newTagType].map((name) => (
+                          <SelectItem
+                            key={`${newTagType}-${name}`}
+                            value={name}
+                          >
+                            {name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button type="button" onClick={addTag} size="sm">
+                      + Ajouter
+                    </Button>
+                  </div>
+
+                  {form.watch("tagDto") && form.watch("tagDto").length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {form.watch("tagDto").map((tag, index) => (
+                        <Badge
+                          key={index}
+                          variant="secondary"
+                          className="flex items-center gap-1"
+                        >
+                          {tag.name} ({tag.type})
+                          <button
+                            type="button"
+                            onClick={() => removeTag(index)}
+                            className="ml-1 text-xs text-muted-foreground hover:text-foreground"
+                          >
+                            ✕
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
+                  {(!form.watch("tagDto") ||
+                    form.watch("tagDto").length === 0) && (
+                    <p className="text-sm text-muted-foreground">
+                      Aucun mot-clé ajouté.
+                    </p>
+                  )}
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="contractType"
+                  render={({ field }) => (
+                    <FormItem className="*:not-first:mt-2">
+                      <FormLabel>Type de contrat</FormLabel>
+                      <FormControl>
+                        <SelectWithSearch
+                          options={[
+                            { label: "CDI", value: "CDI" },
+                            {
+                              label: "CDI (Temps partiel)",
+                              value: "CDI_PART_TIME",
+                            },
+                            { label: "CDD", value: "CDD" },
+                            {
+                              label: "CDD (Temps partiel)",
+                              value: "CDD_PART_TIME",
+                            },
+                            { label: "Intérim", value: "INTERIM" },
+                            { label: "Freelance", value: "FREELANCE" },
+                            { label: "Stage", value: "INTERNSHIP" },
+                          ]}
+                          value={field.value}
+                          onValueChange={(value) => field.onChange(value)}
+                          placeholder="Sélectionnez un type de contrat"
+                          searchPlaceholder="Rechercher..."
+                          hasNotSpecified={true}
+                          notSpecifiedLabel="Pas spécifié"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
+            {/* ÉTAPE 4 : OPTIONS AVANCÉES */}
+            {currentStep === 4 && (
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="requiredLanguage"
+                  render={({ field }) => {
+                    const currentLanguages = field.value || [];
+                    const hasBilingue = currentLanguages.includes("Bilingue");
+
+                    return (
+                      <FormItem className="*:not-first:mt-2">
+                        <FormLabel>Langue requise</FormLabel>
+                        <div className="flex flex-wrap gap-2">
+                          {[
+                            { value: "Français", label: "Français" },
+                            { value: "Anglais", label: "Anglais" },
+                            {
+                              value: "Bilingue",
+                              label: "Bilingue (Français/Anglais)",
+                            },
+                          ].map((lang) => {
+                            const isChecked = currentLanguages.includes(
+                              lang.value
+                            );
+                            const isDisabled =
+                              lang.value !== "Bilingue" && hasBilingue;
+
+                            return (
+                              <div
+                                key={lang.value}
+                                className="flex items-center gap-1"
+                              >
+                                <Checkbox
+                                  id={`lang-${lang.value}`}
+                                  checked={isChecked}
+                                  disabled={isDisabled}
+                                  onCheckedChange={(checked) => {
+                                    let updated: string[] = [
+                                      ...currentLanguages,
+                                    ];
+                                    if (checked) {
+                                      if (lang.value === "Bilingue") {
+                                        // Si on sélectionne Bilingue, on supprime les autres
+                                        updated = ["Bilingue"];
+                                      } else {
+                                        // Si on sélectionne une autre langue, on ajoute si Bilingue n'est pas sélectionné
+                                        if (!hasBilingue) {
+                                          updated.push(lang.value);
+                                        }
+                                      }
+                                    } else {
+                                      updated = updated.filter(
+                                        (l) => l !== lang.value
+                                      );
+                                    }
+                                    field.onChange(updated);
+                                  }}
+                                />
+                                <Label
+                                  htmlFor={`lang-${lang.value}`}
+                                  className={`text-sm cursor-pointer ${
+                                    isDisabled ? "opacity-50" : ""
+                                  }`}
+                                >
+                                  {lang.label}
+                                </Label>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {hasBilingue && currentLanguages.length > 1 && (
+                          <p className="text-sm text-destructive mt-1">
+                            Bilingue ne peut pas être combiné avec d&apos;autres
+                            langues
+                          </p>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="postNumber"
+                  render={({ field }) => (
+                    <FormItem className="*:not-first:mt-2">
+                      <FormLabel>Nombre de postes</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="1"
+                          {...field}
+                          value={field.value || 1}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value) || 1)
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="requiredDocuments"
+                  render={({ field }) => (
+                    <FormItem className="*:not-first:mt-2">
+                      <FormLabel>
+                        Documents requis <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <div className="flex flex-wrap gap-2">
+                        {DOCUMENT_TYPES.map((doc) => {
+                          const isChecked = (field.value || []).some(
+                            (d) => d.type === doc.value
+                          );
+                          return (
+                            <div
+                              key={doc.value}
+                              className="flex items-center gap-1"
+                            >
+                              <Checkbox
+                                id={`doc-${doc.value}`}
+                                checked={isChecked}
+                                onCheckedChange={(checked) => {
+                                  let updated = [...(field.value || [])];
+                                  if (checked) {
+                                    updated.push({ type: doc.value });
+                                  } else {
+                                    updated = updated.filter(
+                                      (d) => d.type !== doc.value
+                                    );
+                                  }
+                                  if (updated.length === 0) return;
+                                  field.onChange(updated);
+                                }}
+                              />
+                              <Label
+                                htmlFor={`doc-${doc.value}`}
+                                className="text-sm"
+                              >
+                                {doc.label}
+                              </Label>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="isUrgent"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Offre urgente</FormLabel>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="px-8 flex justify-between gap-2 pt-2">
+            {currentStep > 1 && (
+              <Button variant="outline" onClick={handlePrevious}>
+                Précédent
+              </Button>
+            )}
+            {currentStep < STEPS.length ? (
+              <Button onClick={handleNext}>Suivant</Button>
+            ) : (
+              <Button onClick={handleUpdateJob} disabled={isPending}>
+                {isPending ? (
+                  <>
+                    <Spinner className="h-4 w-4 animate-spin text-white" />{" "}
+                  </>
+                ) : (
+                  "Modifier l'offre"
+                )}
+              </Button>
+            )}
+          </div>
+        </Form>
       </DialogContent>
     </Dialog>
   );

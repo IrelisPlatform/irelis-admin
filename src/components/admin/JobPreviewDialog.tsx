@@ -19,6 +19,7 @@ import {
   Globe,
   Users,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { formatDateLong } from "@/services/date";
 import { getContractTypeLabel, documentLabels } from "@/lib/jobs/job-helpers";
@@ -140,8 +141,12 @@ export function JobPreviewDialog({
               <div key={i} className="flex p-2 items-start gap-4 text-base">
                 <item.icon className="w-4 h-4 text-[#1e3a8a]/70 flex-shrink-0 mt-1" />
                 <div className="flex-1 flex gap-2">
-                  <span className="font-medium text-gray-800">{item.label}</span>
-                  <span className="text-gray-700 break-words">{item.value}</span>
+                  <span className="font-medium text-gray-800">
+                    {item.label}
+                  </span>
+                  <span className="text-gray-700 break-words">
+                    {item.value}
+                  </span>
                 </div>
               </div>
             ))}
@@ -182,16 +187,6 @@ export function JobPreviewDialog({
               </div>
             )}
 
-            {jobData.benefits && (
-              <div>
-                <h4 className="text-[#1e3a8a] font-semibold mb-1">Avantages</h4>
-                <ReadonlyEditor
-                  value={jobData.benefits}
-                  namespace="job-benefits"
-                />
-              </div>
-            )}
-
             {jobData.requiredDocuments.length > 0 && (
               <div>
                 <h4 className="text-[#1e3a8a] font-semibold mb-1">
@@ -228,12 +223,10 @@ export function JobPreviewDialog({
             Revenir
           </Button>
           <Button onClick={onPublish} disabled={isLoading}>
-            {isLoading ? "En cours..." : "Publier l'offre"}
+            {isLoading ? <Loader2 /> : "Publier l'offre"}
           </Button>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
-
-

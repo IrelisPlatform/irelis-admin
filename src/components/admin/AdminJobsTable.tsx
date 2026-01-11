@@ -35,7 +35,7 @@ async function fetchAdminJobs(filters: AdminJobsFilters) {
 
   // Appel direct au backend
   const response = await fetch(
-    `${API_URL}/api/v1/jobs/published?page=0&size=100`,
+    `${API_URL}/api/v1/jobs/published?page=0&size=10`,
     {
       method: "GET",
       headers: {
@@ -69,8 +69,7 @@ async function fetchAdminJobs(filters: AdminJobsFilters) {
     filteredJobs = filteredJobs.filter(
       (job) =>
         job.title.toLowerCase().includes(searchLower) ||
-        job.workCityLocation?.toLowerCase().includes(searchLower) ||
-        job.companyName?.toLowerCase().includes(searchLower)
+        job.workCities?.some((city) => city.toLowerCase().includes(searchLower))
     );
   }
 
@@ -111,15 +110,27 @@ function AdminJobsTableContent(props: { jobs: PublishedJob[] }) {
     <>
       {props.jobs.map((job) => (
         <TableRow key={job.id}>
-          <TableCell className="font-medium">{job.title}</TableCell>
-          <TableCell className="font-medium">{job.companyName}</TableCell>
+          <TableCell className="font-medium wrap-break-word truncate">
+            <span className="truncate block" title={job.title}>
+              {job.title}
+            </span>
+          </TableCell>
+          <TableCell className="font-medium">
+            <span className="truncate block" title={job.companyName}>
+              {job.companyName}
+            </span>
+          </TableCell>
           <TableCell>
             {job.workCities.length === 0 ? (
               <>{job.workCountryLocation}</>
             ) : (
-              <>
+              <span
+                title={`${job.title} - ${
+                  job.workCountryLocation
+                } - ${job.workCities.join(", ")}`}
+              >
                 {job.workCountryLocation} - {job.workCities.join(", ")}
-              </>
+              </span>
             )}
           </TableCell>
           <TableCell>
@@ -183,21 +194,27 @@ export function AdminJobsTable() {
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["admin-jobs", { search, status, type }],
     queryFn: () => fetchAdminJobs({ search, status, type }),
+    staleTime: 30 * 1000, // Les données restent "fresh" pendant 30 secondes
+    refetchOnMount: false, // Ne pas refetch au montage si les données sont fresh
+    refetchOnWindowFocus: false, // Ne pas refetch lors du focus de la fenêtre
+    refetchOnReconnect: false, // Ne pas refetch lors de la reconnexion réseau
   });
 
   return (
     <div className="border rounded-lg overflow-hidden">
-      <Table>
+      <Table className="table-fixed w-full">
         <TableHeader>
           <TableRow className="bg-muted/50">
-            <TableHead>Titre</TableHead>
-            <TableHead>Nom de l&apos;entreprise</TableHead>
-            <TableHead>Localisation</TableHead>
-            <TableHead>Type de contrat</TableHead>
-            <TableHead>Statut</TableHead>
-            <TableHead>Date de publication</TableHead>
-            <TableHead>Date d&apos;expiration</TableHead>
-            <TableHead>Actions</TableHead>
+            <TableHead className="w-[200px]">Titre</TableHead>
+            <TableHead className="w-[150px]">
+              Nom de l&apos;entreprise
+            </TableHead>
+            <TableHead className="w-[200px]">Localisation</TableHead>
+            <TableHead className="w-[120px]">Type de contrat</TableHead>
+            <TableHead className="w-[100px]">Statut</TableHead>
+            <TableHead className="w-[150px]">Date de publication</TableHead>
+            <TableHead className="w-[150px]">Date d&apos;expiration</TableHead>
+            <TableHead className="w-[100px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

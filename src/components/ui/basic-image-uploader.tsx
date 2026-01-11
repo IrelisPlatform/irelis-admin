@@ -1,7 +1,7 @@
 "use client";
 
 import { CircleUserRoundIcon } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,18 @@ export function BasicImageUploader(props: BasicImageUploaderProps) {
 
   const previewUrl = files[0]?.preview || defaultPreview || null;
   const fileName = files[0]?.file.name || null;
+  const [name, setFileName] = useState(files[0]?.file.name || null);
+
+  useEffect(() => {
+    if (files[0]?.file.name) {
+      setFileName(files[0].file.name);
+    } else if (!files[0] && defaultPreview) {
+      // Si on a un defaultPreview mais pas de file, on garde le nom précédent
+      // Le nom sera réinitialisé si on supprime le fichier
+    } else if (!files[0]) {
+      setFileName(null);
+    }
+  }, [files, defaultPreview]);
 
   useEffect(() => {
     return () => {
@@ -95,10 +107,10 @@ export function BasicImageUploader(props: BasicImageUploaderProps) {
             />
           </div>
         </div>
-        {fileName && (
+        {(fileName || previewUrl) && (
           <div className="inline-flex gap-2 text-xs">
             <p aria-live="polite" className="truncate text-muted-foreground">
-              {fileName}
+              {fileName || name}
             </p>
             <button
               aria-label={`${removeButtonLabel} ${fileName}`}

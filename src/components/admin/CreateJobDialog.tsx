@@ -2,11 +2,12 @@
 
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { SerializedEditorState } from "lexical";
 import {
   Dialog,
@@ -38,7 +39,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Editor } from "@/components/blocks/editor-00/editor";
-import { createJobAction } from "@/app/_actions/jobs";
 import {
   STEPS,
   DOCUMENT_TYPES,
@@ -55,13 +55,14 @@ import {
 } from "@/lib/jobs/job-schemas";
 import { TAG_NAMES, TagType } from "@/lib/jobTags";
 import { COUNTRIES, COUNTRIES_WITH_CITIES } from "@/lib/countries";
-import useSectors, { Sector } from "@/hooks/useSectors";
 import { JobPreviewDialog } from "./JobPreviewDialog";
-import type { TagDto, RequiredDocument } from "@/types/job";
+import type { TagDto, RequiredDocument, AdminJob } from "@/types/job";
 import { Plus, Eye } from "lucide-react";
 import { BasicImageUploader } from "@/components/ui/basic-image-uploader";
 import { SelectWithSearch } from "@/components/ui/select-with-search";
 import { SelectWithSearchAndButton } from "@/components/ui/select-with-search-and-button";
+import { createJobAction } from "@/app/_actions/jobs";
+import type { Sector } from "@/app/api/sectors/route";
 
 type CreateJobDialogProps = {
   children?: React.ReactNode;
@@ -69,18 +70,33 @@ type CreateJobDialogProps = {
 
 export function CreateJobDialog({ children }: CreateJobDialogProps) {
   const router = useRouter();
-  const { sectors, loading: sectorsLoading } = useSectors();
+  const queryClient = useQueryClient();
+  const { data: sectors = [], isLoading: sectorsLoading } = useQuery<Sector[]>({
+    queryKey: ["sectors"],
+    queryFn: async () => {
+      const response = await fetch("/api/sectors");
+      if (!response.ok) {
+        throw new Error("Failed to fetch sectors");
+      }
+      return response.json();
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnMount: false, // Ne pas refetch au montage si les données sont fresh
+    refetchOnWindowFocus: false, // Ne pas refetch lors du focus de la fenêtre
+    refetchOnReconnect: false, // Ne pas refetch lors de la reconnexion réseau
+  });
+  const [isPending, startTransition] = useTransition();
   const [currentStep, setCurrentStep] = useState(1);
   const [isOpen, setIsOpen] = useState(false);
   const [companyLogo, setCompanyLogo] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoFileName, setLogoFileName] = useState<string | null>(null);
   const [selectedCountry, setSelectedCountry] = useState("");
   const [newTagType, setNewTagType] = useState<"skill" | "tool" | "domain">(
     "skill"
   );
   const [newTagName, setNewTagName] = useState("");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [isFormStateOpen, setIsFormStateOpen] = useState(false);
   const [customCities, setCustomCities] = useState<string[]>([]);
 
@@ -185,75 +201,69 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
       );
     }
   };
-
   const handleCreateJob = async () => {
-    setIsLoading(true);
-    try {
-      const values = form.getValues();
+    const values = form.getValues();
 
-      let expirationDateISO: string | null = null;
-      if (values.expirationDate) {
-        const expDate = new Date(values.expirationDate);
-        if (!isNaN(expDate.getTime())) {
-          expDate.setHours(23, 59, 59, 999);
-          expirationDateISO = expDate.toISOString();
-        }
+    let expirationDateISO: string | null = null;
+    if (values.expirationDate) {
+      const expDate = new Date(values.expirationDate);
+      if (!isNaN(expDate.getTime())) {
+        expDate.setHours(23, 59, 59, 999);
+        expirationDateISO = expDate.toISOString();
       }
+    }
 
-      const payload = {
-        companyName: values.companyName.trim(),
-        companyDescription: values.companyDescription?.trim() || "",
-        companyLength: values.companyLength || "",
-        sectorId: values.sectorId || undefined,
-        companyEmail: values.companyEmail?.trim() || undefined,
-        title: values.title.trim(),
-        description: JSON.stringify(values.description),
-        workCountryLocation: values.workCountryLocation,
-        workCityLocation: values.workCityLocation.join(", "),
-        contractType: values.contractType || undefined,
-        jobType: values.jobType || undefined,
-        salary: values.salary || "",
-        isUrgent: values.isUrgent,
-        isFeatured: false,
-        expirationDate: expirationDateISO,
-        requiredLanguage: Array.isArray(values.requiredLanguage)
-          ? values.requiredLanguage.join(", ")
-          : values.requiredLanguage || undefined,
-        postNumber: values.postNumber || 1,
-        tagDto: values.tagDto || [],
-        requiredDocuments: values.requiredDocuments,
-      };
+    const payload = {
+      companyName: values.companyName.trim(),
+      companyDescription: values.companyDescription?.trim() || null,
+      companyLength: values.companyLength || null,
+      sectorId: values.sectorId || null,
+      companyEmail: values.companyEmail?.trim() || null,
+      title: values.title.trim(),
+      description: JSON.stringify(values.description),
+      workCountryLocation: values.workCountryLocation,
+      workCities: values.workCityLocation,
+      contractType: values.contractType || null,
+      jobType: values.jobType || null,
+      salary: values.salary || null,
+      isUrgent: values.isUrgent,
+      isFeatured: false,
+      expirationDate: expirationDateISO,
+      requiredLanguages: values.requiredLanguage,
+      postNumber: values.postNumber || 1,
+      tagDto: values.tagDto || [],
+      requiredDocuments: values.requiredDocuments,
+    };
 
-      const formData = new FormData();
-      formData.append(
-        "data",
-        new Blob([JSON.stringify(payload)], { type: "application/json" })
-      );
+    const formData = new FormData();
+    formData.append(
+      "data",
+      new Blob([JSON.stringify(payload)], {
+        type: "application/json",
+      })
+    );
+    if (companyLogo) {
+      formData.append("file", companyLogo);
+    }
 
-      if (companyLogo) {
-        formData.append("file", companyLogo);
-      }
-
+    startTransition(async () => {
       const result = await createJobAction(formData);
       if (result.success) {
         toast.success("Offre créée avec succès !");
+        // Invalider la query pour rafraîchir la table
+        await queryClient.invalidateQueries({ queryKey: ["admin-jobs"] });
         form.reset();
         setCompanyLogo(null);
         setLogoPreview(null);
+        setLogoFileName(null);
         setSelectedCountry("");
         setCurrentStep(1);
         setIsOpen(false);
         setIsPreviewOpen(false);
-        router.refresh();
       } else {
         toast.error(result.error || "Erreur lors de la création de l'offre");
       }
-    } catch (err) {
-      console.error(err);
-      toast.error("Erreur lors de la création de l'offre");
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
   const requiredLanguageValue = form.watch("requiredLanguage");
@@ -289,6 +299,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
             form.reset();
             setCompanyLogo(null);
             setLogoPreview(null);
+            setLogoFileName(null);
             setCustomCities([]);
           }
         }}
@@ -300,13 +311,13 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
             </Button>
           )}
         </DialogTrigger>
-        <DialogContent className="max-w-full sm:max-w-xl lg:max-w-5xl overflow-y-auto max-h-[90vh]">
-          <DialogHeader>
+        <DialogContent className="max-w-full sm:max-w-xl lg:max-w-5xl max-h-[90vh] flex flex-col">
+          <DialogHeader className="px-8">
             <div className="flex items-center justify-between">
               <DialogTitle className="text-primary">
                 Créer une offre (Étape {currentStep}/4)
               </DialogTitle>
-              {/*     <Button
+              <Button
                 type="button"
                 variant="outline"
                 size="sm"
@@ -314,7 +325,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
               >
                 <Eye className="h-4 w-4 mr-2" />
                 État du formulaire
-              </Button> */}
+              </Button>
             </div>
             <div className="flex mt-2 space-x-1">
               {STEPS.map((step) => (
@@ -329,7 +340,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
           </DialogHeader>
 
           <Form {...form}>
-            <div className="py-4">
+            <div className="py-2 px-8 overflow-y-auto flex-1 min-h-0">
               {/* ÉTAPE 1 : ENTREPRISE */}
               {currentStep === 1 && (
                 <div className="space-y-4">
@@ -343,9 +354,11 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                           if (file) {
                             setCompanyLogo(file);
                             setLogoPreview(URL.createObjectURL(file));
+                            setLogoFileName(file.name);
                           } else {
                             setCompanyLogo(null);
                             setLogoPreview(null);
+                            setLogoFileName(null);
                           }
                         }}
                         defaultPreview={logoPreview || undefined}
@@ -424,7 +437,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                           <SelectWithSearch
                             options={sectors
                               .filter((sector) => sector.id.trim() !== "")
-                              .map((sector: Sector) => ({
+                              .map((sector) => ({
                                 label: sector.name,
                                 value: sector.id,
                               }))}
@@ -448,22 +461,30 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                     render={({ field }) => (
                       <FormItem className="*:not-first:mt-2">
                         <FormLabel>Taille de l'entreprise</FormLabel>
-                        <FormControl>
-                          <SelectWithSearch
-                            options={companySizeRanges.map((range) => ({
-                              label: range,
-                              value: range,
-                            }))}
-                            value={field.value || null}
-                            onValueChange={(value) =>
-                              field.onChange(value || "")
-                            }
-                            placeholder="Sélectionner la taille de l'entreprise"
-                            searchPlaceholder="Rechercher..."
-                            hasNotSpecified={true}
-                            notSpecifiedLabel="Pas spécifié"
-                          />
-                        </FormControl>
+                        <Select
+                          onValueChange={(value) =>
+                            field.onChange(
+                              value === "not-specified" ? "" : value
+                            )
+                          }
+                          value={field.value || "not-specified"}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Sélectionner la taille de l'entreprise" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="not-specified">
+                              Pas spécifié
+                            </SelectItem>
+                            {companySizeRanges.map((range) => (
+                              <SelectItem key={range} value={range}>
+                                {range}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -513,7 +534,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                     )}
                   />
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="workCountryLocation"
@@ -691,15 +712,28 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                       <FormItem className="*:not-first:mt-2">
                         <FormLabel>Salaire</FormLabel>
                         <Select
-                          onValueChange={field.onChange}
-                          value={field.value || ""}
+                          onValueChange={(value) =>
+                            field.onChange(
+                              value === "not-specified" ? "" : value
+                            )
+                          }
+                          value={field.value || "not-specified"}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Sélectionner un salaire" />
+                              <SelectValue
+                                className="text-muted-foreground"
+                                placeholder="Sélectionner un salaire"
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent className="max-h-60 overflow-y-auto">
+                            <SelectItem
+                              className="text-muted-foreground"
+                              value="not-specified"
+                            >
+                              Non spécifié
+                            </SelectItem>
                             {salaryRanges.map((range) => (
                               <SelectItem key={range} value={range}>
                                 {range}
@@ -995,7 +1029,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
               )}
             </div>
 
-            <div className="flex justify-between gap-2 pt-2">
+            <div className="px-8 flex justify-between gap-2 pt-2">
               {currentStep > 1 && (
                 <Button variant="outline" onClick={handlePrevious}>
                   Précédent
@@ -1004,7 +1038,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
               {currentStep < STEPS.length ? (
                 <Button onClick={handleNext}>Suivant</Button>
               ) : (
-                <Button onClick={handlePreview} disabled={isLoading}>
+                <Button onClick={handlePreview} disabled={isPending}>
                   Visualiser
                 </Button>
               )}
@@ -1018,7 +1052,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
         onOpenChange={setIsPreviewOpen}
         jobData={jobPreviewData}
         onPublish={handleCreateJob}
-        isLoading={isLoading}
+        isLoading={isPending}
       />
       {/*Modal d'état du formulaire*/}
       <Dialog open={isFormStateOpen} onOpenChange={setIsFormStateOpen}>

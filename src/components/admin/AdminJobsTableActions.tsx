@@ -3,7 +3,7 @@
 "use client";
 
 import { useState } from "react";
-import { MoreVertical, Edit, Trash2, Eye } from "lucide-react";
+import { MoreVertical, Edit, Trash2, Eye, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,6 +17,7 @@ import { DeleteJobDialog } from "./DeleteJobDialog";
 import { publishJobAction } from "@/app/_actions/jobs";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { PublishedJob } from "@/types/job";
 
 type AdminJobsTableActionsProps = {
@@ -25,6 +26,7 @@ type AdminJobsTableActionsProps = {
 
 export function AdminJobsTableActions({ job }: AdminJobsTableActionsProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -33,13 +35,19 @@ export function AdminJobsTableActions({ job }: AdminJobsTableActionsProps) {
       const result = await publishJobAction(job.id);
       if (result.success) {
         toast.success("Offre publiée !");
-        router.refresh();
+        // Invalider la query pour rafraîchir la table
+        await queryClient.invalidateQueries({ queryKey: ["admin-jobs"] });
       } else {
         toast.error(result.error || "Erreur lors de la publication");
       }
     } catch (error) {
       toast.error("Erreur lors de la publication");
     }
+  };
+
+  const handleViewDetails = () => {
+    // TODO: Implémenter l'affichage des détails de l'offre
+    console.log("View details for job:", job.id);
   };
 
   return (
@@ -51,6 +59,9 @@ export function AdminJobsTableActions({ job }: AdminJobsTableActionsProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={handleViewDetails}>
+            <Info className="h-4 w-4 mr-2" /> Voir les détails
+          </DropdownMenuItem>
           {job.status !== "PUBLISHED" && (
             <DropdownMenuItem onClick={handlePublish}>
               <Eye className="h-4 w-4 mr-2" /> Publier
@@ -77,9 +88,9 @@ export function AdminJobsTableActions({ job }: AdminJobsTableActionsProps) {
       />
 
       <DeleteJobDialog
-        isOpen={isDeleteDialogOpen}
+        open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-        jobId={job.id}
+        job={job}
       />
     </>
   );

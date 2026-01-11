@@ -19,8 +19,8 @@ export function AdminJobsFilters() {
   const [typeFilter, setTypeFilter] = useQueryState("type");
 
   return (
-    <div className="flex flex-col lg:flex-row gap-4 justify-between">
-      <div className="flex-1 max-w-md">
+    <div className="flex flex-col sm:flex-row gap-4 justify-between">
+      <div className="flex-1 max-w-full">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -34,7 +34,7 @@ export function AdminJobsFilters() {
 
       <div className="flex flex-wrap gap-2">
         <Select value={statusFilter || "all"} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-40 text-muted-foreground">
             <Filter className="h-4 w-4 mr-2" /> Statut
           </SelectTrigger>
           <SelectContent>
@@ -46,7 +46,7 @@ export function AdminJobsFilters() {
         </Select>
 
         <Select value={typeFilter || "all"} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-40 text-muted-foreground">
             <Filter className="h-4 w-4 mr-2" /> Type
           </SelectTrigger>
           <SelectContent>

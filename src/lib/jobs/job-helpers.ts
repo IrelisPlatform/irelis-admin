@@ -44,7 +44,7 @@ export const companySizeRanges = [
 
 export const salaryRanges: string[] = (() => {
   const ranges: string[] = [];
-  for (let start = 0; start < 1000000; start += 100000) {
+  for (let start = 0; start < 1000000; start += 50000) {
     const end = start + 50000;
     ranges.push(`${start.toLocaleString()} - ${end.toLocaleString()} FCFA`);
   }
@@ -61,8 +61,8 @@ export const documentLabels: Record<string, string> = {
 };
 
 export const ContractTypeLabels: Record<string, string> = {
-  CDI: "CDI (Temps plein)",
-  CDD: "CDD (Temps plein)",
+  CDI: "CDI",
+  CDD: "CDD",
   CDI_PART_TIME: "CDI (Temps partiel)",
   CDD_PART_TIME: "CDD (Temps partiel)",
   INTERNSHIP: "Stage",
@@ -72,9 +72,7 @@ export const ContractTypeLabels: Record<string, string> = {
 };
 
 export const getContractTypeLabel = (type?: string) =>
-  type && ContractTypeLabels[type]
-    ? ContractTypeLabels[type]
-    : "Type de contrat non spécifié";
+  type && ContractTypeLabels[type] ? ContractTypeLabels[type] : "Non spécifié";
 
 export const getStatusBadge = (status: string) => {
   const variants = {

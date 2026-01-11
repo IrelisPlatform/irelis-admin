@@ -15,12 +15,12 @@ export type JobPage = {
 };
 export interface RequiredDocument {
   type:
-    | "CV"
-    | "COVER_LETTER"
-    | "PORTFOLIO"
-    | "CERTIFICATE"
-    | "IDENTITY_DOC"
-    | string;
+  | "CV"
+  | "COVER_LETTER"
+  | "PORTFOLIO"
+  | "CERTIFICATE"
+  | "IDENTITY_DOC"
+  | string;
 }
 
 // 🔹 Réponse brute du backend (lecture seule)
@@ -38,7 +38,7 @@ export interface BackendPublishedJob {
   expirationDate: string;
   isFeatured: boolean;
   isUrgent: boolean;
-  requiredLanguage: string;
+  requiredLanguages: string[];
   sectorName: string;
   postNumber: number;
   companyLength: string;
@@ -62,12 +62,10 @@ export interface PublishedJob {
   companyDescription: string;
   sectorId: string;
   postNumber: number;
-  companyLength: string;
   workCountryLocation: string;
   workCities: string[];
   /* workCityLocation: string; */
   jobType: string;
-  type: string;
   salary: string;
   publishedAt: string | null;
   expirationDate: string;
@@ -82,7 +80,7 @@ export interface PublishedJob {
   status: string;
   // competences (requirements) (à revoir)
   /* qualifications: string[]; */
-  requiredLanguage: string;
+  requiredLanguages: string[]
   requiredDocuments: RequiredDocument[];
   tagDto: Array<{ name: string; type: string }>;
   contractType: string;

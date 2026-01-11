@@ -116,7 +116,8 @@ export function SelectWithSearch(props: SelectWithSearchProps) {
                   <CommandItem
                     key={option.value}
                     onSelect={() => handleSelect(option.value)}
-                    value={option.value}
+                    value={option.label}
+                    keywords={[option.value]}
                   >
                     {option.label}
                     {value === option.value && (

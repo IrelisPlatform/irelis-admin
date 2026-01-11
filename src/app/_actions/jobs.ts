@@ -3,10 +3,10 @@
 "use server";
 
 import { cookies } from "next/headers";
-import api from "@/services/axiosClient";
+import api from "@/services/axiosServerClient";
 import { revalidatePath } from "next/cache";
 
-type AdminJob = {
+export type AdminJob = {
   id: string;
   [key: string]: any;
 };
@@ -23,7 +23,9 @@ type PaginatedResponse<T> = {
 
 async function getAuthHeaders() {
   const cookieStore = await cookies();
+  console.log("ccokieStore", cookieStore.get("access_token")?.value);
   const token = cookieStore.get("access_token")?.value;
+
   return {
     Authorization: `Bearer ${token}`,
   };

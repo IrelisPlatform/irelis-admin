@@ -2,53 +2,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { BackendPublishedJob, PublishedJob } from "@/types/job";
+import { JobPage, BackendPublishedJob, PublishedJob } from "@/types/job";
 
-// export interface Job {
-//     id: string;
-//     title: string;
-//     description: string;
-//     workCountryLocation: string;
-//     workCityLocation: string;
-//     responsibilities: string;
-//     requirements: string;
-//     benefits: string;
-//     contractType: string;
-//     status: string;
-//     jobType: string;
-//     salary: string;
-//     publishedAt: string;
-//     expirationDate:  string;
-//     isFeatured: boolean;
-//     isUrgent: boolean;
-//     requiredLanguage: string;
-//     sectorName: string;
-//     companyName: string;
-//     companyDescription: string;
-//     companyLength: string;
-//     postNumber: number;
-//     tagDto: [
-//         {
-//             name: string;
-//             type: string;
-//         }
-//     ],
-//     requiredDocuments: [
-//         {
-//             type: string;
-//         }
-//     ]
-// }
 
-interface JobPage {
-  content: BackendPublishedJob[];
-  page: number;
-  size: number;
-  total_elements: number;
-  total_pages: number;
-  first: boolean;
-  last: boolean;
-}
 
 const parseListFromString = (input: string): string[] => {
   if (!input) return [];
@@ -76,7 +32,6 @@ export const transformJob = (job: BackendPublishedJob): PublishedJob => {
     offerDescription: job.description,
     companyName: job.companyName || "Entreprise confidentielle",
     companyDescription: job.companyDescription,
-    type: job.contractType,
     salary: job.salary,
     publishedAt: job.publishedAt,
     expirationDate: job.expirationDate,
@@ -86,14 +41,12 @@ export const transformJob = (job: BackendPublishedJob): PublishedJob => {
     sector: job.sectorName,
     companySize: job.companyLength,
     companyLogo: job.companyLogoUrl,
-    requiredLanguage: job.requiredLanguage,
+    requiredLanguages: job.requiredLanguages,
     tags: job.tagDto.map((t) => t.name),
-
     requiredDocuments: job.requiredDocuments,
     companyLogoUrl: job.companyLogoUrl,
     sectorId: job.sectorId,
     postNumber: job.postNumber,
-    companyLength: job.companyLength,
     workCountryLocation: job.workCountryLocation,
     workCities: job.workCities,
     jobType: job.jobType,
