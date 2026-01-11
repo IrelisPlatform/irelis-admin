@@ -82,7 +82,7 @@ export interface PublishedJob {
   /* qualifications: string[]; */
   requiredLanguages: string[]
   requiredDocuments: RequiredDocument[];
-  tagDto: Array<{ name: string; type: string }>;
+  tagDto: Array<{ name: string; type: "skill" | "tool" | "domain" }>;
   contractType: string;
 }
 
@@ -117,7 +117,7 @@ export interface AdminJobOfferRequest {
   isUrgent?: boolean;
   requiredLanguage: string;
   postNumber?: number;
-  tagDto: { name: string; type?: string }[];
+  tagDto: { name: string; type?: "skill" | "tool" | "domain" }[];
   requiredDocuments: RequiredDocument[];
 }
 

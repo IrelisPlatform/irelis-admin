@@ -172,10 +172,10 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
         requiredDocuments: (job.requiredDocuments || [{ type: "CV" }]).map(
           (doc) => ({
             type: (doc.type === "CV" ||
-            doc.type === "COVER_LETTER" ||
-            doc.type === "PORTFOLIO" ||
-            doc.type === "CERTIFICATE" ||
-            doc.type === "IDENTITY_DOC"
+              doc.type === "COVER_LETTER" ||
+              doc.type === "PORTFOLIO" ||
+              doc.type === "CERTIFICATE" ||
+              doc.type === "IDENTITY_DOC"
               ? doc.type
               : "CV") as
               | "CV"
@@ -353,9 +353,8 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
             {STEPS.map((step) => (
               <div
                 key={step.id}
-                className={`h-1 flex-1 rounded-full ${
-                  currentStep >= step.id ? "bg-[#1e3a88]" : "bg-gray-200"
-                }`}
+                className={`h-1 flex-1 rounded-full ${currentStep >= step.id ? "bg-[#1e3a88]" : "bg-gray-200"
+                  }`}
               />
             ))}
           </div>
@@ -595,20 +594,20 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
                     render={({ field }) => {
                       const availableCities =
                         selectedCountry &&
-                        COUNTRIES_WITH_CITIES[
+                          COUNTRIES_WITH_CITIES[
                           selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
-                        ]
+                          ]
                           ? [
-                              ...COUNTRIES_WITH_CITIES[
-                                selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
-                              ].filter((city) => city !== "Autre"),
-                              ...customCities.filter(
-                                (city) =>
-                                  !COUNTRIES_WITH_CITIES[
-                                    selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
-                                  ]?.includes(city)
-                              ),
-                            ]
+                            ...COUNTRIES_WITH_CITIES[
+                              selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
+                            ].filter((city) => city !== "Autre"),
+                            ...customCities.filter(
+                              (city) =>
+                                !COUNTRIES_WITH_CITIES[
+                                  selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
+                                ]?.includes(city)
+                            ),
+                          ]
                           : [];
 
                       return (
@@ -826,10 +825,10 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
 
                   {(!form.watch("tagDto") ||
                     form.watch("tagDto").length === 0) && (
-                    <p className="text-sm text-muted-foreground">
-                      Aucun mot-clé ajouté.
-                    </p>
-                  )}
+                      <p className="text-sm text-muted-foreground">
+                        Aucun mot-clé ajouté.
+                      </p>
+                    )}
                 </div>
 
                 <FormField
@@ -931,9 +930,8 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
                                 />
                                 <Label
                                   htmlFor={`lang-${lang.value}`}
-                                  className={`text-sm cursor-pointer ${
-                                    isDisabled ? "opacity-50" : ""
-                                  }`}
+                                  className={`text-sm cursor-pointer ${isDisabled ? "opacity-50" : ""
+                                    }`}
                                 >
                                   {lang.label}
                                 </Label>
