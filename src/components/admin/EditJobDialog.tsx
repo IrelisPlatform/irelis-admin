@@ -303,7 +303,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
       })
     );
     if (companyLogo) {
-      formData.append("file", companyLogo);
+      formData.append("companyLogo", companyLogo);
     }
 
     startTransition(async () => {

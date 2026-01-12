@@ -43,7 +43,7 @@ export interface BackendPublishedJob {
   postNumber: number;
   companyLength: string;
   companyLogoUrl: string;
-  tagDto?: Array<{ name: string; type: string }>;
+  tagDto?:  Array<{ name: string; type: "skill" | "tool" | "domain" }>;
   requiredDocuments: RequiredDocument[];
   companyName: string;
   companyDescription: string;
