@@ -5,22 +5,29 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Upload, UserCheck, Sparkles } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCandidateProfile } from '@/hooks/useCandidateProfile';
-import { useApplyJob } from '@/hooks/useApplyJob';
+import { toast } from 'sonner';
+import { useCandidateProfile } from '@/hooks/candidate/useCandidateProfile';
+import { useApplyJob } from '@/hooks/candidate/useApplyJob';
 
 export function PostulerForm() {
-  const { user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const offerId = searchParams.get('offerId');
-  const { apply } = useApplyJob();
   const { profile, loading } = useCandidateProfile();
   
   const [profilComplet, setProfilComplet] = useState<boolean | null>(null);
 
-  const { apply, isApplying } = useApplyJob(offerId!);
+  const { apply, isApplying } = useApplyJob(offerId);
+
+  useEffect(() => {
+    if (loading) return;
+    if (!profile) {
+      setProfilComplet(false);
+      return;
+    }
+    setProfilComplet(Boolean(profile.firstName && profile.lastName && profile.cvUrl));
+  }, [loading, profile]);
 
   const handleApply = async () => {
     if (!offerId) return;
@@ -61,6 +68,7 @@ export function PostulerForm() {
             </p>
             <Button 
               onClick={handlePostuler1Clic}
+              disabled={isApplying}
               className="bg-[#1e3a8a] hover:bg-[#1e40af] text-white w-full py-6 text-lg"
             >
               <Sparkles className="h-5 w-5 mr-2" />

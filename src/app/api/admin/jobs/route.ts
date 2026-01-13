@@ -10,6 +10,9 @@ const transformJob = (job: BackendPublishedJob): PublishedJob => {
   const isNew = publishedAt
     ? (now.getTime() - publishedAt.getTime()) / (1000 * 3600 * 24) <= 7
     : false;
+  const location = [job.workCityLocation, job.workCountryLocation]
+    .filter(Boolean)
+    .join(", ");
 
   return {
     id: job.id,
@@ -27,7 +30,8 @@ const transformJob = (job: BackendPublishedJob): PublishedJob => {
     sector: job.sectorName,
     companySize: job.companyLength,
     companyLogo: job.companyLogoUrl,
-    requiredLanguage: job.requiredLanguage,
+    requiredLanguage: job.requiredLanguages?.[0] || "",
+    requiredLanguages: job.requiredLanguages || [],
     tags: job.tagDto?.map((t) => t.name) || [],
     requiredDocuments: job.requiredDocuments,
     companyLogoUrl: job.companyLogoUrl,
@@ -35,12 +39,16 @@ const transformJob = (job: BackendPublishedJob): PublishedJob => {
     postNumber: job.postNumber,
     companyLength: job.companyLength,
     workCountryLocation: job.workCountryLocation,
+    workCities: job.workCities || [],
     /* workCityLocation: job.workCityLocation, */
     jobType: job.jobType,
     companyEmail: job.companyEmail,
     status: job.status,
     tagDto: job.tagDto || [],
     contractType: job.contractType,
+    location,
+    company: job.companyName || "Entreprise confidentielle",
+    description: job.description,
   };
 };
 

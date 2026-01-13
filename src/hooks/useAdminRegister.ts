@@ -1,4 +1,10 @@
 // src/hooks/useAdminRegister
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { apiRequest } from "@/lib/api/client";
 
 export function useAdminRegister() {
   const [loading, setLoading] = useState(false);

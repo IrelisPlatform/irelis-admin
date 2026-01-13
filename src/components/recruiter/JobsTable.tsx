@@ -48,7 +48,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import {  PaginatedResponse } from "@/types/job";
+import { JobOffer, PaginatedResponse } from "@/types/job";
 import Cookies from "js-cookie";
 
 interface Job {
@@ -95,7 +95,7 @@ export function JobsTable() {
 
     setLoading(true);
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim() || 'http://api-irelis.us-east-2.elasticbeanstalk.com';
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim();
       const res = await fetch(`${backendUrl}/api/v1/jobs/recruiter/my-offers?page=0&size=50`, {
         headers: { Authorization: `Bearer ${token}` }
       });

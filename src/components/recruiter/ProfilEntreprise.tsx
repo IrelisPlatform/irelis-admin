@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,6 +32,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 // 🔧 logger non fourni → fallback
 function loggerInfo(message: string, data?: any) {
@@ -74,7 +75,8 @@ export function ProfilEntreprise() {
     firstName: '',
     lastName: '',
     title: '',
-    hiringFor: ''
+    hiringFor: '',
+    function: ''
   });
 
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -95,7 +97,12 @@ export function ProfilEntreprise() {
       if (draftStr) {
         const draft = JSON.parse(draftStr);
         if (draft.accountType) setAccountType(draft.accountType);
-        if (draft.formData) setFormData(draft.formData);
+        if (draft.formData) {
+          setFormData({
+            function: "",
+            ...draft.formData,
+          });
+        }
         if (draft.logoPreview) setLogoPreview(draft.logoPreview);
       }
     } catch (e) {
@@ -336,7 +343,8 @@ export function ProfilEntreprise() {
       firstName: '',
       lastName: '',
       title: '',
-      hiringFor: ''
+      hiringFor: '',
+      function: ''
     });
   };
 

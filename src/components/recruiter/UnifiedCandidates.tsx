@@ -190,8 +190,8 @@ export function UnifiedCandidates() {
     if (!sortField) return filteredATSCandidates;
     
     return [...filteredATSCandidates].sort((a, b) => {
-      let aValue = a[sortField];
-      let bValue = b[sortField];
+      let aValue: string | number = a[sortField];
+      let bValue: string | number = b[sortField];
 
       if (sortField === "appliedDate") {
         aValue = new Date(aValue as string).getTime();

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { useCountry } from '../../contexts/CountryContext';
-import { logger } from '../../utils/logger';
+import { useCountry } from '@/context/CountryContext';
+import { logger } from '@/utils/logger';
 
 interface LocalizedSEOProps {
   pageType?: 'home' | 'jobs' | 'company' | 'blog' | 'recruiter';

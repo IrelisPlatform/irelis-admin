@@ -52,6 +52,38 @@ export interface BackendPublishedJob {
   workCities: string[];
 }
 
+export interface JobOffer {
+  id: string;
+  title: string;
+  description: string;
+  workCountryLocation: string;
+  workCityLocation: string;
+  contractType: string;
+  status: string;
+  jobType: string;
+  salary: string;
+  publishedAt: string | null;
+  expirationDate: string;
+  isFeatured?: boolean;
+  isUrgent?: boolean;
+  requiredLanguage?: string;
+  requiredLanguages?: string[];
+  sectorName: string;
+  postNumber?: number;
+  companyLength?: string;
+  companyLogoUrl?: string;
+  tagDto?: Array<{ name: string; type: "skill" | "tool" | "domain" }>;
+  requiredDocuments?: RequiredDocument[];
+  companyName?: string;
+  companyDescription?: string;
+  companyEmail?: string;
+  sectorId?: string;
+  workCities?: string[];
+  responsibilities?: string;
+  requirements?: string;
+  benefits?: string;
+}
+
 // 🔹 Version transformée pour le frontend
 export interface PublishedJob {
   id: string;
@@ -80,10 +112,20 @@ export interface PublishedJob {
   status: string;
   // competences (requirements) (à revoir)
   /* qualifications: string[]; */
-  requiredLanguages: string[]
+  requiredLanguages: string[];
   requiredDocuments: RequiredDocument[];
   tagDto: Array<{ name: string; type: "skill" | "tool" | "domain" }>;
   contractType: string;
+  companyLength?: string;
+  location?: string;
+  type?: string;
+  company?: string;
+  description?: string;
+  responsibilities?: string;
+  qualifications?: string;
+  benefits?: string;
+  about?: string;
+  requiredLanguage?: string;
 }
 
 // 🔹 Pour les réponses paginées (réutilisable partout)

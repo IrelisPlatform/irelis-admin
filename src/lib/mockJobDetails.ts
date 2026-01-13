@@ -23,17 +23,13 @@ export type JobDetail = {
     companyDescription: string;
     companyLength: string;
     postNumber: number;
-    tags: [
-        {
-            name: string;
-            type: string;
-        }
-    ],
-    requiredDocuments: [
-        {
-            type: string;
-        }
-    ]
+    tags: Array<{
+        name: string;
+        type: string;
+    }>;
+    requiredDocuments: Array<{
+        type: string;
+    }>;
 }
 
 // const jobDetails: JobDetail[] = [

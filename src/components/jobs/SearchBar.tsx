@@ -5,14 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/context/LanguageContext";
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 interface JobSearchBarProps {
   jobCount: number;
   onSearch?: (title: string, location: string) => void;
 }
 
-export function JobSearchBar({ jobCount }: JobSearchBarProps) {
+export function JobSearchBar({ jobCount, onSearch }: JobSearchBarProps) {
   const { t } = useLanguage();
   const suggestions = t.search.suggestions;
   const [keyword, setKeyword] = useState('');
@@ -60,6 +60,8 @@ export function JobSearchBar({ jobCount }: JobSearchBarProps) {
             <Search className="w-5 h-5 text-[#1e3a8a] mr-3 flex-shrink-0 z-10" />
             <Input
               placeholder={t.search.keywordPlaceholder}
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
               className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-400 bg-transparent relative z-10"
             />
           </div>
@@ -68,6 +70,8 @@ export function JobSearchBar({ jobCount }: JobSearchBarProps) {
             <MapPin className="w-5 h-5 text-[#1e3a8a] mr-3 flex-shrink-0 z-10" />
             <Input
               placeholder={t.search.locationPlaceholder}
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
               className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-400 bg-transparent relative z-10"
             />
           </div>
@@ -78,7 +82,7 @@ export function JobSearchBar({ jobCount }: JobSearchBarProps) {
             className="relative z-10"
           >
             <Button 
-              onClick={() => onSearch(keyword, location)}
+              onClick={() => onSearch?.(keyword, location)}
               size="lg" 
               className="bg-[#1e3a8a] hover:bg-[#1e40af] text-white px-10 shadow-md hover:shadow-xl transition-all duration-200 relative overflow-hidden group/btn"
             >
