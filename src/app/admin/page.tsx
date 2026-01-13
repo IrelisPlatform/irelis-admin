@@ -3,6 +3,7 @@
 import { Suspense } from "react";
 import { AdminJobsTable } from "@/components/admin/AdminJobsTable";
 import { AdminJobsFilters } from "@/components/admin/AdminJobsFilters";
+import { AdminJobsPagination } from "@/components/admin/AdminJobsPagination";
 import { CreateJobDialog } from "@/components/admin/CreateJobDialog";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -47,7 +48,9 @@ export default async function AdminDashboardPage({ searchParams }: PageProps) {
         fallback={<div className="text-center py-8">Chargement...</div>}
       > */}
       <AdminJobsTable />
+      <AdminJobsPagination />
       {/*  </Suspense> */}
     </div>
   );
 }
+

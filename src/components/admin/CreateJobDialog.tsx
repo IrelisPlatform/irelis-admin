@@ -234,7 +234,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
       tagDto: values.tagDto || [],
       requiredDocuments: values.requiredDocuments,
     };
-
+    console.log("payload", { payload })
     const formData = new FormData();
     formData.append(
       "data",
@@ -331,9 +331,8 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
               {STEPS.map((step) => (
                 <div
                   key={step.id}
-                  className={`h-1 flex-1 rounded-full ${
-                    currentStep >= step.id ? "bg-[#1e3a88]" : "bg-gray-200"
-                  }`}
+                  className={`h-1 flex-1 rounded-full ${currentStep >= step.id ? "bg-[#1e3a88]" : "bg-gray-200"
+                    }`}
                 />
               ))}
             </div>
@@ -575,20 +574,20 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                       render={({ field }) => {
                         const availableCities =
                           selectedCountry &&
-                          COUNTRIES_WITH_CITIES[
+                            COUNTRIES_WITH_CITIES[
                             selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
-                          ]
+                            ]
                             ? [
-                                ...COUNTRIES_WITH_CITIES[
-                                  selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
-                                ].filter((city) => city !== "Autre"),
-                                ...customCities.filter(
-                                  (city) =>
-                                    !COUNTRIES_WITH_CITIES[
-                                      selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
-                                    ]?.includes(city)
-                                ),
-                              ]
+                              ...COUNTRIES_WITH_CITIES[
+                                selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
+                              ].filter((city) => city !== "Autre"),
+                              ...customCities.filter(
+                                (city) =>
+                                  !COUNTRIES_WITH_CITIES[
+                                    selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
+                                  ]?.includes(city)
+                              ),
+                            ]
                             : [];
 
                         return (
@@ -809,10 +808,10 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
 
                     {(!form.watch("tagDto") ||
                       form.watch("tagDto").length === 0) && (
-                      <p className="text-sm text-muted-foreground">
-                        Aucun mot-clé ajouté.
-                      </p>
-                    )}
+                        <p className="text-sm text-muted-foreground">
+                          Aucun mot-clé ajouté.
+                        </p>
+                      )}
                   </div>
 
                   <FormField
@@ -914,9 +913,8 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                                   />
                                   <Label
                                     htmlFor={`lang-${lang.value}`}
-                                    className={`text-sm cursor-pointer ${
-                                      isDisabled ? "opacity-50" : ""
-                                    }`}
+                                    className={`text-sm cursor-pointer ${isDisabled ? "opacity-50" : ""
+                                      }`}
                                   >
                                     {lang.label}
                                   </Label>

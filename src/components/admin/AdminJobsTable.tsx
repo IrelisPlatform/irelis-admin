@@ -25,6 +25,7 @@ type AdminJobsFilters = {
   search: string | null;
   status: string | null;
   type: string | null;
+  page: number;
 };
 
 async function fetchAdminJobs(filters: AdminJobsFilters) {
@@ -33,9 +34,12 @@ async function fetchAdminJobs(filters: AdminJobsFilters) {
     throw new Error("Backend URL not configured");
   }
 
-  // Appel direct au backend
+  // Récupérer la page (0-indexed pour l'API)
+  const page = filters.page
+
+  // Appel direct au backend avec pagination
   const response = await fetch(
-    `${API_URL}/api/v1/jobs/published?page=0&size=10`,
+    `${API_URL}/api/v1/jobs/published?page=${page}&size=10`,
     {
       method: "GET",
       headers: {
@@ -88,8 +92,9 @@ async function fetchAdminJobs(filters: AdminJobsFilters) {
 
   return {
     jobs: transformedJobs,
-    totalPages: Math.ceil(transformedJobs.length / data.size),
-    totalElements: transformedJobs.length,
+    totalPages: data.total_pages,
+    totalElements: data.total_elements,
+    currentPage: data.page,
     first: data.first,
     last: data.last,
   };
@@ -125,9 +130,8 @@ function AdminJobsTableContent(props: { jobs: PublishedJob[] }) {
               <>{job.workCountryLocation}</>
             ) : (
               <span
-                title={`${job.title} - ${
-                  job.workCountryLocation
-                } - ${job.workCities.join(", ")}`}
+                title={`${job.title} - ${job.workCountryLocation
+                  } - ${job.workCities.join(", ")}`}
               >
                 {job.workCountryLocation} - {job.workCities.join(", ")}
               </span>
@@ -146,8 +150,8 @@ function AdminJobsTableContent(props: { jobs: PublishedJob[] }) {
             {job.expirationDate
               ? formatDateLong(job.expirationDate)
               : job.status === "PUBLISHED"
-              ? "Postuler au plus tôt"
-              : "Non publiée"}
+                ? "Postuler au plus tôt"
+                : "Non publiée"}
           </TableCell>
           <TableCell>
             <AdminJobsTableActions job={job} />
@@ -190,10 +194,14 @@ export function AdminJobsTable() {
   const [search] = useQueryState("search");
   const [status] = useQueryState("status");
   const [type] = useQueryState("type");
+  const [page] = useQueryState("page", { defaultValue: "0" });
+
+  // Convertir page en nombre (0-indexed)
+  const pageNumber = parseInt(page, 10) || 0;
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["admin-jobs", { search, status, type }],
-    queryFn: () => fetchAdminJobs({ search, status, type }),
+    queryKey: ["admin-jobs", { search, status, type, page: pageNumber }],
+    queryFn: () => fetchAdminJobs({ search, status, type, page: pageNumber }),
     staleTime: 30 * 1000, // Les données restent "fresh" pendant 30 secondes
     refetchOnMount: false, // Ne pas refetch au montage si les données sont fresh
     refetchOnWindowFocus: false, // Ne pas refetch lors du focus de la fenêtre

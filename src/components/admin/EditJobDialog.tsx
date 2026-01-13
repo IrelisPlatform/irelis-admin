@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Eye } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -92,6 +93,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
   );
   const [newTagName, setNewTagName] = useState("");
   const [customCities, setCustomCities] = useState<string[]>([]);
+  const [isFormStateOpen, setIsFormStateOpen] = useState(false);
 
   const form = useForm<CreateJobFormData>({
     resolver: zodResolver(createJobSchema),
@@ -328,257 +330,442 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
   if (!job) return null;
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(open) => {
-        onOpenChange(open);
-        if (!open) {
-          setCurrentStep(1);
-          form.reset();
-          setCompanyLogo(null);
-          setLogoPreview(null);
-          setLogoFileName(null);
-          setCustomCities([]);
-        }
-      }}
-    >
-      <DialogContent className="max-w-full sm:max-w-xl lg:max-w-5xl max-h-[90vh] flex flex-col">
-        <DialogHeader className="px-8">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-primary">
-              Modifier l&apos;offre (Étape {currentStep}/4)
-            </DialogTitle>
-          </div>
-          <div className="flex mt-2 space-x-1">
-            {STEPS.map((step) => (
-              <div
-                key={step.id}
-                className={`h-1 flex-1 rounded-full ${currentStep >= step.id ? "bg-[#1e3a88]" : "bg-gray-200"
-                  }`}
-              />
-            ))}
-          </div>
-        </DialogHeader>
+    <>
+      <Dialog
+        open={open}
+        onOpenChange={(open) => {
+          onOpenChange(open);
+          if (!open) {
+            setCurrentStep(1);
+            form.reset();
+            setCompanyLogo(null);
+            setLogoPreview(null);
+            setLogoFileName(null);
+            setCustomCities([]);
+          }
+        }}
+      >
+        <DialogContent className="max-w-full sm:max-w-xl lg:max-w-5xl max-h-[90vh] flex flex-col">
+          <DialogHeader className="px-8">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-primary">
+                Modifier l&apos;offre (Étape {currentStep}/4)
+              </DialogTitle>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsFormStateOpen(true)}
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                État du formulaire
+              </Button>
+            </div>
+            <div className="flex mt-2 space-x-1">
+              {STEPS.map((step) => (
+                <div
+                  key={step.id}
+                  className={`h-1 flex-1 rounded-full ${currentStep >= step.id ? "bg-[#1e3a88]" : "bg-gray-200"
+                    }`}
+                />
+              ))}
+            </div>
+          </DialogHeader>
 
-        <Form {...form}>
-          <div className="py-2 px-8 overflow-y-auto flex-1 min-h-0">
-            {/* ÉTAPE 1 : ENTREPRISE */}
-            {currentStep === 1 && (
-              <div className="space-y-4">
-                <div className="*:not-first:mt-2">
-                  <Label className="mb-2">Logo de l&apos;entreprise</Label>
-                  <div>
-                    <BasicImageUploader
-                      accept="image/png,image/jpeg,image/webp"
-                      maxSize={2 * 1024 * 1024}
-                      onFileChange={(file) => {
-                        if (file) {
-                          setCompanyLogo(file);
-                          setLogoPreview(URL.createObjectURL(file));
-                          setLogoFileName(file.name);
-                        } else {
-                          setCompanyLogo(null);
-                          setLogoPreview(null);
-                          setLogoFileName(null);
-                        }
-                      }}
-                      defaultPreview={logoPreview || undefined}
-                      uploadButtonLabel="Ajouter un logo"
-                      changeButtonLabel="Changer le logo"
-                      removeButtonLabel="Supprimer"
-                    />
-                    <p className="mt-1 text-sm text-gray-500">
-                      Taille maximale : 2 Mo
-                    </p>
+          <Form {...form}>
+            <div className="py-2 px-8 overflow-y-auto flex-1 min-h-0">
+              {/* ÉTAPE 1 : ENTREPRISE */}
+              {currentStep === 1 && (
+                <div className="space-y-4">
+                  <div className="*:not-first:mt-2">
+                    <Label className="mb-2">Logo de l&apos;entreprise</Label>
+                    <div>
+                      <BasicImageUploader
+                        accept="image/png,image/jpeg,image/webp"
+                        maxSize={2 * 1024 * 1024}
+                        onFileChange={(file) => {
+                          if (file) {
+                            setCompanyLogo(file);
+                            setLogoPreview(URL.createObjectURL(file));
+                            setLogoFileName(file.name);
+                          } else {
+                            setCompanyLogo(null);
+                            setLogoPreview(null);
+                            setLogoFileName(null);
+                          }
+                        }}
+                        defaultPreview={logoPreview || undefined}
+                        uploadButtonLabel="Ajouter un logo"
+                        changeButtonLabel="Changer le logo"
+                        removeButtonLabel="Supprimer"
+                      />
+                      <p className="mt-1 text-sm text-gray-500">
+                        Taille maximale : 2 Mo
+                      </p>
+                    </div>
                   </div>
-                </div>
 
-                <FormField
-                  control={form.control}
-                  name="companyName"
-                  render={({ field }) => (
-                    <FormItem className="*:not-first:mt-2">
-                      <FormLabel>
-                        Nom de l&apos;entreprise{" "}
-                        <span className="text-red-500">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ex: Irelis SARL" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="companyDescription"
-                  render={({ field }) => (
-                    <FormItem className="*:not-first:mt-2">
-                      <FormLabel>Description de l&apos;entreprise</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          className=""
-                          placeholder="Décrivez votre entreprise en quelques lignes..."
-                          rows={3}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="companyEmail"
-                  render={({ field }) => (
-                    <FormItem className="*:not-first:mt-2">
-                      <FormLabel>Email de l&apos;entreprise</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder="contact@entreprise.com"
-                          {...field}
-                          value={field.value || ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="sectorId"
-                  render={({ field }) => (
-                    <FormItem className="*:not-first:mt-2">
-                      <FormLabel>Secteur d&apos;activité</FormLabel>
-                      <FormControl>
-                        <SelectWithSearch
-                          options={sectors
-                            .filter((sector) => sector.id.trim() !== "")
-                            .map((sector) => ({
-                              label: sector.name,
-                              value: sector.id,
-                            }))}
-                          value={field.value}
-                          onValueChange={(value) => field.onChange(value)}
-                          placeholder="Sélectionnez un secteur"
-                          searchPlaceholder="Rechercher un secteur..."
-                          hasNotSpecified={true}
-                          notSpecifiedLabel="Pas spécifié"
-                          disabled={sectorsLoading}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="companyLength"
-                  render={({ field }) => (
-                    <FormItem className="*:not-first:mt-2">
-                      <FormLabel>Taille de l&apos;entreprise</FormLabel>
-                      <Select
-                        onValueChange={(value) =>
-                          field.onChange(value === "not-specified" ? "" : value)
-                        }
-                        value={field.value || "not-specified"}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner la taille de l'entreprise" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="not-specified">
-                            Pas spécifié
-                          </SelectItem>
-                          {companySizeRanges.map((range) => (
-                            <SelectItem key={range} value={range}>
-                              {range}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
-
-            {/* ÉTAPE 2 : INFOS GÉNÉRALES */}
-            {currentStep === 2 && (
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem className="*:not-first:mt-2">
-                      <FormLabel>
-                        Titre du poste <span className="text-red-500">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Ex: Directeur de Production"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem className="*:not-first:mt-2">
-                      <FormLabel>
-                        Description de l&apos;offre{" "}
-                        <span className="text-red-500">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Editor
-                          editorSerializedState={field.value ?? undefined}
-                          onSerializedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="workCountryLocation"
+                    name="companyName"
                     render={({ field }) => (
                       <FormItem className="*:not-first:mt-2">
                         <FormLabel>
-                          Pays <span className="text-red-500">*</span>
+                          Nom de l&apos;entreprise{" "}
+                          <span className="text-red-500">*</span>
                         </FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: Irelis SARL" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="companyDescription"
+                    render={({ field }) => (
+                      <FormItem className="*:not-first:mt-2">
+                        <FormLabel>Description de l&apos;entreprise</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            className=""
+                            placeholder="Décrivez votre entreprise en quelques lignes..."
+                            rows={3}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="companyEmail"
+                    render={({ field }) => (
+                      <FormItem className="*:not-first:mt-2">
+                        <FormLabel>Email de l&apos;entreprise</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="email"
+                            placeholder="contact@entreprise.com"
+                            {...field}
+                            value={field.value || ""}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="sectorId"
+                    render={({ field }) => (
+                      <FormItem className="*:not-first:mt-2">
+                        <FormLabel>Secteur d&apos;activité</FormLabel>
+                        <FormControl>
+                          <SelectWithSearch
+                            options={sectors
+                              .filter((sector) => sector.id.trim() !== "")
+                              .map((sector) => ({
+                                label: sector.name,
+                                value: sector.id,
+                              }))}
+                            value={field.value}
+                            onValueChange={(value) => field.onChange(value)}
+                            placeholder="Sélectionnez un secteur"
+                            searchPlaceholder="Rechercher un secteur..."
+                            hasNotSpecified={true}
+                            notSpecifiedLabel="Pas spécifié"
+                            disabled={sectorsLoading}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="companyLength"
+                    render={({ field }) => (
+                      <FormItem className="*:not-first:mt-2">
+                        <FormLabel>Taille de l&apos;entreprise</FormLabel>
                         <Select
-                          onValueChange={(v) => {
-                            field.onChange(v);
-                            setSelectedCountry(v);
-                            form.setValue("workCityLocation", []);
-                          }}
-                          value={field.value}
+                          onValueChange={(value) =>
+                            field.onChange(value === "not-specified" ? "" : value)
+                          }
+                          value={field.value || "not-specified"}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Sélectionnez un pays" />
+                              <SelectValue placeholder="Sélectionner la taille de l'entreprise" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {COUNTRIES.map((country) => (
-                              <SelectItem key={country} value={country}>
-                                {country}
+                            <SelectItem value="not-specified">
+                              Pas spécifié
+                            </SelectItem>
+                            {companySizeRanges.map((range) => (
+                              <SelectItem key={range} value={range}>
+                                {range}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+
+              {/* ÉTAPE 2 : INFOS GÉNÉRALES */}
+              {currentStep === 2 && (
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem className="*:not-first:mt-2">
+                        <FormLabel>
+                          Titre du poste <span className="text-red-500">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Ex: Directeur de Production"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem className="*:not-first:mt-2">
+                        <FormLabel>
+                          Description de l&apos;offre{" "}
+                          <span className="text-red-500">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Editor
+                            editorSerializedState={field.value ?? undefined}
+                            onSerializedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="workCountryLocation"
+                      render={({ field }) => (
+                        <FormItem className="*:not-first:mt-2">
+                          <FormLabel>
+                            Pays <span className="text-red-500">*</span>
+                          </FormLabel>
+                          <Select
+                            onValueChange={(v) => {
+                              field.onChange(v);
+                              setSelectedCountry(v);
+                              form.setValue("workCityLocation", []);
+                            }}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Sélectionnez un pays" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {COUNTRIES.map((country) => (
+                                <SelectItem key={country} value={country}>
+                                  {country}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="workCityLocation"
+                      render={({ field }) => {
+                        const availableCities =
+                          selectedCountry &&
+                            COUNTRIES_WITH_CITIES[
+                            selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
+                            ]
+                            ? [
+                              ...COUNTRIES_WITH_CITIES[
+                                selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
+                              ].filter((city) => city !== "Autre"),
+                              ...customCities.filter(
+                                (city) =>
+                                  !COUNTRIES_WITH_CITIES[
+                                    selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
+                                  ]?.includes(city)
+                              ),
+                            ]
+                            : [];
+
+                        return (
+                          <FormItem className="*:not-first:mt-2">
+                            <FormLabel>
+                              Villes <span className="text-red-500">*</span>
+                            </FormLabel>
+                            <SelectWithSearchAndButton
+                              options={availableCities.map((city) => ({
+                                label: city,
+                                value: city,
+                              }))}
+                              value=""
+                              onValueChange={(v) => {
+                                const currentCities = field.value || [];
+                                if (!currentCities.includes(v)) {
+                                  field.onChange([...currentCities, v]);
+                                }
+                              }}
+                              onAddItem={(newCity) => {
+                                if (!customCities.includes(newCity)) {
+                                  setCustomCities([...customCities, newCity]);
+                                }
+                                const currentCities = field.value || [];
+                                if (!currentCities.includes(newCity)) {
+                                  field.onChange([...currentCities, newCity]);
+                                }
+                              }}
+                              placeholder="Sélectionnez une ville"
+                              searchPlaceholder="Rechercher une ville..."
+                              addItemPlaceholder="Entrer une ville..."
+                              buttonLabel="Ajouter une ville"
+                              disabled={!selectedCountry}
+                            />
+                            {field.value && field.value.length > 0 && (
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {field.value.map((city, index) => (
+                                  <Badge
+                                    key={index}
+                                    variant="secondary"
+                                    className="flex items-center gap-1"
+                                  >
+                                    {city}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const updated = field.value.filter(
+                                          (_, i) => i !== index
+                                        );
+                                        field.onChange(updated);
+                                      }}
+                                      className="ml-1 text-xs text-muted-foreground hover:text-foreground"
+                                    >
+                                      ✕
+                                    </button>
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="expirationDate"
+                    render={({ field }) => (
+                      <FormItem className="*:not-first:mt-2">
+                        <FormLabel>Date d&apos;expiration</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="date"
+                            {...field}
+                            value={field.value || ""}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+
+              {/* ÉTAPE 3 : DÉTAILS DU POSTE */}
+              {currentStep === 3 && (
+                <div className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="jobType"
+                    render={({ field }) => (
+                      <FormItem className="*:not-first:mt-2">
+                        <FormLabel>Conditions de travail</FormLabel>
+                        <FormControl>
+                          <SelectWithSearch
+                            options={[
+                              { label: "Temps plein", value: "FULL_TIME" },
+                              { label: "Temps partiel", value: "PART_TIME" },
+                              { label: "Télétravail", value: "REMOTE" },
+                              { label: "Hybride", value: "HYBRID" },
+                            ]}
+                            value={field.value}
+                            onValueChange={(value) => field.onChange(value)}
+                            placeholder="Sélectionnez les conditions de travail"
+                            searchPlaceholder="Rechercher..."
+                            hasNotSpecified={true}
+                            notSpecifiedLabel="Pas spécifié"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="salary"
+                    render={({ field }) => (
+                      <FormItem className="*:not-first:mt-2">
+                        <FormLabel>Salaire</FormLabel>
+                        <Select
+                          onValueChange={(value) =>
+                            field.onChange(value === "not-specified" ? "" : value)
+                          }
+                          value={field.value || "not-specified"}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue
+                                className="text-muted-foreground"
+                                placeholder="Sélectionner un salaire"
+                              />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="max-h-60 overflow-y-auto">
+                            <SelectItem
+                              className="text-muted-foreground"
+                              value="not-specified"
+                            >
+                              Non spécifié
+                            </SelectItem>
+                            {salaryRanges.map((range) => (
+                              <SelectItem key={range} value={range}>
+                                {range}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -588,483 +775,323 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
                     )}
                   />
 
+                  <div className="space-y-3">
+                    <Label className="mb-4">
+                      Tags (utile pour le référencement mais pas obligatoire)
+                    </Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Select
+                        value={newTagType}
+                        onValueChange={(v) => setNewTagType(v as TagType)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="skill">Compétence</SelectItem>
+                          <SelectItem value="tool">Outil</SelectItem>
+                          <SelectItem value="domain">Domaine</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      <Select value={newTagName} onValueChange={setNewTagName}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Nom" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {TAG_NAMES[newTagType].map((name) => (
+                            <SelectItem
+                              key={`${newTagType}-${name}`}
+                              value={name}
+                            >
+                              {name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button type="button" onClick={addTag} size="sm">
+                        + Ajouter
+                      </Button>
+                    </div>
+
+                    {form.watch("tagDto") && form.watch("tagDto").length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {form.watch("tagDto").map((tag, index) => (
+                          <Badge
+                            key={index}
+                            variant="secondary"
+                            className="flex items-center gap-1"
+                          >
+                            {tag.name} ({tag.type})
+                            <button
+                              type="button"
+                              onClick={() => removeTag(index)}
+                              className="ml-1 text-xs text-muted-foreground hover:text-foreground"
+                            >
+                              ✕
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+
+                    {(!form.watch("tagDto") ||
+                      form.watch("tagDto").length === 0) && (
+                        <p className="text-sm text-muted-foreground">
+                          Aucun mot-clé ajouté.
+                        </p>
+                      )}
+                  </div>
+
                   <FormField
                     control={form.control}
-                    name="workCityLocation"
+                    name="contractType"
+                    render={({ field }) => (
+                      <FormItem className="*:not-first:mt-2">
+                        <FormLabel>Type de contrat</FormLabel>
+                        <FormControl>
+                          <SelectWithSearch
+                            options={[
+                              { label: "CDI", value: "CDI" },
+                              {
+                                label: "CDI (Temps partiel)",
+                                value: "CDI_PART_TIME",
+                              },
+                              { label: "CDD", value: "CDD" },
+                              {
+                                label: "CDD (Temps partiel)",
+                                value: "CDD_PART_TIME",
+                              },
+                              { label: "Intérim", value: "INTERIM" },
+                              { label: "Freelance", value: "FREELANCE" },
+                              { label: "Stage", value: "INTERNSHIP" },
+                            ]}
+                            value={field.value}
+                            onValueChange={(value) => field.onChange(value)}
+                            placeholder="Sélectionnez un type de contrat"
+                            searchPlaceholder="Rechercher..."
+                            hasNotSpecified={true}
+                            notSpecifiedLabel="Pas spécifié"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+
+              {/* ÉTAPE 4 : OPTIONS AVANCÉES */}
+              {currentStep === 4 && (
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="requiredLanguage"
                     render={({ field }) => {
-                      const availableCities =
-                        selectedCountry &&
-                          COUNTRIES_WITH_CITIES[
-                          selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
-                          ]
-                          ? [
-                            ...COUNTRIES_WITH_CITIES[
-                              selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
-                            ].filter((city) => city !== "Autre"),
-                            ...customCities.filter(
-                              (city) =>
-                                !COUNTRIES_WITH_CITIES[
-                                  selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
-                                ]?.includes(city)
-                            ),
-                          ]
-                          : [];
+                      const currentLanguages = field.value || [];
+                      const hasBilingue = currentLanguages.includes("Bilingue");
 
                       return (
                         <FormItem className="*:not-first:mt-2">
-                          <FormLabel>
-                            Villes <span className="text-red-500">*</span>
-                          </FormLabel>
-                          <SelectWithSearchAndButton
-                            options={availableCities.map((city) => ({
-                              label: city,
-                              value: city,
-                            }))}
-                            value=""
-                            onValueChange={(v) => {
-                              const currentCities = field.value || [];
-                              if (!currentCities.includes(v)) {
-                                field.onChange([...currentCities, v]);
-                              }
-                            }}
-                            onAddItem={(newCity) => {
-                              if (!customCities.includes(newCity)) {
-                                setCustomCities([...customCities, newCity]);
-                              }
-                              const currentCities = field.value || [];
-                              if (!currentCities.includes(newCity)) {
-                                field.onChange([...currentCities, newCity]);
-                              }
-                            }}
-                            placeholder="Sélectionnez une ville"
-                            searchPlaceholder="Rechercher une ville..."
-                            addItemPlaceholder="Entrer une ville..."
-                            buttonLabel="Ajouter une ville"
-                            disabled={!selectedCountry}
-                          />
-                          {field.value && field.value.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              {field.value.map((city, index) => (
-                                <Badge
-                                  key={index}
-                                  variant="secondary"
+                          <FormLabel>Langue requise</FormLabel>
+                          <div className="flex flex-wrap gap-2">
+                            {[
+                              { value: "Français", label: "Français" },
+                              { value: "Anglais", label: "Anglais" },
+                              {
+                                value: "Bilingue",
+                                label: "Bilingue (Français/Anglais)",
+                              },
+                            ].map((lang) => {
+                              const isChecked = currentLanguages.includes(
+                                lang.value
+                              );
+                              const isDisabled =
+                                lang.value !== "Bilingue" && hasBilingue;
+
+                              return (
+                                <div
+                                  key={lang.value}
                                   className="flex items-center gap-1"
                                 >
-                                  {city}
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const updated = field.value.filter(
-                                        (_, i) => i !== index
-                                      );
+                                  <Checkbox
+                                    id={`lang-${lang.value}`}
+                                    checked={isChecked}
+                                    disabled={isDisabled}
+                                    onCheckedChange={(checked) => {
+                                      let updated: string[] = [
+                                        ...currentLanguages,
+                                      ];
+                                      if (checked) {
+                                        if (lang.value === "Bilingue") {
+                                          // Si on sélectionne Bilingue, on supprime les autres
+                                          updated = ["Bilingue"];
+                                        } else {
+                                          // Si on sélectionne une autre langue, on ajoute si Bilingue n'est pas sélectionné
+                                          if (!hasBilingue) {
+                                            updated.push(lang.value);
+                                          }
+                                        }
+                                      } else {
+                                        updated = updated.filter(
+                                          (l) => l !== lang.value
+                                        );
+                                      }
                                       field.onChange(updated);
                                     }}
-                                    className="ml-1 text-xs text-muted-foreground hover:text-foreground"
+                                  />
+                                  <Label
+                                    htmlFor={`lang-${lang.value}`}
+                                    className={`text-sm cursor-pointer ${isDisabled ? "opacity-50" : ""
+                                      }`}
                                   >
-                                    ✕
-                                  </button>
-                                </Badge>
-                              ))}
-                            </div>
+                                    {lang.label}
+                                  </Label>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          {hasBilingue && currentLanguages.length > 1 && (
+                            <p className="text-sm text-destructive mt-1">
+                              Bilingue ne peut pas être combiné avec d&apos;autres
+                              langues
+                            </p>
                           )}
                           <FormMessage />
                         </FormItem>
                       );
                     }}
                   />
-                </div>
 
-                <FormField
-                  control={form.control}
-                  name="expirationDate"
-                  render={({ field }) => (
-                    <FormItem className="*:not-first:mt-2">
-                      <FormLabel>Date d&apos;expiration</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="date"
-                          {...field}
-                          value={field.value || ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
-
-            {/* ÉTAPE 3 : DÉTAILS DU POSTE */}
-            {currentStep === 3 && (
-              <div className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="jobType"
-                  render={({ field }) => (
-                    <FormItem className="*:not-first:mt-2">
-                      <FormLabel>Conditions de travail</FormLabel>
-                      <FormControl>
-                        <SelectWithSearch
-                          options={[
-                            { label: "Temps plein", value: "FULL_TIME" },
-                            { label: "Temps partiel", value: "PART_TIME" },
-                            { label: "Télétravail", value: "REMOTE" },
-                            { label: "Hybride", value: "HYBRID" },
-                          ]}
-                          value={field.value}
-                          onValueChange={(value) => field.onChange(value)}
-                          placeholder="Sélectionnez les conditions de travail"
-                          searchPlaceholder="Rechercher..."
-                          hasNotSpecified={true}
-                          notSpecifiedLabel="Pas spécifié"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="salary"
-                  render={({ field }) => (
-                    <FormItem className="*:not-first:mt-2">
-                      <FormLabel>Salaire</FormLabel>
-                      <Select
-                        onValueChange={(value) =>
-                          field.onChange(value === "not-specified" ? "" : value)
-                        }
-                        value={field.value || "not-specified"}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue
-                              className="text-muted-foreground"
-                              placeholder="Sélectionner un salaire"
-                            />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="max-h-60 overflow-y-auto">
-                          <SelectItem
-                            className="text-muted-foreground"
-                            value="not-specified"
-                          >
-                            Non spécifié
-                          </SelectItem>
-                          {salaryRanges.map((range) => (
-                            <SelectItem key={range} value={range}>
-                              {range}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="space-y-3">
-                  <Label className="mb-4">
-                    Tags (utile pour le référencement mais pas obligatoire)
-                  </Label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Select
-                      value={newTagType}
-                      onValueChange={(v) => setNewTagType(v as TagType)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="skill">Compétence</SelectItem>
-                        <SelectItem value="tool">Outil</SelectItem>
-                        <SelectItem value="domain">Domaine</SelectItem>
-                      </SelectContent>
-                    </Select>
-
-                    <Select value={newTagName} onValueChange={setNewTagName}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Nom" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {TAG_NAMES[newTagType].map((name) => (
-                          <SelectItem
-                            key={`${newTagType}-${name}`}
-                            value={name}
-                          >
-                            {name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Button type="button" onClick={addTag} size="sm">
-                      + Ajouter
-                    </Button>
-                  </div>
-
-                  {form.watch("tagDto") && form.watch("tagDto").length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {form.watch("tagDto").map((tag, index) => (
-                        <Badge
-                          key={index}
-                          variant="secondary"
-                          className="flex items-center gap-1"
-                        >
-                          {tag.name} ({tag.type})
-                          <button
-                            type="button"
-                            onClick={() => removeTag(index)}
-                            className="ml-1 text-xs text-muted-foreground hover:text-foreground"
-                          >
-                            ✕
-                          </button>
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-
-                  {(!form.watch("tagDto") ||
-                    form.watch("tagDto").length === 0) && (
-                      <p className="text-sm text-muted-foreground">
-                        Aucun mot-clé ajouté.
-                      </p>
-                    )}
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="contractType"
-                  render={({ field }) => (
-                    <FormItem className="*:not-first:mt-2">
-                      <FormLabel>Type de contrat</FormLabel>
-                      <FormControl>
-                        <SelectWithSearch
-                          options={[
-                            { label: "CDI", value: "CDI" },
-                            {
-                              label: "CDI (Temps partiel)",
-                              value: "CDI_PART_TIME",
-                            },
-                            { label: "CDD", value: "CDD" },
-                            {
-                              label: "CDD (Temps partiel)",
-                              value: "CDD_PART_TIME",
-                            },
-                            { label: "Intérim", value: "INTERIM" },
-                            { label: "Freelance", value: "FREELANCE" },
-                            { label: "Stage", value: "INTERNSHIP" },
-                          ]}
-                          value={field.value}
-                          onValueChange={(value) => field.onChange(value)}
-                          placeholder="Sélectionnez un type de contrat"
-                          searchPlaceholder="Rechercher..."
-                          hasNotSpecified={true}
-                          notSpecifiedLabel="Pas spécifié"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
-
-            {/* ÉTAPE 4 : OPTIONS AVANCÉES */}
-            {currentStep === 4 && (
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="requiredLanguage"
-                  render={({ field }) => {
-                    const currentLanguages = field.value || [];
-                    const hasBilingue = currentLanguages.includes("Bilingue");
-
-                    return (
+                  <FormField
+                    control={form.control}
+                    name="postNumber"
+                    render={({ field }) => (
                       <FormItem className="*:not-first:mt-2">
-                        <FormLabel>Langue requise</FormLabel>
-                        <div className="flex flex-wrap gap-2">
-                          {[
-                            { value: "Français", label: "Français" },
-                            { value: "Anglais", label: "Anglais" },
-                            {
-                              value: "Bilingue",
-                              label: "Bilingue (Français/Anglais)",
-                            },
-                          ].map((lang) => {
-                            const isChecked = currentLanguages.includes(
-                              lang.value
-                            );
-                            const isDisabled =
-                              lang.value !== "Bilingue" && hasBilingue;
+                        <FormLabel>Nombre de postes</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="1"
+                            {...field}
+                            value={field.value || 1}
+                            onChange={(e) =>
+                              field.onChange(Number(e.target.value) || 1)
+                            }
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
+                  <FormField
+                    control={form.control}
+                    name="requiredDocuments"
+                    render={({ field }) => (
+                      <FormItem className="*:not-first:mt-2">
+                        <FormLabel>
+                          Documents requis <span className="text-red-500">*</span>
+                        </FormLabel>
+                        <div className="flex flex-wrap gap-2">
+                          {DOCUMENT_TYPES.map((doc) => {
+                            const isChecked = (field.value || []).some(
+                              (d) => d.type === doc.value
+                            );
                             return (
                               <div
-                                key={lang.value}
+                                key={doc.value}
                                 className="flex items-center gap-1"
                               >
                                 <Checkbox
-                                  id={`lang-${lang.value}`}
+                                  id={`doc-${doc.value}`}
                                   checked={isChecked}
-                                  disabled={isDisabled}
                                   onCheckedChange={(checked) => {
-                                    let updated: string[] = [
-                                      ...currentLanguages,
-                                    ];
+                                    let updated = [...(field.value || [])];
                                     if (checked) {
-                                      if (lang.value === "Bilingue") {
-                                        // Si on sélectionne Bilingue, on supprime les autres
-                                        updated = ["Bilingue"];
-                                      } else {
-                                        // Si on sélectionne une autre langue, on ajoute si Bilingue n'est pas sélectionné
-                                        if (!hasBilingue) {
-                                          updated.push(lang.value);
-                                        }
-                                      }
+                                      updated.push({ type: doc.value });
                                     } else {
                                       updated = updated.filter(
-                                        (l) => l !== lang.value
+                                        (d) => d.type !== doc.value
                                       );
                                     }
+                                    if (updated.length === 0) return;
                                     field.onChange(updated);
                                   }}
                                 />
                                 <Label
-                                  htmlFor={`lang-${lang.value}`}
-                                  className={`text-sm cursor-pointer ${isDisabled ? "opacity-50" : ""
-                                    }`}
+                                  htmlFor={`doc-${doc.value}`}
+                                  className="text-sm"
                                 >
-                                  {lang.label}
+                                  {doc.label}
                                 </Label>
                               </div>
                             );
                           })}
                         </div>
-                        {hasBilingue && currentLanguages.length > 1 && (
-                          <p className="text-sm text-destructive mt-1">
-                            Bilingue ne peut pas être combiné avec d&apos;autres
-                            langues
-                          </p>
-                        )}
                         <FormMessage />
                       </FormItem>
-                    );
-                  }}
-                />
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="postNumber"
-                  render={({ field }) => (
-                    <FormItem className="*:not-first:mt-2">
-                      <FormLabel>Nombre de postes</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min="1"
-                          {...field}
-                          value={field.value || 1}
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value) || 1)
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={form.control}
+                    name="isUrgent"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Offre urgente</FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+            </div>
 
-                <FormField
-                  control={form.control}
-                  name="requiredDocuments"
-                  render={({ field }) => (
-                    <FormItem className="*:not-first:mt-2">
-                      <FormLabel>
-                        Documents requis <span className="text-red-500">*</span>
-                      </FormLabel>
-                      <div className="flex flex-wrap gap-2">
-                        {DOCUMENT_TYPES.map((doc) => {
-                          const isChecked = (field.value || []).some(
-                            (d) => d.type === doc.value
-                          );
-                          return (
-                            <div
-                              key={doc.value}
-                              className="flex items-center gap-1"
-                            >
-                              <Checkbox
-                                id={`doc-${doc.value}`}
-                                checked={isChecked}
-                                onCheckedChange={(checked) => {
-                                  let updated = [...(field.value || [])];
-                                  if (checked) {
-                                    updated.push({ type: doc.value });
-                                  } else {
-                                    updated = updated.filter(
-                                      (d) => d.type !== doc.value
-                                    );
-                                  }
-                                  if (updated.length === 0) return;
-                                  field.onChange(updated);
-                                }}
-                              />
-                              <Label
-                                htmlFor={`doc-${doc.value}`}
-                                className="text-sm"
-                              >
-                                {doc.label}
-                              </Label>
-                            </div>
-                          );
-                        })}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
+            <div className="px-8 flex justify-between gap-2 pt-2">
+              {currentStep > 1 && (
+                <Button variant="outline" onClick={handlePrevious}>
+                  Précédent
+                </Button>
+              )}
+              {currentStep < STEPS.length ? (
+                <Button onClick={handleNext}>Suivant</Button>
+              ) : (
+                <Button onClick={handleUpdateJob} disabled={isPending}>
+                  {isPending ? (
+                    <>
+                      <Spinner className="h-4 w-4 animate-spin text-white" />{" "}
+                    </>
+                  ) : (
+                    "Modifier l'offre"
                   )}
-                />
+                </Button>
+              )}
+            </div>
+          </Form>
+        </DialogContent>
+      </Dialog>
 
-                <FormField
-                  control={form.control}
-                  name="isUrgent"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Offre urgente</FormLabel>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
+      {/* Modal d'état du formulaire */}
+      <Dialog open={isFormStateOpen} onOpenChange={setIsFormStateOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>État du formulaire</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            <pre className="bg-muted p-4 rounded-md overflow-auto text-xs">
+              {JSON.stringify(form.getValues(), null, 2)}
+            </pre>
           </div>
-
-          <div className="px-8 flex justify-between gap-2 pt-2">
-            {currentStep > 1 && (
-              <Button variant="outline" onClick={handlePrevious}>
-                Précédent
-              </Button>
-            )}
-            {currentStep < STEPS.length ? (
-              <Button onClick={handleNext}>Suivant</Button>
-            ) : (
-              <Button onClick={handleUpdateJob} disabled={isPending}>
-                {isPending ? (
-                  <>
-                    <Spinner className="h-4 w-4 animate-spin text-white" />{" "}
-                  </>
-                ) : (
-                  "Modifier l'offre"
-                )}
-              </Button>
-            )}
-          </div>
-        </Form>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

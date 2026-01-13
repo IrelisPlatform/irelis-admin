@@ -1,5 +1,6 @@
 import {
   createSearchParamsCache,
+  parseAsInteger,
   parseAsString,
   parseAsStringEnum,
 } from "nuqs/server";
@@ -16,6 +17,7 @@ export const adminJobsParamsParsers = {
   type: parseAsStringEnum([...typeOptions])
     .withDefault("all")
     .withOptions({ shallow: false, throttleMs: 1000 }),
+  page: parseAsInteger.withDefault(0).withOptions({ shallow: false }),
 };
 
 // Cache pour le serveur
