@@ -50,4 +50,6 @@ jobs:
             --name irelis-admin-front \
             -p 3000:3000 \
             -e NEXT_PUBLIC_BACKEND_URL=${{ secrets.NEXT_PUBLIC_BACKEND_URL }} \
+            -e NEXT_PUBLIC_SITE_URL=http://3.142.99.119 \
+            -e HOST=3.142.99.119 \
             ${{ secrets.DOCKER_USERNAME }}/irelis-admin:ref
