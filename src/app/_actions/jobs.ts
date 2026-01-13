@@ -23,7 +23,7 @@ type PaginatedResponse<T> = {
 
 async function getAuthHeaders() {
   const cookieStore = await cookies();
-  console.log("ccokieStore", cookieStore.get("access_token")?.value);
+  console.log("cookieStore", cookieStore.get("access_token")?.value);
   const token = cookieStore.get("access_token")?.value;
 
   return {
@@ -33,37 +33,29 @@ async function getAuthHeaders() {
 
 export async function createJobAction(formData: FormData) {
   try {
+
     const headers = await getAuthHeaders();
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/jobs`,
-      {
-        method: "POST",
-        headers: {
-          ...headers,
-        },
-        body: formData,
-      }
-    );
+    console.log("headers", headers)
+    const response = await api.post<AdminJob>("/admin/jobs", formData, {
+      headers,
+    });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error("Error creating job:", errorData);
-      console.log(errorData?.code);
-      return {
-        success: false,
-        error:
-          errorData?.message || "Erreur lors de la création de l'offre",
-      };
-    }
+    /* revlidatePath("/admin"); */
+    return { success: true, data: response.data };
 
-    const data: AdminJob = await response.json();
-    revalidatePath("/admin");
-    return { success: true, data };
   } catch (error: any) {
-    console.error("Error creating job:", error.message);
+    console.error(
+      "Error creating job:",
+      error?.response?.data || error.message
+    );
+    console.log(error?.response?.data?.code);
+
     return {
       success: false,
-      error: error.message || "Erreur lors de la création de l'offre",
+      error:
+        error?.response?.data?.message ||
+        error.message ||
+        "Erreur lors de la création de l'offre",
     };
   }
 }
