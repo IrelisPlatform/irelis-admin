@@ -44,6 +44,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCandidateProfile } from "@/hooks/candidate/useCandidateProfile";
+import { useAuth } from "@/context/AuthContext";
 import { monthStringToIsoDate } from '@/utils/date';
 import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle} from "../ui/dialog";
 import {Spinner} from "@/components/ui/spinner";
@@ -80,8 +81,8 @@ interface Langue {
 }
 
 // --- Mappings pour les COMPÉTENCES ---
-const backendSkillLevelToUI = (level: string): string => {
-  const map: Record<string, string> = {
+const backendSkillLevelToUI = (level: string): Competence["niveau"] => {
+  const map: Record<string, Competence["niveau"]> = {
     BEGINNER: 'débutant',
     INTERMEDIATE: 'intermédiaire',
     ADVANCED: 'avancé',
@@ -101,8 +102,8 @@ const uiSkillLevelToBackend = (level: string): "BEGINNER" | "INTERMEDIATE" | "AD
 };
 
 // --- Mappings pour les LANGUES ---
-const backendLanguageLevelToUI = (level: string): string => {
-  const map: Record<string, string> = {
+const backendLanguageLevelToUI = (level: string): Langue["niveau"] => {
+  const map: Record<string, Langue["niveau"]> = {
     BEGINNER: 'débutant',
     INTERMEDIATE: 'intermédiaire',
     ADVANCED: 'avancé',
@@ -124,6 +125,7 @@ const uiLanguageLevelToBackend = (level: string): "BEGINNER" | "INTERMEDIATE" | 
 };
 
 export function ProfilCandidat() {
+  const { deleteAccount } = useAuth();
   const {
     profile,
     loading,
@@ -134,9 +136,9 @@ export function ProfilCandidat() {
     deleteLetter,
     toggleVisibility,
     deleteSkill,
-    // deleteExperience,
-    // deleteEducation,
-    // deleteLanguage
+    deleteExperience,
+    deleteEducation,
+    deleteLanguage
   } = useCandidateProfile();
 
   // UI state

@@ -44,7 +44,14 @@ export interface Education {
 export interface Language {
   id: string;
   language: string;
-  level: "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "FLUENT" | "NATIVE";
+  level:
+    | "BEGINNER"
+    | "INTERMEDIATE"
+    | "ADVANCED"
+    | "FLUENT"
+    | "NATIVE"
+    | "BILINGUAL"
+    | "NATIVE_LANGUAGE";
 }
 
 export interface Experience {
@@ -348,38 +355,38 @@ export function useCandidateProfile() {
     loadProfile();
   };
 
-  // const deleteExperience = async (experienceId: string) => {
-  //   const token = await getValidToken();
-  //   if (!token) throw new Error("Non authentifié");
-  //   const res = await fetch(`${API_BASE_URL}/api/v1/experiences/${experienceId}`, {
-  //     method: "DELETE",
-  //     headers: { Authorization: `Bearer ${token}` }
-  //   });
-  //   if (!res.ok) throw new Error("Échec de la suppression de l'expérience");
-  //   loadProfile();
-  // };
+  const deleteExperience = async (experienceId: string) => {
+    if (!token) throw new Error("Non authentifié");
+    const res = await fetch(`${API_BASE_URL}/api/v1/experiences/${experienceId}`, {
+      method: "DELETE",
+      credentials: "include",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Échec de la suppression de l'expérience");
+    loadProfile();
+  };
 
-  // const deleteEducation = async (educationId: string) => {
-  //   const token = await getValidToken();
-  //   if (!token) throw new Error("Non authentifié");
-  //   const res = await fetch(`${API_BASE_URL}/api/v1/educations/${educationId}`, {
-  //     method: "DELETE",
-  //     headers: { Authorization: `Bearer ${token}` }
-  //   });
-  //   if (!res.ok) throw new Error("Échec de la suppression de la formation");
-  //   loadProfile();
-  // };
-  //
-  // const deleteLanguage = async (languageId: string) => {
-  //   const token = await getValidToken();
-  //   if (!token) throw new Error("Non authentifié");
-  //   const res = await fetch(`${API_BASE_URL}/api/v1/languages/${languageId}`, {
-  //     method: "DELETE",
-  //     headers: { Authorization: `Bearer ${token}` }
-  //   });
-  //   if (!res.ok) throw new Error("Échec de la suppression de la langue");
-  //   loadProfile();
-  // };
+  const deleteEducation = async (educationId: string) => {
+    if (!token) throw new Error("Non authentifié");
+    const res = await fetch(`${API_BASE_URL}/api/v1/educations/${educationId}`, {
+      method: "DELETE",
+      credentials: "include",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Échec de la suppression de la formation");
+    loadProfile();
+  };
+
+  const deleteLanguage = async (languageId: string) => {
+    if (!token) throw new Error("Non authentifié");
+    const res = await fetch(`${API_BASE_URL}/api/v1/languages/${languageId}`, {
+      method: "DELETE",
+      credentials: "include",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Échec de la suppression de la langue");
+    loadProfile();
+  };
 
   // ------------------------
   // INITIALISATION
@@ -400,9 +407,9 @@ export function useCandidateProfile() {
     deleteLetter,
     toggleVisibility,
     deleteSkill,
-    // deleteExperience,
-    // deleteEducation,
-    // deleteLanguage,
+    deleteExperience,
+    deleteEducation,
+    deleteLanguage,
     saveJobPreferences
   };
 }

@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useCandidateProfile } from "@/hooks/candidate/useCandidateProfile";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://api-irelis.us-east-2.elasticbeanstalk.com";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.trim();
 
 interface MatchingScoreResponse {
   score: number; // entre 0 et 1 (ex: 0.85)

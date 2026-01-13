@@ -1,5 +1,4 @@
 // src/components/candidate/MatchingScoreContainer.tsx
-import { useState, useEffect } from "react";
 import { MatchingScore, MatchingResult } from "@/components/candidate/MatchingScore";
 import { useMatchingScore } from "@/hooks/candidate/useMatchingScore";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,22 +17,7 @@ export function MatchingScoreContainer({
   compact = false,
   onApply,
 }: MatchingScoreContainerProps) {
-  const { calculateScore, loading, error } = useMatchingScore();
-  const [matchResult, setMatchResult] = useState<MatchingResult | null>(null);
-
-  useEffect(() => {
-    const fetchScore = async () => {
-      try {
-        const result = await calculateScore(jobOfferId);
-        setMatchResult(result);
-      } catch (err) {
-        console.error("Erreur matching", err);
-      }
-    };
-    if (jobOfferId) {
-      fetchScore();
-    }
-  }, [jobOfferId]);
+  const { result: matchResult, loading, error } = useMatchingScore(jobOfferId);
 
   if (loading) {
     return (

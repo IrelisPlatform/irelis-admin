@@ -42,7 +42,7 @@ export function RichTextEditor({ value, onChange, placeholder }: Props) {
     return (
         <div className="rounded-md border bg-background">
             <CKEditor
-                editor={ClassicEditor}
+                editor={ClassicEditor as any}
                 data={value}
                 config={config}
                 onChange={(_, editor) => {

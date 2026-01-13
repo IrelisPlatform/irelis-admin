@@ -33,6 +33,8 @@ import { Guides } from "@/components/recruiter/Guides"; // ✅ ajouté
 import { ProfilEntreprise } from "@/components/recruiter/ProfilEntreprise"; // ✅ ajouté
 import { Contact } from "@/components/recruiter/Contact"; // ✅ ajouté
 import { CompanySettings } from "@/components/recruiter/CompanySettings";
+import { Solutions } from "@/components/recruiter/Solutions";
+import { CVtheque } from "@/components/recruiter/CVtheque";
 
 interface RecruiterSpaceProps {
   onTabChange?: (tab: string) => void;

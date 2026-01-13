@@ -21,7 +21,7 @@ export interface JobSearchResult {
   last: boolean;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://api-irelis.us-east-2.elasticbeanstalk.com";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.trim();
 
 export function useSearchJobs() {
   const [jobs, setJobs] = useState<any[]>([]);
