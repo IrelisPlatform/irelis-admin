@@ -14,10 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EditJobDialog } from "./EditJobDialog";
 import { DeleteJobDialog } from "./DeleteJobDialog";
-import { publishJobAction } from "@/app/_actions/jobs";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
+import { usePublishJob } from "@/hooks/admin/useJobMutations";
 import { PublishedJob } from "@/types/job";
 
 type AdminJobsTableActionsProps = {
@@ -25,24 +22,13 @@ type AdminJobsTableActionsProps = {
 };
 
 export function AdminJobsTableActions({ job }: AdminJobsTableActionsProps) {
-  const router = useRouter();
-  const queryClient = useQueryClient();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const handlePublish = async () => {
-    try {
-      const result = await publishJobAction(job.id);
-      if (result.success) {
-        toast.success("Offre publiée !");
-        // Invalider la query pour rafraîchir la table
-        await queryClient.invalidateQueries({ queryKey: ["admin-jobs"] });
-      } else {
-        toast.error(result.error || "Erreur lors de la publication");
-      }
-    } catch (error) {
-      toast.error("Erreur lors de la publication");
-    }
+  const publishJobMutation = usePublishJob();
+
+  const handlePublish = () => {
+    publishJobMutation.mutate(job.id);
   };
 
   const handleViewDetails = () => {

@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye } from "lucide-react";
+import { Eye, Loader2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -29,7 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Spinner } from "@/components/ui/spinner";
+
 import {
   Form,
   FormControl,
@@ -58,7 +58,7 @@ import { COUNTRIES, COUNTRIES_WITH_CITIES } from "@/lib/countries";
 import { BasicImageUploader } from "@/components/ui/basic-image-uploader";
 import { SelectWithSearch } from "@/components/ui/select-with-search";
 import { SelectWithSearchAndButton } from "@/components/ui/select-with-search-and-button";
-import { updateJobAction } from "@/app/_actions/jobs";
+import { useUpdateJob } from "@/hooks/admin/useJobMutations";
 import type { TagDto, RequiredDocument, PublishedJob } from "@/types/job";
 import type { Sector } from "@/app/api/sectors/route";
 
@@ -69,8 +69,7 @@ type EditJobDialogProps = {
 };
 
 export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
-  const router = useRouter();
-  const queryClient = useQueryClient();
+
   const { data: sectors = [], isLoading: sectorsLoading } = useQuery<Sector[]>({
     queryKey: ["sectors"],
     queryFn: async () => {
@@ -82,7 +81,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
-  const [isPending, startTransition] = useTransition();
+  const updateJobMutation = useUpdateJob();
   const [currentStep, setCurrentStep] = useState(1);
   const [companyLogo, setCompanyLogo] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -308,23 +307,22 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
       formData.append("companyLogo", companyLogo);
     }
 
-    startTransition(async () => {
-      const result = await updateJobAction(job.id, formData);
-      if (result.success) {
-        toast.success("Offre mise à jour avec succès !");
-        // Invalider la query pour rafraîchir la table
-        await queryClient.invalidateQueries({ queryKey: ["admin-jobs"] });
-        form.reset();
-        setCompanyLogo(null);
-        setLogoPreview(null);
-        setLogoFileName(null);
-        setSelectedCountry("");
-        setCurrentStep(1);
-        onOpenChange(false);
-      } else {
-        toast.error(result.error || "Erreur lors de la mise à jour de l'offre");
+    updateJobMutation.mutate(
+      { id: job.id, formData },
+      {
+        onSuccess: (result) => {
+          if (result.success) {
+            form.reset();
+            setCompanyLogo(null);
+            setLogoPreview(null);
+            setLogoFileName(null);
+            setSelectedCountry("");
+            setCurrentStep(1);
+            onOpenChange(false);
+          }
+        },
       }
-    });
+    );
   };
 
   if (!job) return null;
@@ -1064,10 +1062,10 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
               {currentStep < STEPS.length ? (
                 <Button onClick={handleNext}>Suivant</Button>
               ) : (
-                <Button onClick={handleUpdateJob} disabled={isPending}>
-                  {isPending ? (
+                <Button onClick={handleUpdateJob} disabled={updateJobMutation.isPending}>
+                  {updateJobMutation.isPending ? (
                     <>
-                      <Spinner className="h-4 w-4 animate-spin text-white" />{" "}
+                      <Loader2 className="h-4 w-4 animate-spin text-white" />{" "}
                     </>
                   ) : (
                     "Modifier l'offre"

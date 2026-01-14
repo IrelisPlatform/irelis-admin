@@ -2,10 +2,6 @@
 
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +10,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { deleteJobAction } from "@/app/_actions/jobs";
+import { useDeleteJob } from "@/hooks/admin/useJobMutations";
 import { Loader2 } from "lucide-react";
 import { PublishedJob } from "@/types/job";
 import { formatDateLong } from "@/services/date";
@@ -31,29 +27,17 @@ export function DeleteJobDialog({
   onOpenChange,
   job,
 }: DeleteJobDialogProps) {
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const [isLoading, setIsLoading] = useState(false);
+  const deleteJobMutation = useDeleteJob();
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!job) return;
-
-    setIsLoading(true);
-    try {
-      const result = await deleteJobAction(job.id);
-      if (result.success) {
-        toast.success("Offre supprimée");
-        // Invalider la query pour rafraîchir la table
-        await queryClient.invalidateQueries({ queryKey: ["admin-jobs"] });
-        onOpenChange(false);
-      } else {
-        toast.error(result.error || "Erreur lors de la suppression");
-      }
-    } catch (error) {
-      toast.error("Erreur lors de la suppression de l'offre");
-    } finally {
-      setIsLoading(false);
-    }
+    deleteJobMutation.mutate(job.id, {
+      onSuccess: (result) => {
+        if (result.success) {
+          onOpenChange(false);
+        }
+      },
+    });
   };
 
   if (!job) return null;
@@ -109,16 +93,16 @@ export function DeleteJobDialog({
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={isLoading}
+              disabled={deleteJobMutation.isPending}
             >
               Annuler
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
-              disabled={isLoading}
+              disabled={deleteJobMutation.isPending}
             >
-              {isLoading ? (
+              {deleteJobMutation.isPending ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
                 "Supprimer"

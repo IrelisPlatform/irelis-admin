@@ -7,6 +7,12 @@ const nextConfig: NextConfig = {
         root: __dirname,
     },
 
+    /*   experimental: {
+          serverActions: {
+              allowedOrigins: ["3.142.99.119", "localhost:3000"],
+          },
+      },
+   */
     images: {
         remotePatterns: [
             {

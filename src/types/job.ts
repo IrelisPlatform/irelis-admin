@@ -1,4 +1,8 @@
 // src/types/job.ts
+/* export type AdminJob = {
+  id: string;
+  [key: string]: any;
+}; */
 
 export interface TagDto {
   name: string;
@@ -43,7 +47,7 @@ export interface BackendPublishedJob {
   postNumber: number;
   companyLength: string;
   companyLogoUrl: string;
-  tagDto?:  Array<{ name: string; type: "skill" | "tool" | "domain" }>;
+  tagDto?: Array<{ name: string; type: "skill" | "tool" | "domain" }>;
   requiredDocuments: RequiredDocument[];
   companyName: string;
   companyDescription: string;

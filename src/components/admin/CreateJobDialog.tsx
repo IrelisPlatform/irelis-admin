@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useRef, useEffect, useTransition } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -61,7 +61,7 @@ import { Plus, Eye } from "lucide-react";
 import { BasicImageUploader } from "@/components/ui/basic-image-uploader";
 import { SelectWithSearch } from "@/components/ui/select-with-search";
 import { SelectWithSearchAndButton } from "@/components/ui/select-with-search-and-button";
-import { createJobAction } from "@/app/_actions/jobs";
+import { useCreateJob } from "@/hooks/admin/useJobMutations";
 import type { Sector } from "@/app/api/sectors/route";
 
 type CreateJobDialogProps = {
@@ -85,7 +85,8 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
     refetchOnWindowFocus: false, // Ne pas refetch lors du focus de la fenêtre
     refetchOnReconnect: false, // Ne pas refetch lors de la reconnexion réseau
   });
-  const [isPending, startTransition] = useTransition();
+  const createJobMutation = useCreateJob();
+
   const [currentStep, setCurrentStep] = useState(1);
   const [isOpen, setIsOpen] = useState(false);
   const [companyLogo, setCompanyLogo] = useState<File | null>(null);
@@ -246,23 +247,19 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
       formData.append("file", companyLogo);
     }
 
-    startTransition(async () => {
-      const result = await createJobAction(formData);
-      if (result.success) {
-        toast.success("Offre créée avec succès !");
-        // Invalider la query pour rafraîchir la table
-        await queryClient.invalidateQueries({ queryKey: ["admin-jobs"] });
-        form.reset();
-        setCompanyLogo(null);
-        setLogoPreview(null);
-        setLogoFileName(null);
-        setSelectedCountry("");
-        setCurrentStep(1);
-        setIsOpen(false);
-        setIsPreviewOpen(false);
-      } else {
-        toast.error(result.error || "Erreur lors de la création de l'offre");
-      }
+    createJobMutation.mutate(formData, {
+      onSuccess: (result) => {
+        if (result.success) {
+          form.reset();
+          setCompanyLogo(null);
+          setLogoPreview(null);
+          setLogoFileName(null);
+          setSelectedCountry("");
+          setCurrentStep(1);
+          setIsOpen(false);
+          setIsPreviewOpen(false);
+        }
+      },
     });
   };
 
@@ -1036,7 +1033,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
               {currentStep < STEPS.length ? (
                 <Button onClick={handleNext}>Suivant</Button>
               ) : (
-                <Button onClick={handlePreview} disabled={isPending}>
+                <Button onClick={handlePreview}>
                   Visualiser
                 </Button>
               )}
@@ -1050,7 +1047,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
         onOpenChange={setIsPreviewOpen}
         jobData={jobPreviewData}
         onPublish={handleCreateJob}
-        isLoading={isPending}
+        isLoading={createJobMutation.isPending}
       />
       {/*Modal d'état du formulaire*/}
       <Dialog open={isFormStateOpen} onOpenChange={setIsFormStateOpen}>
