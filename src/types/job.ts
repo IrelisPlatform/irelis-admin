@@ -47,7 +47,7 @@ export interface BackendPublishedJob {
   postNumber: number;
   companyLength: string;
   companyLogoUrl: string;
-  tagDto?: Array<{ name: string; type: "skill" | "tool" | "domain" }>;
+  tagDto?: Array<{ name: string; type: "skill" | "tool" | "domain" | "SKILL" }>;
   requiredDocuments: RequiredDocument[];
   companyName: string;
   companyDescription: string;
@@ -86,7 +86,7 @@ export interface PublishedJob {
   /* qualifications: string[]; */
   requiredLanguages: string[]
   requiredDocuments: RequiredDocument[];
-  tagDto: Array<{ name: string; type: "skill" | "tool" | "domain" }>;
+  tagDto: Array<{ name: string; type: "skill" | "tool" | "domain" | "SKILL" }>;
   contractType: string;
 }
 
@@ -121,7 +121,7 @@ export interface AdminJobOfferRequest {
   isUrgent?: boolean;
   requiredLanguage: string;
   postNumber?: number;
-  tagDto: { name: string; type?: "skill" | "tool" | "domain" }[];
+  tagDto: { name: string; type?: "skill" | "tool" | "domain" | "SKILL" }[];
   requiredDocuments: RequiredDocument[];
 }
 

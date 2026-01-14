@@ -65,7 +65,7 @@ export const jobDetailsStepSchema = z.object({
     .array(
       z.object({
         name: z.string(),
-        type: z.enum(["skill", "tool", "domain"]),
+        type: z.enum(["skill", "tool", "domain", "SKILL"]),
       })
     )
     .default([]),
