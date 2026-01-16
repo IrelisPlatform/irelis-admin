@@ -8,33 +8,25 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
-} from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { ReadonlyEditor } from "@/components/ReadonlyEditor";
-import { Badge } from "@/components/ui/badge";
-import { formatDateLong } from "@/services/date";
-import {
-    getContractTypeLabel,
-    getJobTypeLabel,
-    documentLabels,
-    getStatusBadge,
-} from "@/lib/jobs/job-helpers";
-import type { PublishedJob } from "@/types/job";
-import {
     Building2,
     FileText,
     Briefcase,
-    Settings,
     MapPin,
     Mail,
     Globe,
     Users,
     Handshake,
+    AlertCircle,
+    Banknote,
+    Clock,
+    Factory,
+    UsersRound,
 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { documentLabels, getContractTypeLabel, getJobTypeLabel, getStatusBadge } from "@/lib/jobs/job-helpers";
+import { Badge } from "@/components/ui/badge";
+import { formatDateLong } from "@/services/date";
+import { ReadonlyEditor } from "../ReadonlyEditor";
 
 type JobDetailsDialogProps = {
     open: boolean;
@@ -47,7 +39,6 @@ export function JobDetailsDialog({
     onOpenChange,
     job,
 }: JobDetailsDialogProps) {
-    console.log(job)
     if (!job) return null;
 
     let description: SerializedEditorState | null = null;
@@ -62,305 +53,217 @@ export function JobDetailsDialog({
         console.error("Error parsing description:", e);
     }
 
+    const logoUrl = job.companyLogoUrl;
+
+    const cityAndCountryLocation = !job.workCities || job.workCities.length === 0
+        ? job.workCountryLocation
+        : job.workCountryLocation + " - " + job.workCities.join(", ")
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden bg-white/95 backdrop-blur-xl">
-                <DialogHeader className="px-6 py-3 pb-2 border-b bg-white/50 sticky top-0 z-10">
-                    <div className="flex items-center gap-4">
-                        {job.companyLogoUrl ? (
-                            <img
-                                src={job.companyLogoUrl}
-                                alt={job.companyName}
-                                className="w-12 h-12 rounded-lg border object-cover bg-white"
-                            />
-                        ) : (
-                            <div className="w-12 h-12 rounded-lg border bg-gray-100 flex items-center justify-center">
-                                <Building2 className="w-6 h-6 text-muted-foreground" />
-                            </div>
-                        )}
+            <DialogContent className="max-w-full sm:max-w-xl lg:max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden bg-white">
+                <DialogHeader className="py-4 px-6 border-b bg-white/50 sticky top-0 z-10 shrink-0 backdrop-blur-sm">
+                    <div className="flex items-center justify-between">
                         <div>
                             <DialogTitle className="text-xl font-bold text-[#1e3a8a]">
-                                {job.title}
+                                Détails de l'offre
                             </DialogTitle>
-                            <div className="flex items-center gap-2 mt-1">
-                                <span className="text-sm font-medium">
-                                    {job.companyName}
-                                </span>
-                                <span className="text-gray-300">•</span>
-                                <span className="text-xs font-medium text-foreground flex gap-1 items-center">
-                                    <Briefcase className="size-4" />
-                                    {getContractTypeLabel(job.contractType)}
-                                </span>
-                                <span className="text-gray-300">•</span>
-                                <span className="text-xs font-medium text- flex gap-1 items-center">
-                                    <Handshake className="size-4" />
-                                    {getJobTypeLabel(job.jobType)}
-                                </span>
-                                <span className="text-gray-300">•</span>
+                            <div className="mt-1">
                                 {getStatusBadge(job.status)}
                             </div>
                         </div>
                     </div>
                 </DialogHeader>
 
-                <div className="flex-1 overflow-y-hidden p-6">
-                    <Tabs
-                        defaultValue="general"
-                        orientation="vertical"
-                        className="flex h-full flex-row gap-4"
-                    >
-                        {/**Tablist */}
-                        <div className="w-64 shrink-0">
-                            <TabsList className="flex flex-col h-auto w-full gap-1 bg-transparent p-0">
-                                <TabsTrigger
-                                    value="company"
-                                    className="w-full justify-start gap-2 px-3 py-2 text-sm font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#1e3a8a]"
-                                >
-                                    <Building2 className="w-4 h-4" />
-                                    Entreprise
-                                </TabsTrigger>
-                                <TabsTrigger
-                                    value="general"
-                                    className="w-full justify-start gap-2 px-3 py-2 text-sm font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#1e3a8a]"
-                                >
-                                    <FileText className="w-4 h-4" />
-                                    Infos générales
-                                </TabsTrigger>
-                                <TabsTrigger
-                                    value="details"
-                                    className="w-full justify-start gap-2 px-3 py-2 text-sm font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#1e3a8a]"
-                                >
-                                    <Briefcase className="w-4 h-4" />
-                                    Détails du poste
-                                </TabsTrigger>
-                                <TabsTrigger
-                                    value="other"
-                                    className="w-full justify-start gap-2 px-3 py-2 text-sm font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#1e3a8a]"
-                                >
-                                    <Settings className="w-4 h-4" />
-                                    Autres informations
-                                </TabsTrigger>
-                            </TabsList>
+                <div className="flex-1 overflow-y-auto sm:p-8 p-4 bg-white">
+                    <div className="max-w-3xl mx-auto space-y-8">
+                        {/* Top Section: Logo & Titles */}
+                        <div className="flex flex-col sm:flex-row gap-6 items-start">
+                            <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-xl border bg-white shadow-sm flex items-center justify-center shrink-0 overflow-hidden">
+                                {logoUrl ? (
+                                    <img
+                                        src={logoUrl}
+                                        alt="Logo entreprise"
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <Briefcase className="w-8 h-8 text-gray-300" />
+                                )}
+                            </div>
+                            <div className="space-y-2 flex-1 w-full items-start flex">
+                                <div>
+                                    <h2 className="text-2xl sm:text-3xl font-bold text-[#1e3a8a] leading-tight">
+                                        {job.title}
+                                    </h2>
+                                    <div className="flex flex-wrap items-center gap-2 text-lg text-gray-600">
+                                        <span className="font-medium">{job.companyName}</span>
+                                    </div>
+                                </div>
+
+                                {job.isUrgent && (
+                                    <Badge variant="destructive" className="ml-auto bg-destructive hover:bg-red-600">
+                                        <AlertCircle className="w-3 h-3 mr-1" /> Urgent
+                                    </Badge>
+                                )}
+                            </div>
                         </div>
-                        {/**TabContent */}
-                        <div className="flex-1 min-h-0 rounded-md border text-start overflow-y-auto px-8 max-h-[50vh] p-6">
-                            <TabsContent value="company" className="mt-0 space-y-6">
-                                <div>
-                                    <h3 className="text-lg font-semibold  mb-4">
-                                        Informations de l'entreprise
-                                    </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <InfoItem
-                                            icon={Building2}
-                                            label="Nom"
-                                            value={job.companyName}
-                                        />
-                                        <InfoItem
-                                            icon={Mail}
-                                            label="Email"
-                                            value={job.companyEmail || "Non spécifié"}
-                                        />
 
-                                        <InfoItem
-                                            icon={Briefcase}
-                                            label="Secteur"
-                                            value={job.sector || "Non spécifié"}
-                                        />
-                                        <InfoItem
-                                            icon={Users}
-                                            label="Taille"
-                                            value={job.companySize || "Non spécifiée"}
-                                        />
+                        {/* Gradient Info Box */}
+                        <div className="bg-linear-to-br from-blue-50/80 to-indigo-50/50 p-4 sm:p-6 rounded-xl border border-blue-100/50 shadow-sm">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                                <div className="flex items-center gap-3 text-gray-700">
+                                    <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm shrink-0">
+                                        <MapPin className="w-4 h-4 text-[#1e3a8a]" />
                                     </div>
-                                    <div className="mt-6">
-                                        <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                                            Description de l'entreprise
-                                        </h4>
-                                        <div className="bg-gray-50 rounded-lg p-4 text-sm text-[#1e3a8a] leading-relaxed">
-                                            {job.companyDescription || "Aucune description"}
-                                        </div>
-                                    </div>
+                                    <span className="wrap-break-word">{cityAndCountryLocation}</span>
                                 </div>
-
-                            </TabsContent>
-
-                            <TabsContent value="general" className="mt-0 space-y-6">
-                                <div>
-                                    <h3 className="text-lg font-semibold  mb-4">
-                                        Informations générales
-                                    </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                                        <InfoItem
-                                            icon={FileText}
-                                            label="Titre du poste"
-                                            value={job.title}
-                                        />
-                                        <InfoItem
-                                            icon={MapPin}
-                                            label="Localisation"
-                                            value={
-                                                job.workCities && job.workCities.length > 0
-                                                    ? `${job.workCountryLocation} - ${job.workCities.join(
-                                                        ", "
-                                                    )}`
-                                                    : job.workCountryLocation
-                                            }
-                                        />
-                                        <InfoItem
-                                            icon={Users}
-                                            label="Nombre de postes"
-                                            value={job.postNumber?.toString() || "1"}
-                                        />
+                                <div className="flex items-center gap-3 text-gray-700">
+                                    <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm shrink-0">
+                                        <Briefcase className="w-4 h-4 text-[#1e3a8a]" />
                                     </div>
-                                    <div>
-                                        <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                                            Description de l'offre
-                                        </h4>
-                                        {description ? (
-                                            <div className="border rounded-lg p-4">
-                                                <ReadonlyEditor
-                                                    value={description}
-                                                    namespace="job-description-details"
-                                                />
-                                            </div>
-                                        ) : (
-                                            <p className="text-muted-foreground italic">
-                                                Aucune description de l'offre spécifiée
-                                            </p>
-                                        )}
-                                    </div>
+                                    <span>{getContractTypeLabel(job.contractType)}</span>
                                 </div>
-                            </TabsContent>
-
-                            <TabsContent value="details" className="mt-0 space-y-6">
-                                <div>
-                                    <h3 className="text-lg font-semibold  mb-4">
-                                        Détails du poste
-                                    </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <InfoItem
-                                            icon={Briefcase}
-                                            label="Type de contrat"
-                                            value={getContractTypeLabel(job.contractType)}
-                                        />
-                                        <InfoItem
-                                            icon={Briefcase}
-                                            label="Conditions de travail"
-                                            value={getJobTypeLabel(job.jobType)}
-                                        />
-                                        <InfoItem
-                                            icon={FileText}
-                                            label="Salaire"
-                                            value={job.salary || "Non spécifié"}
-                                        />
-                                        <InfoItem
-                                            icon={Globe}
-                                            label="Langues requises"
-                                            value={
-                                                job.requiredLanguages && job.requiredLanguages.length > 0
-                                                    ? job.requiredLanguages.join(", ")
-                                                    : "Aucune langue requise"
-                                            }
-                                        />
+                                <div className="flex items-center gap-3 text-gray-700">
+                                    <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm shrink-0">
+                                        <Banknote className="w-4 h-4 text-[#1e3a8a]" />
                                     </div>
-
-                                    {job.tagDto && job.tagDto.length > 0 && (
-                                        <div className="mt-6">
-                                            <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                                                Outils, compétences, domaines
-                                            </h4>
-                                            <div className="flex flex-wrap gap-2">
-                                                {job.tagDto.map((tag, i) => (
-                                                    <Badge
-                                                        key={i}
-                                                        variant="secondary"
-                                                        className="bg-blue-50 text-blue-700 hover:bg-blue-100"
-                                                    >
-                                                        {tag.name}
-                                                        <span className="ml-1 opacity-60 text-[10px] uppercase">
-                                                            {tag.type}
-                                                        </span>
-                                                    </Badge>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
+                                    <span>{job.salary || "Non spécifié"}</span>
                                 </div>
-                            </TabsContent>
-
-                            <TabsContent value="other" className="mt-0 space-y-6">
-                                <div>
-                                    <h3 className="text-lg font-semibold  mb-4">
-                                        Autres informations
-                                    </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <InfoItem
-                                            icon={FileText}
-                                            label="Date de publication"
-                                            value={
-                                                job.publishedAt
-                                                    ? formatDateLong(job.publishedAt)
-                                                    : "Non publiée"
-                                            }
-                                        />
-                                        <InfoItem
-                                            icon={FileText}
-                                            label="Date d'expiration"
-                                            value={
-                                                job.expirationDate
-                                                    ? formatDateLong(job.expirationDate)
-                                                    : "Non définie"
-                                            }
-                                        />
-                                        <InfoItem
-                                            icon={Settings}
-                                            label="Urgent"
-                                            value={job.isUrgent ? "Oui" : "Non"}
-                                        />
+                                <div className="flex items-center gap-3 text-gray-700">
+                                    <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm shrink-0">
+                                        <Handshake className="w-4 h-4 text-[#1e3a8a]" />
                                     </div>
-
-                                    {job.requiredDocuments && job.requiredDocuments.length > 0 && (
-                                        <div className="mt-6">
-                                            <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                                                Documents demandés
-                                            </h4>
-                                            <ul className="list-disc pl-5 space-y-1 text-gray-600">
-                                                {job.requiredDocuments.map((doc, i) => (
-                                                    <li key={i}>
-                                                        {documentLabels[doc.type] || doc.type}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    )}
+                                    <span>{getJobTypeLabel(job.jobType)}</span>
                                 </div>
-                            </TabsContent>
+                                <div className="flex items-center gap-3 text-gray-700">
+                                    <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm shrink-0">
+                                        <Clock className="w-4 h-4 text-[#1e3a8a]" />
+                                    </div>
+                                    <span>{job.expirationDate ? formatDateLong(job.expirationDate) : "Postuler au plus tôt"}</span>
+                                </div>
+                                <div className="flex items-center gap-3 text-gray-700">
+                                    <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm shrink-0">
+                                        <Users className="w-4 h-4 text-[#1e3a8a]" />
+                                    </div>
+                                    <span>{job.postNumber} poste(s)</span>
+                                </div>
+                            </div>
                         </div>
-                    </Tabs>
+
+                        {/* Badges */}
+                        <div className="flex flex-wrap gap-2 flex-col">
+                            <p className="text-[#1e3a8a] font-bold">Outils, compétences, domaines</p>
+                            {(!job.tagDto || job.tagDto.length === 0) ? (
+                                <>
+                                    <p className="text-muted-foreground">Aucun tag spécifié</p>
+                                </>
+                            ) : (
+                                job.tagDto.map((tag) => (
+                                    <Badge
+                                        key={`${tag.type}-${tag.name}`}
+                                        variant="secondary"
+                                        className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-100"
+                                    >
+                                        {tag.name}
+                                    </Badge>
+                                ))
+                            )}
+
+                        </div>
+
+                        <Separator />
+
+                        {/* Description */}
+                        <div className="space-y-4">
+                            <h3 className="text-[#1e3a8a] text-lg font-bold flex items-center gap-2">
+                                <FileText className="w-5 h-5" /> Description du poste
+                            </h3>
+                            {description ? (
+                                <div className="prose prose-sm max-w-none text-gray-600">
+                                    <ReadonlyEditor
+                                        value={description}
+                                        namespace="preview-description"
+                                    />
+                                </div>
+                            ) : (
+                                <p className="text-gray-500 italic">Aucune description fournie.</p>
+                            )}
+                        </div>
+
+                        <div className="flex flex-wrap justify-between gap-4">
+                            <div>
+                                <h3 className="text-[#1e3a8a] text-lg font-bold flex items-center gap-2">
+                                    <FileText className="w-4 h-4" /> Documents requis
+                                </h3>
+
+                                {job.requiredDocuments && job.requiredDocuments.length > 0 ? (
+                                    <ul className="list-disc pl-5 space-y-1 text-gray-600">
+                                        {job.requiredDocuments.map((doc) => (
+                                            <li key={doc.type}>{documentLabels[doc.type] || doc.type}</li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p className="text-gray-500 italic">Aucun document requis.</p>
+                                )}
+
+                            </div>
+
+
+                            <div>
+                                {/* Languages Section */}
+                                <h3 className="text-[#1e3a8a] text-lg font-bold flex items-center gap-2">
+                                    <Globe className="w-4 h-4" /> Langues requises
+                                </h3>
+
+                                {(job.requiredLanguages || []).length === 0 ? (
+                                    <p className="text-gray-600">Aucune langue requise</p>
+                                ) : (job.requiredLanguages || []).length === 1 ? (
+                                    <p className="text-gray-600">{(job.requiredLanguages || [])[0]}</p>
+                                ) : (
+                                    <ul className="list-disc pl-5 space-y-1">
+                                        {(job.requiredLanguages || []).map((lang, index) => (
+                                            <li key={index}>{lang}</li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
+
+                        </div>
+
+                        <Separator />
+
+                        {/* Company Section */}
+                        <div className="bg-linear-to-br from-gray-50 to-blue-50/30 p-6 rounded-xl space-y-4">
+                            <h3 className="text-[#1e3a8a] text-lg font-bold flex items-center gap-2">
+                                <Building2 className="w-5 h-5" /> À propos de {job.companyName}
+                            </h3>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-gray-100">
+                                <div className="text-sm flex items-center gap-2">
+                                    <span className="font-semibold text-gray-700 flex items-center"><Factory className="size-4 mr-1" /> Secteur :</span>
+                                    <span className="text-gray-600">
+                                        {job.sector || "Non spécifié"}</span>
+                                </div>
+                                <div className="text-sm flex items-center gap-2">
+                                    <span className="font-semibold text-gray-700 flex items-center"><UsersRound className="size-4 mr-1" /> Taille :</span>{" "}
+                                    <span className="text-gray-600">{job.companySize || "Non spécifié"}</span>
+                                </div>
+                                <div className="text-sm sm:col-span-2 flex items-center gap-2">
+                                    <span className="font-semibold text-gray-700 flex items-center"><Mail className="size-4 mr-1" /> Contact :</span>{" "}
+                                    <span className="text-gray-600">{job.companyEmail || "Non spécifié"}</span>
+                                </div>
+                            </div>
+                            <p className="text-gray-600 leading-relaxed">
+                                {job.companyDescription || "Aucune description de l'entreprise."}
+                            </p>
+
+                        </div>
+
+                    </div>
                 </div>
             </DialogContent>
-        </Dialog>
+        </Dialog >
     );
 }
 
-function InfoItem({
-    icon: Icon,
-    label,
-    value,
-}: {
-    icon: any;
-    label: string;
-    value: string | React.ReactNode;
-}) {
-    return (
-        <div className="flex items-start gap-3">
-            <div className="p-2 bg-blue-50 rounded-md shrink-0">
-                <Icon className="w-4 h-4 text-[#1e3a8a]" />
-            </div>
-            <div>
-                <p className={`${label === "Urgent" ? "text-destructive" : "text-muted-foreground"} text-sm font-medium`}>{label}</p>
-                <div className="text-sm font-medium  mt-0.5 text-[#1e3a8a]">{value}</div>
-            </div>
-        </div>
-    );
-}
+

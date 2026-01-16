@@ -47,7 +47,7 @@ export function AdminJobsTableActions({ job, onViewDetails }: AdminJobsTableActi
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={handleViewDetails}>
-            <Info className="h-4 w-4 mr-2" /> Voir les détails
+            <Eye className="h-4 w-4 mr-2" /> Voir les détails
           </DropdownMenuItem>
           {job.status !== "PUBLISHED" && (
             <DropdownMenuItem onClick={handlePublish}>
