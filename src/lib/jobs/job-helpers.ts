@@ -98,3 +98,15 @@ export const getStatusBadge = (status: string) => {
     label
   );
 };
+
+export const JobTypeLabels: Record<string, string> = {
+  FULL_TIME: "Temps plein",
+  PART_TIME: "Temps partiel",
+  REMOTE: "Télétravail",
+  HYBRID: "Hybride",
+
+};
+export const getJobTypeLabel = (type?: string) =>
+  type && JobTypeLabels[type]
+    ? JobTypeLabels[type]
+    : "Non spécifié";

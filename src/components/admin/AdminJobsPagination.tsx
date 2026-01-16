@@ -71,9 +71,9 @@ export function AdminJobsPagination() {
 
     console.log("totlaPages", totalPages)
     // Ne pas afficher la pagination s'il n'y a qu'une seule page
-    if (totalPages <= 1) {
-        return null;
-    }
+    /*    if (totalPages <= 1) {
+           return null;
+       } */
 
     // Fonction pour changer de page (mise à jour de l'URL)
     const onPageChange = (newPage: number) => {

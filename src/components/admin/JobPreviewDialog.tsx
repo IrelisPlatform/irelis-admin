@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ReadonlyEditor } from "@/components/ReadonlyEditor";
@@ -20,10 +21,16 @@ import {
   Users,
   AlertCircle,
   Loader2,
+  FileText,
+  CheckCircle2,
+  Handshake,
+  Factory,
+  UsersRound
 } from "lucide-react";
 import { formatDateLong } from "@/services/date";
-import { getContractTypeLabel, documentLabels } from "@/lib/jobs/job-helpers";
+import { getContractTypeLabel, documentLabels, getJobTypeLabel } from "@/lib/jobs/job-helpers";
 import type { TagDto, RequiredDocument } from "@/types/job";
+import { Badge } from "@/components/ui/badge";
 
 type JobPreviewData = {
   title: string;
@@ -31,18 +38,20 @@ type JobPreviewData = {
   companyLogo?: File | string | null;
   contractType: string;
   salary?: string;
-  workCityLocation: string | string[];
+  workCities: string[];
   workCountryLocation: string;
   expirationDate?: string;
   requiredLanguage: string;
   postNumber: number;
   isUrgent: boolean;
-  description?: SerializedEditorState | null;
-  responsibilities?: SerializedEditorState | null;
-  requirements?: SerializedEditorState | null;
-  benefits?: SerializedEditorState | null;
+  offerDescription?: SerializedEditorState | null;
   requiredDocuments: RequiredDocument[];
   tagDto: TagDto[];
+  jobType: string | null
+  companyDescription?: string | null;
+  companyEmail?: string | null
+  companySize?: string | null
+  sectorName?: string | null
 };
 
 type JobPreviewDialogProps = {
@@ -51,6 +60,10 @@ type JobPreviewDialogProps = {
   jobData: JobPreviewData;
   onPublish: () => void;
   isLoading?: boolean;
+  texts?: {
+    descriptionHeader?: string,
+    textBtnAction?: string
+  }
 };
 
 export function JobPreviewDialog({
@@ -58,6 +71,10 @@ export function JobPreviewDialog({
   onOpenChange,
   jobData,
   onPublish,
+  texts = {
+    descriptionHeader: "Vérifiez le rendu final de votre offre avant de la publier",
+    textBtnAction: "Publier l'offre"
+  },
   isLoading = false,
 }: JobPreviewDialogProps) {
   const logoUrl =
@@ -65,168 +82,210 @@ export function JobPreviewDialog({
       ? URL.createObjectURL(jobData.companyLogo)
       : jobData.companyLogo;
 
-  const cityLocation = Array.isArray(jobData.workCityLocation)
-    ? jobData.workCityLocation.join(", ")
-    : jobData.workCityLocation;
+  const cityAndCountryLocation = jobData.workCities.length === 0
+    ? jobData.workCountryLocation
+    : jobData.workCountryLocation + " - " + jobData.workCities.join(", ")
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-6 rounded-xl bg-white">
-        <DialogHeader className="pl-2">
-          <DialogTitle className="text-2xl font-bold mb-2 text-[#1e3a8a]">
-            Prévisualisation de l'offre
-          </DialogTitle>
-          <p className="text-sm text-gray-500 mb-4">
-            Vérifiez toutes les informations avant de publier votre offre.
-          </p>
+      <DialogContent className="max-w-full sm:max-w-xl lg:max-w-5xl max-h-[90vh] flex flex-col p-0 overflow-hidden bg-white/95 backdrop-blur-xl">
+        <DialogHeader className="py-3 px-12 border-b bg-white/50 sticky top-0 z-10 shrink-0">
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle className="text-2xl font-bold text-[#1e3a8a]">
+                Prévisualisation de l'offre
+              </DialogTitle>
+              <p className="text-sm text-gray-500 mt-1">
+                {texts.descriptionHeader}
+              </p>
+            </div>
+
+          </div>
         </DialogHeader>
 
-        <div className="bg-gradient-to-br from-blue-50/80 to-indigo-50/50 p-10 rounded-xl border border-blue-100/50 shadow-sm space-y-6">
-          <div className="flex items-center gap-4">
-            {logoUrl && (
-              <img
-                src={logoUrl}
-                alt="Logo entreprise"
-                className="w-16 h-16 rounded-lg border object-contain"
-              />
-            )}
-            <div className="space-y-1">
-              <h3 className="text-xl font-semibold text-[#1e3a8a]">
-                {jobData.title}
-              </h3>
-              <p className="text-gray-700">{jobData.companyName}</p>
+        <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50">
+          <div className="max-w-4xl mx-auto space-y-8">
+            {/* Header Card */}
+            <div className="bg-white rounded-xl border shadow-sm p-6 relative overflow-hidden">
+              <div className="flex flex-col md:flex-row gap-6 items-start relative z-0">
+                {logoUrl ? (
+                  <img
+                    src={logoUrl}
+                    alt="Logo entreprise"
+                    className="w-24 h-24 rounded-2xl border bg-white object-cover shadow-sm shrink-0"
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-2xl border bg-gray-50 flex items-center justify-center shrink-0">
+                    <Briefcase className="w-10 h-10 text-gray-300" />
+                  </div>
+                )}
+
+                <div className="space-y-2 flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-2xl font-bold tracking-tight mr-auto">
+                      Titre du poste : <span className="text-[#1e3a8a]">{jobData.title}</span>
+                    </h3>
+                    {jobData.isUrgent && (
+                      <Badge variant="destructive" className="animate-pulse rounded-full">
+                        <AlertCircle className="w-3 h-3 mr-1" />
+                        Urgent
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div className="text-lg flex items-center gap-x-4 flex-wrap">
+                    <div className="flex items-center space-x-4">
+                      Nom de l'entreprise : <span className="text-[#1e3a8a]">{jobData.companyName}</span>
+                    </div>
+
+
+                  </div>
+                  <div className="text-lg flex items-center gap-x-4 flex-wrap">
+
+
+                    <div className="flex items-center space-x-4 text-sm">
+                      Email de l'entreprise :  <span className={`${jobData.companyEmail ? "text-[#1e3a8a]" : "text-muted-foreground"}`}>   {jobData.companyEmail || " Pas spécifié"}</span>
+                    </div>
+                    <div className="text-sm">
+                      Date d'expiration du poste : <span className={`${jobData.expirationDate ? "text-[#1e3a8a]" : "text-muted-foreground"}`}>{jobData.expirationDate ? formatDateLong(jobData.expirationDate) : "Non définie"}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3 mt-4">
+                    <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100">
+                      <MapPin className="w-3 h-3 mr-1" />
+                      {cityAndCountryLocation}
+                    </Badge>
+                    <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100">
+                      <Briefcase className="w-3 h-3 mr-1" />
+                      {getContractTypeLabel(jobData.contractType)}
+                    </Badge>
+                    <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100">
+                      <Handshake className="w-3 h-3 mr-1" />
+                      {getJobTypeLabel(jobData.jobType)}
+                    </Badge>
+
+                    <Badge variant="secondary" className="bg-green-50 text-green-700 hover:bg-green-100">
+                      <Banknote className="w-3 h-3 mr-1" />
+                      {jobData.salary || "Pas spécifié"}
+                    </Badge>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Details Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                { label: "Langue requise", value: jobData.requiredLanguage || "Non spécifié", icon: Globe },
+                { label: "Nombre de postes", value: jobData.postNumber, icon: Users },
+                { label: "Taille de l'entreprise", value: jobData.companySize || "Non spécifié", icon: UsersRound },
+                { label: "Secteur d'activité", value: jobData.sectorName || "Non spécifié", icon: Factory },
+
+              ].map((item, i) => (
+                <div key={i} className="bg-white p-4 rounded-xl border shadow-sm flex items-center gap-3">
+                  <div className="p-2 bg-gray-100 rounded-lg text-gray-600">
+                    <item.icon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{item.label}</p>
+                    <p className="font-semibold">{item.value}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Content Sections */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 space-y-8">
+                {jobData.offerDescription && (
+                  <section className="bg-white rounded-xl border shadow-sm p-6">
+                    <h4 className="flex items-center gap-2 text-lg font-bold text-[#1e3a8a] mb-4 pb-2 border-b">
+                      <FileText className="w-5 h-5" />
+                      Description de l'offre
+                    </h4>
+                    <ReadonlyEditor
+                      value={jobData.offerDescription}
+                      namespace="job-description-preview"
+                    />
+                  </section>
+                )}
+
+                <section className="bg-white rounded-xl border shadow-sm p-6">
+                  <h4 className="flex items-center gap-2 text-lg font-bold text-[#1e3a8a] mb-4 pb-2 border-b">
+                    <FileText className="w-5 h-5" />
+                    Description de l'entreprise
+                  </h4>
+                  <p>{jobData.companyDescription || "Pas spécifié"}</p>
+                </section>
+
+              </div>
+
+              <div className="space-y-6">
+                {/* Documents Widget */}
+                {jobData.requiredDocuments.length > 0 && (
+                  <div className="bg-white rounded-xl border shadow-sm p-6">
+                    <h4 className="font-bold mb-4 flex items-center gap-2">
+                      Documents requis
+                    </h4>
+                    <div className="space-y-2">
+                      {jobData.requiredDocuments.map((d) => (
+                        <div key={d.type} className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 text-sm font-medium text-gray-700">
+                          <FileText className="w-4 h-4 text-muted-foreground" />
+                          {documentLabels[d.type]}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tags Widget */}
+
+                <div className="bg-white rounded-xl border shadow-sm p-6">
+                  <h4 className="font-bold mb-4">Outils, compétences, domaines</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {jobData.tagDto.length > 0 ? (
+                      <>
+                        {jobData.tagDto.map((tag) => (
+                          <div
+                            key={`${tag.type}-${tag.name}`}
+                            className="px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium rounded-full border"
+                          >
+                            {tag.name}
+                          </div>
+                        ))}
+                      </>
+                    ) : (
+
+                      "Aucun tag défini"
+                    )}
+
+                  </div>
+                </div>
+
+              </div>
             </div>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700">
-            {[
-              {
-                label: "Type de contrat",
-                value: getContractTypeLabel(jobData.contractType),
-                icon: Briefcase,
-              },
-              {
-                label: "Salaire",
-                value: jobData.salary || "Non spécifié",
-                icon: Banknote,
-              },
-              {
-                label: "Lieu",
-                value: `${cityLocation}, ${jobData.workCountryLocation}`,
-                icon: MapPin,
-              },
-              {
-                label: "Date d'expiration",
-                value: jobData.expirationDate
-                  ? formatDateLong(jobData.expirationDate)
-                  : "Non définie",
-                icon: Clock,
-              },
-              {
-                label: "Langue requise",
-                value: jobData.requiredLanguage || "-",
-                icon: Globe,
-              },
-              {
-                label: "Nombre de postes",
-                value: jobData.postNumber ?? 1,
-                icon: Users,
-              },
-              {
-                label: "Offre urgente",
-                value: jobData.isUrgent ? "Oui" : "Non",
-                icon: AlertCircle,
-              },
-            ].map((item, i) => (
-              <div key={i} className="flex p-2 items-start gap-4 text-base">
-                <item.icon className="w-4 h-4 text-[#1e3a8a]/70 flex-shrink-0 mt-1" />
-                <div className="flex-1 flex gap-2">
-                  <span className="font-medium text-gray-800">
-                    {item.label}
-                  </span>
-                  <span className="text-gray-700 break-words">
-                    {item.value}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 gap-6">
-            {jobData.description && (
-              <div>
-                <h4 className="text-[#1e3a8a] font-semibold mb-1">
-                  Description de l'offre
-                </h4>
-                <ReadonlyEditor
-                  value={jobData.description}
-                  namespace="job-description"
-                />
-              </div>
-            )}
-
-            {jobData.responsibilities && (
-              <div>
-                <h4 className="text-[#1e3a8a] font-semibold mb-1">Missions</h4>
-                <ReadonlyEditor
-                  value={jobData.responsibilities}
-                  namespace="job-responsibilities"
-                />
-              </div>
-            )}
-
-            {jobData.requirements && (
-              <div>
-                <h4 className="text-[#1e3a8a] font-semibold mb-1">
-                  Compétences requises
-                </h4>
-                <ReadonlyEditor
-                  value={jobData.requirements}
-                  namespace="job-requirements"
-                />
-              </div>
-            )}
-
-            {jobData.requiredDocuments.length > 0 && (
-              <div>
-                <h4 className="text-[#1e3a8a] font-semibold mb-1">
-                  Documents requis
-                </h4>
-                <ul className="list-disc pl-5 space-y-1 text-gray-700">
-                  {jobData.requiredDocuments.map((d) => (
-                    <li key={d.type}>{documentLabels[d.type]}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {jobData.tagDto.length > 0 && (
-              <div>
-                <h4 className="text-[#1e3a8a] font-semibold mb-1">Tags</h4>
-                <div className="flex flex-wrap gap-2">
-                  {jobData.tagDto.map((tag) => (
-                    <span
-                      key={tag.name}
-                      className="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded"
-                    >
-                      {tag.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
         </div>
 
-        <div className="flex justify-between gap-2 mt-6">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Revenir
+        <DialogFooter className="px-12 py-3 bg-white sticky bottom-0 z-10 shrink-0 gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="px-6">
+            Revenir aux modifications
           </Button>
-          <Button onClick={onPublish} disabled={isLoading}>
-            {isLoading ? <Loader2 /> : "Publier l'offre"}
+          <Button onClick={onPublish} disabled={isLoading} className="px-8 bg-[#1e3a8a] hover:bg-[#1e3a8a]/90">
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Publication...
+              </>
+            ) : (
+              texts.textBtnAction
+            )}
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
-    </Dialog>
+    </Dialog >
   );
 }

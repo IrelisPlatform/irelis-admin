@@ -29,10 +29,10 @@ export async function POST(request: NextRequest) {
 
     const authHeaders = await getAuthHeaders();
     const formData = await request.formData();
-
+    console.log("formData", formData)
     // Reconstruire le FormData pour l'envoi au backend
     const backendFormData = new FormData();
-
+    console.log("backendFormData", backendFormData)
     // Copier toutes les entrées du FormData
     for (const [key, value] of formData.entries()) {
       backendFormData.append(key, value);

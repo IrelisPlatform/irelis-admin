@@ -20,6 +20,8 @@ import { PublishedJob, JobPage, BackendPublishedJob } from "@/types/job";
 import { Spinner } from "@/components/ui/spinner";
 import { transformJob } from "@/hooks/usePublishedJobs";
 import { AlertCircle } from "lucide-react";
+import { JobDetailsDialog } from "./JobDetailsDialog";
+import { useState } from "react";
 
 type AdminJobsFilters = {
   search: string | null;
@@ -101,6 +103,14 @@ async function fetchAdminJobs(filters: AdminJobsFilters) {
 }
 
 function AdminJobsTableContent(props: { jobs: PublishedJob[] }) {
+  const [selectedJob, setSelectedJob] = useState<PublishedJob | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+
+  const handleRowClick = (job: PublishedJob) => {
+    setSelectedJob(job);
+    setIsDetailsOpen(true);
+  };
+
   if (props.jobs.length === 0) {
     return (
       <TableRow>
@@ -114,7 +124,11 @@ function AdminJobsTableContent(props: { jobs: PublishedJob[] }) {
   return (
     <>
       {props.jobs.map((job) => (
-        <TableRow key={job.id}>
+        <TableRow
+          key={job.id}
+          className="cursor-pointer hover:bg-muted/50 transition-colors"
+        /*  onClick={() => handleRowClick(job)} */
+        >
           <TableCell className="font-medium wrap-break-word truncate">
             <span className="truncate block" title={job.title}>
               {job.title}
@@ -125,7 +139,7 @@ function AdminJobsTableContent(props: { jobs: PublishedJob[] }) {
               {job.companyName}
             </span>
           </TableCell>
-          <TableCell>
+          <TableCell className="truncate block" title={`${job.title} - ${job.workCountryLocation} - ${job.workCities.join(", ")}`}>
             {job.workCities.length === 0 ? (
               <>{job.workCountryLocation}</>
             ) : (
@@ -154,10 +168,18 @@ function AdminJobsTableContent(props: { jobs: PublishedJob[] }) {
                 : "Non publiée"}
           </TableCell>
           <TableCell>
-            <AdminJobsTableActions job={job} />
+            <AdminJobsTableActions
+              job={job}
+              onViewDetails={() => handleRowClick(job)}
+            />
           </TableCell>
         </TableRow>
       ))}
+      <JobDetailsDialog
+        open={isDetailsOpen}
+        onOpenChange={setIsDetailsOpen}
+        job={selectedJob}
+      />
     </>
   );
 }
@@ -207,6 +229,7 @@ export function AdminJobsTable() {
     refetchOnWindowFocus: false, // Ne pas refetch lors du focus de la fenêtre
     refetchOnReconnect: false, // Ne pas refetch lors de la reconnexion réseau
   });
+  console.log("totalPages", data?.totalPages);
 
   return (
     <div className="border rounded-lg overflow-hidden">

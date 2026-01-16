@@ -27,7 +27,7 @@ export function useCreateJob() {
         mutationFn: async (formData: FormData) => {
             const response = await axios.post<CreateJobResponse>(
                 "/api/admin/jobs",
-                formData,
+                formData
             );
             console.log(response.data)
             if (response.data.error) throw new Error(response.data.error);
@@ -41,11 +41,11 @@ export function useCreateJob() {
         },
         onError: (error: any) => {
             console.log(error)
-            /*  const errorMessage =
-                 error?.response?.data?.error ||
-                 error.message ||
-                 "Erreur lors de la création de l'offre"; */
-            toast.error(error);
+            const errorMessage =
+                error?.response?.data?.error ||
+                error.message ||
+                "Erreur lors de la création de l'offre";
+            toast.error(errorMessage);
         },
     });
 }
@@ -62,7 +62,12 @@ export function useUpdateJob() {
         mutationFn: async ({ id, formData }) => {
             const response = await axios.patch<UpdateJobResponse>(
                 `/api/admin/jobs/${id}`,
-                formData
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                }
             );
             return response.data;
         },
@@ -78,7 +83,7 @@ export function useUpdateJob() {
                  error?.response?.data?.error ||
                  error.message ||
                  "Erreur lors de la création de l'offre"; */
-            toast.error(error);
+            /*    toast.error(error); */
         },
     });
 }
@@ -102,11 +107,11 @@ export function useDeleteJob() {
         },
         onError: (error: any) => {
             console.log(error)
-            /*  const errorMessage =
-                 error?.response?.data?.error ||
-                 error.message ||
-                 "Erreur lors de la création de l'offre"; */
-            toast.error(error);
+            const errorMessage =
+                error?.response?.data?.error ||
+                error.message ||
+                "Erreur lors de la suppression de l'offre";
+            toast.error(errorMessage);
         },
     });
 }

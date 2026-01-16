@@ -61,6 +61,7 @@ import { SelectWithSearchAndButton } from "@/components/ui/select-with-search-an
 import { useUpdateJob } from "@/hooks/admin/useJobMutations";
 import type { TagDto, RequiredDocument, PublishedJob } from "@/types/job";
 import type { Sector } from "@/app/api/sectors/route";
+import { JobPreviewDialog } from "./JobPreviewDialog"; // Import Preview Dialog
 
 type EditJobDialogProps = {
   open: boolean;
@@ -93,6 +94,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
   const [newTagName, setNewTagName] = useState("");
   const [customCities, setCustomCities] = useState<string[]>([]);
   const [isFormStateOpen, setIsFormStateOpen] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false); // Add Preview State
 
   const form = useForm<CreateJobFormData>({
     resolver: zodResolver(createJobSchema),
@@ -237,6 +239,19 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
     }
   };
 
+
+
+  const handlePreview = async () => {
+    const isValid = await validateStep(4);
+    if (isValid) {
+      setIsPreviewOpen(true);
+    } else {
+      toast.error(
+        "Veuillez remplir tous les champs obligatoires avant la prévisualisation"
+      );
+    }
+  };
+
   const handlePrevious = () => {
     setCurrentStep(currentStep - 1);
   };
@@ -317,6 +332,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
             setLogoPreview(null);
             setLogoFileName(null);
             setSelectedCountry("");
+            setIsPreviewOpen(false);
             setCurrentStep(1);
             onOpenChange(false);
           }
@@ -326,6 +342,29 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
   };
 
   if (!job) return null;
+
+  const requiredLanguageValue = form.watch("requiredLanguage");
+  const requiredLanguageString: string = requiredLanguageValue.join(", ")
+
+
+  const jobPreviewData = {
+    title: form.watch("title") || null,
+    companyName: form.watch("companyName") || null,
+    companyLogo: companyLogo || job?.companyLogoUrl,
+    contractType: form.watch("contractType") || null,
+    salary: form.watch("salary") || null,
+    workCities: form.watch("workCityLocation") || [],
+    workCountryLocation: form.watch("workCountryLocation") || null,
+    expirationDate: form.watch("expirationDate") || null,
+    requiredLanguage: requiredLanguageString,
+    postNumber: form.watch("postNumber") || 1,
+    isUrgent: form.watch("isUrgent") || false,
+    offerDescription: form.watch("description"),
+    requiredDocuments: form.watch("requiredDocuments") || [],
+    tagDto: form.watch("tagDto") || [],
+    jobType: form.watch("jobType") || null,
+
+  };
 
   return (
     <>
@@ -1062,14 +1101,9 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
               {currentStep < STEPS.length ? (
                 <Button onClick={handleNext}>Suivant</Button>
               ) : (
-                <Button onClick={handleUpdateJob} disabled={updateJobMutation.isPending}>
-                  {updateJobMutation.isPending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin text-white" />{" "}
-                    </>
-                  ) : (
-                    "Modifier l'offre"
-                  )}
+                <Button onClick={handlePreview} className="bg-[#1e3a8a] text-white hover:bg-[#1e3a8a]/90">
+                  <Eye className="w-4 h-4 mr-2" />
+                  Prévisualiser
                 </Button>
               )}
             </div>
@@ -1090,6 +1124,19 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
           </div>
         </DialogContent>
       </Dialog>
+      <JobPreviewDialog
+        open={isPreviewOpen}
+        onPublish={handleUpdateJob}
+        isLoading={updateJobMutation.isPending}
+        onOpenChange={setIsPreviewOpen}
+        jobData={jobPreviewData}
+        texts={
+          {
+            descriptionHeader: "Vérifiez le rendu final de votre offre avant de la modifier",
+            textBtnAction: "Modifier l'offre"
+          }
+        }
+      />
     </>
   );
 }

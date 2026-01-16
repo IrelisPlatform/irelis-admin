@@ -1,7 +1,7 @@
 "use client";
 
 import { CircleUserRoundIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { Button } from "@/components/ui/button";
@@ -29,34 +29,31 @@ export function BasicImageUploader(props: BasicImageUploaderProps) {
     className,
   } = props;
 
+  // Store the latest callback in a ref to avoid triggering useEffect on every render
+  const onFileChangeRef = useRef(onFileChange);
+  useEffect(() => {
+    onFileChangeRef.current = onFileChange;
+  }, [onFileChange]);
+
   const [{ files }, { removeFile, openFileDialog, getInputProps }] =
     useFileUpload({
       accept,
       maxSize,
-      onFilesChange: (newFiles) => {
-        const file = newFiles[0]?.file;
-        if (file instanceof File) {
-          onFileChange?.(file);
-        } else if (newFiles.length === 0) {
-          onFileChange?.(null);
-        }
-      },
     });
 
-  const previewUrl = files[0]?.preview || defaultPreview || null;
-  const fileName = files[0]?.file.name || null;
-  const [name, setFileName] = useState(files[0]?.file.name || null);
-
+  // Use useEffect to call onFileChange asynchronously to avoid
+  // "Cannot update a component while rendering a different component" error
   useEffect(() => {
-    if (files[0]?.file.name) {
-      setFileName(files[0].file.name);
-    } else if (!files[0] && defaultPreview) {
-      // Si on a un defaultPreview mais pas de file, on garde le nom précédent
-      // Le nom sera réinitialisé si on supprime le fichier
-    } else if (!files[0]) {
-      setFileName(null);
+    const file = files[0]?.file;
+    if (file instanceof File) {
+      onFileChangeRef.current?.(file);
+    } else if (files.length === 0) {
+      onFileChangeRef.current?.(null);
     }
-  }, [files, defaultPreview]);
+  }, [files]);
+
+  const previewUrl = files[0]?.preview || defaultPreview || null;
+  const fileName = useMemo(() => files[0]?.file.name || null, [files]);
 
   useEffect(() => {
     return () => {
@@ -110,7 +107,7 @@ export function BasicImageUploader(props: BasicImageUploaderProps) {
         {(fileName || previewUrl) && (
           <div className="inline-flex gap-2 text-xs">
             <p aria-live="polite" className="truncate text-muted-foreground">
-              {fileName || name}
+              {fileName}
             </p>
             <button
               aria-label={`${removeButtonLabel} ${fileName}`}

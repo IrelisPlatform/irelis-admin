@@ -246,7 +246,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
     if (companyLogo) {
       formData.append("file", companyLogo);
     }
-
+    console.log("formDatacClient", formData)
     createJobMutation.mutate(formData, {
       onSuccess: (result) => {
         if (result.success) {
@@ -274,15 +274,20 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
     companyLogo: companyLogo,
     contractType: form.watch("contractType") || null,
     salary: form.watch("salary") || "",
-    workCityLocation: form.watch("workCityLocation") || [],
+    workCities: form.watch("workCityLocation") || [],
     workCountryLocation: form.watch("workCountryLocation") || "",
     expirationDate: form.watch("expirationDate") || "",
     requiredLanguage: requiredLanguageString,
     postNumber: form.watch("postNumber") || 1,
     isUrgent: form.watch("isUrgent") || false,
-    description: form.watch("description"),
+    offerDescription: form.watch("description"),
     requiredDocuments: form.watch("requiredDocuments") || [],
     tagDto: form.watch("tagDto") || [],
+    jobType: form.watch("jobType") || null,
+    companyDescription: form.watch("companyDescription") || null,
+    companyEmail: form.watch("companyEmail") || null,
+    companySize: form.watch("companyLength") || null,
+    sectorName: sectors.find((sector) => sector.id === form.watch("sectorId"))?.name || null,
   };
 
   return (

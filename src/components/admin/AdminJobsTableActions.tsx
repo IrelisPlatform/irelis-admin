@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, MouseEvent } from "react";
 import { MoreVertical, Edit, Trash2, Eye, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,9 +19,10 @@ import { PublishedJob } from "@/types/job";
 
 type AdminJobsTableActionsProps = {
   job: PublishedJob;
+  onViewDetails: () => void;
 };
 
-export function AdminJobsTableActions({ job }: AdminJobsTableActionsProps) {
+export function AdminJobsTableActions({ job, onViewDetails }: AdminJobsTableActionsProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -31,9 +32,9 @@ export function AdminJobsTableActions({ job }: AdminJobsTableActionsProps) {
     publishJobMutation.mutate(job.id);
   };
 
-  const handleViewDetails = () => {
-    // TODO: Implémenter l'affichage des détails de l'offre
-    console.log("View details for job:", job.id);
+  const handleViewDetails = (e: MouseEvent) => {
+    e.stopPropagation();
+    onViewDetails();
   };
 
   return (
@@ -53,7 +54,10 @@ export function AdminJobsTableActions({ job }: AdminJobsTableActionsProps) {
               <Eye className="h-4 w-4 mr-2" /> Publier
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
+          <DropdownMenuItem onClick={(e) => {
+            e.stopPropagation()
+            setIsEditDialogOpen(true)
+          }}>
             <Edit className="h-4 w-4 mr-2" />
             Modifier
           </DropdownMenuItem>
