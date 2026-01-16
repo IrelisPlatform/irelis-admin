@@ -263,10 +263,8 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
     });
   };
 
-  const requiredLanguageValue = form.watch("requiredLanguage");
-  const requiredLanguageString: string = Array.isArray(requiredLanguageValue)
-    ? requiredLanguageValue.join(", ")
-    : requiredLanguageValue || "";
+
+
 
   const jobPreviewData = {
     title: form.watch("title") || "",
@@ -277,7 +275,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
     workCities: form.watch("workCityLocation") || [],
     workCountryLocation: form.watch("workCountryLocation") || "",
     expirationDate: form.watch("expirationDate") || "",
-    requiredLanguage: requiredLanguageString,
+    requiredLanguages: form.watch("requiredLanguage") || [],
     postNumber: form.watch("postNumber") || 1,
     isUrgent: form.watch("isUrgent") || false,
     offerDescription: form.watch("description"),

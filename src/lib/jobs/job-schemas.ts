@@ -75,7 +75,7 @@ export const jobDetailsStepSchema = z.object({
 export const advancedOptionsStepSchema = z.object({
   requiredLanguage: z
     .array(z.string())
-    .optional()
+    .default([])
     .refine(
       (langs) => {
         if (!langs || langs.length === 0) return true;

@@ -356,14 +356,13 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
     workCities: form.watch("workCityLocation") || [],
     workCountryLocation: form.watch("workCountryLocation") || null,
     expirationDate: form.watch("expirationDate") || null,
-    requiredLanguage: requiredLanguageString,
+    requiredLanguages: form.watch("requiredLanguage") || [],
     postNumber: form.watch("postNumber") || 1,
     isUrgent: form.watch("isUrgent") || false,
     offerDescription: form.watch("description"),
     requiredDocuments: form.watch("requiredDocuments") || [],
     tagDto: form.watch("tagDto") || [],
     jobType: form.watch("jobType") || null,
-
   };
 
   return (
