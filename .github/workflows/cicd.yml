@@ -43,6 +43,7 @@ jobs:
         run: |
           docker run -d \
             --name irelis-admin-front \
-            -p 3000:3000 \
+            -p 3001:3001 \
+            -e PORT=3001 \
             -e NEXT_PUBLIC_BACKEND_URL=${{ secrets.NEXT_PUBLIC_BACKEND_URL }} \
             ${{ secrets.DOCKER_USERNAME }}/irelis-admin-front:latest
