@@ -3,7 +3,7 @@ name: Deploy Admin Frontend Next.js
 on:
   push:
     branches:
-      - refactor-servers-actions-to-api-routes
+      - deploy
 
 jobs:
   build:
@@ -12,7 +12,7 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
         with:
-          ref: refactor-servers-actions-to-api-routes
+          ref: deploy
 
       - name: Create .env file
         run: |
