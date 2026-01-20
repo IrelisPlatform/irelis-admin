@@ -70,7 +70,6 @@ type EditJobDialogProps = {
 };
 
 export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
-
   const { data: sectors = [], isLoading: sectorsLoading } = useQuery<Sector[]>({
     queryKey: ["sectors"],
     queryFn: async () => {
@@ -89,7 +88,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
   const [logoFileName, setLogoFileName] = useState<string | null>(null);
   const [selectedCountry, setSelectedCountry] = useState("");
   const [newTagType, setNewTagType] = useState<"skill" | "tool" | "domain">(
-    "skill"
+    "skill",
   );
   const [newTagName, setNewTagName] = useState("");
   const [customCities, setCustomCities] = useState<string[]>([]);
@@ -175,10 +174,10 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
         requiredDocuments: (job.requiredDocuments || [{ type: "CV" }]).map(
           (doc) => ({
             type: (doc.type === "CV" ||
-              doc.type === "COVER_LETTER" ||
-              doc.type === "PORTFOLIO" ||
-              doc.type === "CERTIFICATE" ||
-              doc.type === "IDENTITY_DOC"
+            doc.type === "COVER_LETTER" ||
+            doc.type === "PORTFOLIO" ||
+            doc.type === "CERTIFICATE" ||
+            doc.type === "IDENTITY_DOC"
               ? doc.type
               : "CV") as
               | "CV"
@@ -186,7 +185,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
               | "PORTFOLIO"
               | "CERTIFICATE"
               | "IDENTITY_DOC",
-          })
+          }),
         ),
       });
 
@@ -198,8 +197,8 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
           (city) =>
             !COUNTRIES_WITH_CITIES[
               job.workCountryLocation as keyof typeof COUNTRIES_WITH_CITIES
-            ]?.includes(city)
-        )
+            ]?.includes(city),
+        ),
       );
     }
   }, [job, open, form]);
@@ -234,12 +233,10 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
       setCurrentStep(currentStep + 1);
     } else {
       toast.error(
-        "Veuillez remplir tous les champs obligatoires pour passer à l'étape suivante"
+        "Veuillez remplir tous les champs obligatoires pour passer à l'étape suivante",
       );
     }
   };
-
-
 
   const handlePreview = async () => {
     const isValid = await validateStep(4);
@@ -247,7 +244,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
       setIsPreviewOpen(true);
     } else {
       toast.error(
-        "Veuillez remplir tous les champs obligatoires avant la prévisualisation"
+        "Veuillez remplir tous les champs obligatoires avant la prévisualisation",
       );
     }
   };
@@ -271,7 +268,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
     const currentTags = form.getValues("tagDto") || [];
     form.setValue(
       "tagDto",
-      currentTags.filter((_, i) => i !== index)
+      currentTags.filter((_, i) => i !== index),
     );
   };
 
@@ -316,12 +313,13 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
       "data",
       new Blob([JSON.stringify(payload)], {
         type: "application/json",
-      })
+      }),
     );
+    console.log("formBeforeFile", formData);
     if (companyLogo) {
       formData.append("companyLogo", companyLogo);
     }
-
+    console.log("formDataEditDialog", formData);
     updateJobMutation.mutate(
       { id: job.id, formData },
       {
@@ -337,15 +335,14 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
             onOpenChange(false);
           }
         },
-      }
+      },
     );
   };
 
   if (!job) return null;
 
   const requiredLanguageValue = form.watch("requiredLanguage");
-  const requiredLanguageString: string = requiredLanguageValue.join(", ")
-
+  const requiredLanguageString: string = requiredLanguageValue.join(", ");
 
   const jobPreviewData = {
     title: form.watch("title") || null,
@@ -401,8 +398,9 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
               {STEPS.map((step) => (
                 <div
                   key={step.id}
-                  className={`h-1 flex-1 rounded-full ${currentStep >= step.id ? "bg-[#1e3a88]" : "bg-gray-200"
-                    }`}
+                  className={`h-1 flex-1 rounded-full ${
+                    currentStep >= step.id ? "bg-[#1e3a88]" : "bg-gray-200"
+                  }`}
                 />
               ))}
             </div>
@@ -532,7 +530,9 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
                         <FormLabel>Taille de l&apos;entreprise</FormLabel>
                         <Select
                           onValueChange={(value) =>
-                            field.onChange(value === "not-specified" ? "" : value)
+                            field.onChange(
+                              value === "not-specified" ? "" : value,
+                            )
                           }
                           value={field.value || "not-specified"}
                         >
@@ -642,20 +642,20 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
                       render={({ field }) => {
                         const availableCities =
                           selectedCountry &&
-                            COUNTRIES_WITH_CITIES[
+                          COUNTRIES_WITH_CITIES[
                             selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
-                            ]
+                          ]
                             ? [
-                              ...COUNTRIES_WITH_CITIES[
-                                selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
-                              ].filter((city) => city !== "Autre"),
-                              ...customCities.filter(
-                                (city) =>
-                                  !COUNTRIES_WITH_CITIES[
-                                    selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
-                                  ]?.includes(city)
-                              ),
-                            ]
+                                ...COUNTRIES_WITH_CITIES[
+                                  selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
+                                ].filter((city) => city !== "Autre"),
+                                ...customCities.filter(
+                                  (city) =>
+                                    !COUNTRIES_WITH_CITIES[
+                                      selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
+                                    ]?.includes(city),
+                                ),
+                              ]
                             : [];
 
                         return (
@@ -703,7 +703,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
                                       type="button"
                                       onClick={() => {
                                         const updated = field.value.filter(
-                                          (_, i) => i !== index
+                                          (_, i) => i !== index,
                                         );
                                         field.onChange(updated);
                                       }}
@@ -780,7 +780,9 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
                         <FormLabel>Salaire</FormLabel>
                         <Select
                           onValueChange={(value) =>
-                            field.onChange(value === "not-specified" ? "" : value)
+                            field.onChange(
+                              value === "not-specified" ? "" : value,
+                            )
                           }
                           value={field.value || "not-specified"}
                         >
@@ -850,33 +852,34 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
                       </Button>
                     </div>
 
-                    {form.watch("tagDto") && form.watch("tagDto").length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {form.watch("tagDto").map((tag, index) => (
-                          <Badge
-                            key={index}
-                            variant="secondary"
-                            className="flex items-center gap-1"
-                          >
-                            {tag.name} ({tag.type})
-                            <button
-                              type="button"
-                              onClick={() => removeTag(index)}
-                              className="ml-1 text-xs text-muted-foreground hover:text-foreground"
+                    {form.watch("tagDto") &&
+                      form.watch("tagDto").length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {form.watch("tagDto").map((tag, index) => (
+                            <Badge
+                              key={index}
+                              variant="secondary"
+                              className="flex items-center gap-1"
                             >
-                              ✕
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
+                              {tag.name} ({tag.type})
+                              <button
+                                type="button"
+                                onClick={() => removeTag(index)}
+                                className="ml-1 text-xs text-muted-foreground hover:text-foreground"
+                              >
+                                ✕
+                              </button>
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
 
                     {(!form.watch("tagDto") ||
                       form.watch("tagDto").length === 0) && (
-                        <p className="text-sm text-muted-foreground">
-                          Aucun mot-clé ajouté.
-                        </p>
-                      )}
+                      <p className="text-sm text-muted-foreground">
+                        Aucun mot-clé ajouté.
+                      </p>
+                    )}
                   </div>
 
                   <FormField
@@ -940,7 +943,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
                               },
                             ].map((lang) => {
                               const isChecked = currentLanguages.includes(
-                                lang.value
+                                lang.value,
                               );
                               const isDisabled =
                                 lang.value !== "Bilingue" && hasBilingue;
@@ -970,7 +973,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
                                         }
                                       } else {
                                         updated = updated.filter(
-                                          (l) => l !== lang.value
+                                          (l) => l !== lang.value,
                                         );
                                       }
                                       field.onChange(updated);
@@ -978,8 +981,9 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
                                   />
                                   <Label
                                     htmlFor={`lang-${lang.value}`}
-                                    className={`text-sm cursor-pointer ${isDisabled ? "opacity-50" : ""
-                                      }`}
+                                    className={`text-sm cursor-pointer ${
+                                      isDisabled ? "opacity-50" : ""
+                                    }`}
                                   >
                                     {lang.label}
                                   </Label>
@@ -989,8 +993,8 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
                           </div>
                           {hasBilingue && currentLanguages.length > 1 && (
                             <p className="text-sm text-destructive mt-1">
-                              Bilingue ne peut pas être combiné avec d&apos;autres
-                              langues
+                              Bilingue ne peut pas être combiné avec
+                              d&apos;autres langues
                             </p>
                           )}
                           <FormMessage />
@@ -1027,12 +1031,13 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
                     render={({ field }) => (
                       <FormItem className="*:not-first:mt-2">
                         <FormLabel>
-                          Documents requis <span className="text-red-500">*</span>
+                          Documents requis{" "}
+                          <span className="text-red-500">*</span>
                         </FormLabel>
                         <div className="flex flex-wrap gap-2">
                           {DOCUMENT_TYPES.map((doc) => {
                             const isChecked = (field.value || []).some(
-                              (d) => d.type === doc.value
+                              (d) => d.type === doc.value,
                             );
                             return (
                               <div
@@ -1048,7 +1053,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
                                       updated.push({ type: doc.value });
                                     } else {
                                       updated = updated.filter(
-                                        (d) => d.type !== doc.value
+                                        (d) => d.type !== doc.value,
                                       );
                                     }
                                     if (updated.length === 0) return;
@@ -1100,7 +1105,10 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
               {currentStep < STEPS.length ? (
                 <Button onClick={handleNext}>Suivant</Button>
               ) : (
-                <Button onClick={handlePreview} className="bg-[#1e3a8a] text-white hover:bg-[#1e3a8a]/90">
+                <Button
+                  onClick={handlePreview}
+                  className="bg-[#1e3a8a] text-white hover:bg-[#1e3a8a]/90"
+                >
                   <Eye className="w-4 h-4 mr-2" />
                   Prévisualiser
                 </Button>
@@ -1129,12 +1137,11 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
         isLoading={updateJobMutation.isPending}
         onOpenChange={setIsPreviewOpen}
         jobData={jobPreviewData}
-        texts={
-          {
-            descriptionHeader: "Vérifiez le rendu final de votre offre avant de la modifier",
-            textBtnAction: "Modifier l'offre"
-          }
-        }
+        texts={{
+          descriptionHeader:
+            "Vérifiez le rendu final de votre offre avant de la modifier",
+          textBtnAction: "Modifier l'offre",
+        }}
       />
     </>
   );
