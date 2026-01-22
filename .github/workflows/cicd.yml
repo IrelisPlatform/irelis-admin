@@ -3,7 +3,7 @@ name: Deploy Admin Frontend Next.js
 on:
   push:
     branches:
-      - deploy
+      - reuse-initial-job-preview-dialog
 
 jobs:
   build:
@@ -12,7 +12,7 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
         with:
-          ref: deploy
+          ref: reuse-initial-job-preview-dialog
 
       - name: Create .env file
         run: |
