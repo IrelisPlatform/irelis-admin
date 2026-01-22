@@ -94,7 +94,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
   const [logoFileName, setLogoFileName] = useState<string | null>(null);
   const [selectedCountry, setSelectedCountry] = useState("");
   const [newTagType, setNewTagType] = useState<"skill" | "tool" | "domain">(
-    "skill"
+    "skill",
   );
   const [newTagName, setNewTagName] = useState("");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -164,7 +164,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
       setCurrentStep(currentStep + 1);
     } else {
       toast.error(
-        "Veuillez remplir tous les champs obligatoires pour passer à l'étape suivante"
+        "Veuillez remplir tous les champs obligatoires pour passer à l'étape suivante",
       );
     }
   };
@@ -188,7 +188,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
     const currentTags = form.getValues("tagDto") || [];
     form.setValue(
       "tagDto",
-      currentTags.filter((_, i) => i !== index)
+      currentTags.filter((_, i) => i !== index),
     );
   };
 
@@ -198,7 +198,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
       setIsPreviewOpen(true);
     } else {
       toast.error(
-        "Veuillez remplir tous les champs obligatoires avant la prévisualisation"
+        "Veuillez remplir tous les champs obligatoires avant la prévisualisation",
       );
     }
   };
@@ -235,18 +235,18 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
       tagDto: values.tagDto || [],
       requiredDocuments: values.requiredDocuments,
     };
-    console.log("payload", { payload })
+    console.log("payload", { payload });
     const formData = new FormData();
     formData.append(
       "data",
       new Blob([JSON.stringify(payload)], {
         type: "application/json",
-      })
+      }),
     );
     if (companyLogo) {
       formData.append("file", companyLogo);
     }
-    console.log("formDatacClient", formData)
+    console.log("formDatacClient", formData);
     createJobMutation.mutate(formData, {
       onSuccess: (result) => {
         if (result.success) {
@@ -262,9 +262,6 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
       },
     });
   };
-
-
-
 
   const jobPreviewData = {
     title: form.watch("title") || "",
@@ -285,7 +282,9 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
     companyDescription: form.watch("companyDescription") || null,
     companyEmail: form.watch("companyEmail") || null,
     companySize: form.watch("companyLength") || null,
-    sectorName: sectors.find((sector) => sector.id === form.watch("sectorId"))?.name || null,
+    sectorName:
+      sectors.find((sector) => sector.id === form.watch("sectorId"))?.name ||
+      null,
   };
 
   return (
@@ -317,7 +316,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
               <DialogTitle className="text-primary">
                 Créer une offre (Étape {currentStep}/4)
               </DialogTitle>
-              <Button
+              {/*     <Button
                 type="button"
                 variant="outline"
                 size="sm"
@@ -325,14 +324,15 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
               >
                 <Eye className="h-4 w-4 mr-2" />
                 État du formulaire
-              </Button>
+              </Button> */}
             </div>
             <div className="flex mt-2 space-x-1">
               {STEPS.map((step) => (
                 <div
                   key={step.id}
-                  className={`h-1 flex-1 rounded-full ${currentStep >= step.id ? "bg-[#1e3a88]" : "bg-gray-200"
-                    }`}
+                  className={`h-1 flex-1 rounded-full ${
+                    currentStep >= step.id ? "bg-[#1e3a88]" : "bg-gray-200"
+                  }`}
                 />
               ))}
             </div>
@@ -463,7 +463,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                         <Select
                           onValueChange={(value) =>
                             field.onChange(
-                              value === "not-specified" ? "" : value
+                              value === "not-specified" ? "" : value,
                             )
                           }
                           value={field.value || "not-specified"}
@@ -574,20 +574,20 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                       render={({ field }) => {
                         const availableCities =
                           selectedCountry &&
-                            COUNTRIES_WITH_CITIES[
+                          COUNTRIES_WITH_CITIES[
                             selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
-                            ]
+                          ]
                             ? [
-                              ...COUNTRIES_WITH_CITIES[
-                                selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
-                              ].filter((city) => city !== "Autre"),
-                              ...customCities.filter(
-                                (city) =>
-                                  !COUNTRIES_WITH_CITIES[
-                                    selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
-                                  ]?.includes(city)
-                              ),
-                            ]
+                                ...COUNTRIES_WITH_CITIES[
+                                  selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
+                                ].filter((city) => city !== "Autre"),
+                                ...customCities.filter(
+                                  (city) =>
+                                    !COUNTRIES_WITH_CITIES[
+                                      selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
+                                    ]?.includes(city),
+                                ),
+                              ]
                             : [];
 
                         return (
@@ -635,7 +635,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                                       type="button"
                                       onClick={() => {
                                         const updated = field.value.filter(
-                                          (_, i) => i !== index
+                                          (_, i) => i !== index,
                                         );
                                         field.onChange(updated);
                                       }}
@@ -713,7 +713,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                         <Select
                           onValueChange={(value) =>
                             field.onChange(
-                              value === "not-specified" ? "" : value
+                              value === "not-specified" ? "" : value,
                             )
                           }
                           value={field.value || "not-specified"}
@@ -808,10 +808,10 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
 
                     {(!form.watch("tagDto") ||
                       form.watch("tagDto").length === 0) && (
-                        <p className="text-sm text-muted-foreground">
-                          Aucun mot-clé ajouté.
-                        </p>
-                      )}
+                      <p className="text-sm text-muted-foreground">
+                        Aucun mot-clé ajouté.
+                      </p>
+                    )}
                   </div>
 
                   <FormField
@@ -875,7 +875,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                               },
                             ].map((lang) => {
                               const isChecked = currentLanguages.includes(
-                                lang.value
+                                lang.value,
                               );
                               const isDisabled =
                                 lang.value !== "Bilingue" && hasBilingue;
@@ -905,7 +905,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                                         }
                                       } else {
                                         updated = updated.filter(
-                                          (l) => l !== lang.value
+                                          (l) => l !== lang.value,
                                         );
                                       }
                                       field.onChange(updated);
@@ -913,8 +913,9 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                                   />
                                   <Label
                                     htmlFor={`lang-${lang.value}`}
-                                    className={`text-sm cursor-pointer ${isDisabled ? "opacity-50" : ""
-                                      }`}
+                                    className={`text-sm cursor-pointer ${
+                                      isDisabled ? "opacity-50" : ""
+                                    }`}
                                   >
                                     {lang.label}
                                   </Label>
@@ -968,7 +969,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                         <div className="flex flex-wrap gap-2">
                           {DOCUMENT_TYPES.map((doc) => {
                             const isChecked = (field.value || []).some(
-                              (d) => d.type === doc.value
+                              (d) => d.type === doc.value,
                             );
                             return (
                               <div
@@ -984,7 +985,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                                       updated.push({ type: doc.value });
                                     } else {
                                       updated = updated.filter(
-                                        (d) => d.type !== doc.value
+                                        (d) => d.type !== doc.value,
                                       );
                                     }
                                     if (updated.length === 0) return;
@@ -1036,9 +1037,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
               {currentStep < STEPS.length ? (
                 <Button onClick={handleNext}>Suivant</Button>
               ) : (
-                <Button onClick={handlePreview}>
-                  Visualiser
-                </Button>
+                <Button onClick={handlePreview}>Visualiser</Button>
               )}
             </div>
           </Form>

@@ -379,12 +379,12 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
         }}
       >
         <DialogContent className="max-w-full sm:max-w-xl lg:max-w-5xl max-h-[90vh] flex flex-col">
-          <DialogHeader className="px-8">
+          <DialogHeader className="p-4 sm:px-8">
             <div className="flex items-center justify-between">
               <DialogTitle className="text-primary">
                 Modifier l&apos;offre (Étape {currentStep}/4)
               </DialogTitle>
-              <Button
+              {/*    <Button
                 type="button"
                 variant="outline"
                 size="sm"
@@ -392,7 +392,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
               >
                 <Eye className="h-4 w-4 mr-2" />
                 État du formulaire
-              </Button>
+              </Button> */}
             </div>
             <div className="flex mt-2 space-x-1">
               {STEPS.map((step) => (

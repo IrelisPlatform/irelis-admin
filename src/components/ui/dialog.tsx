@@ -38,7 +38,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       className={cn(
         "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/80 data-[state=closed]:animate-out data-[state=open]:animate-in",
-        className
+        className,
       )}
       data-slot="dialog-overlay"
       {...props}
@@ -57,13 +57,13 @@ function DialogContent({
       <DialogPrimitive.Content
         className={cn(
           "-translate-x-1/2 -translate-y-1/2 data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100%-2rem)] w-full max-w-[calc(100%-2rem)] gap-4 overflow-y-auto rounded-xl border bg-background p-6 shadow-lg duration-200 data-[state=closed]:animate-out data-[state=open]:animate-in",
-          className
+          className,
         )}
         data-slot="dialog-content"
         {...props}
       >
         {children}
-        <DialogPrimitive.Close className="group absolute top-3 right-3 flex size-7 items-center justify-center rounded outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none">
+        <DialogPrimitive.Close className="group absolute top-3 right-3 z-50 flex size-7 items-center justify-center rounded outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none">
           <XIcon
             className="opacity-60 transition-opacity group-hover:opacity-100"
             size={16}
@@ -90,7 +90,7 @@ function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       className={cn(
         "flex flex-col-reverse gap-3 sm:flex-row sm:justify-end",
-        className
+        className,
       )}
       data-slot="alert-dialog-footer"
       {...props}
