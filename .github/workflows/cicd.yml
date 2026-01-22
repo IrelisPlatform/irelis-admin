@@ -3,7 +3,7 @@ name: Deploy Admin Frontend Next.js
 on:
   push:
     branches:
-      - refactor-servers-actions-to-api-routes
+      - deploy
 
 jobs:
   build:
@@ -12,7 +12,7 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
         with:
-          ref: refactor-servers-actions-to-api-routes
+          ref: deploy
 
       - name: Create .env file
         run: |
@@ -48,7 +48,8 @@ jobs:
         run: |
           docker run -d \
             --name irelis-admin-front \
-            -p 3000:3000 \
+            -e PORT=3001 \
+            -p 3001:3001 \
             -e NEXT_PUBLIC_BACKEND_URL=${{ secrets.NEXT_PUBLIC_BACKEND_URL }} \
             ${{ secrets.DOCKER_USERNAME }}/irelis-admin:server
 
