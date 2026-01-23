@@ -32,7 +32,7 @@ import {
 } from "@/lib/jobs/job-helpers";
 import { Badge } from "@/components/ui/badge";
 import { formatDateLong } from "@/services/date";
-import { ReadonlyEditor } from "../ReadonlyEditor";
+import ReadonlyEditor from "../ReadonlyEditor";
 import { PublishedJob } from "@/types/job";
 
 type JobDetailsDialogProps = {

@@ -11,7 +11,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ReadonlyEditor } from "@/components/ReadonlyEditor";
+import ReadonlyEditor from "../ReadonlyEditor";
 import {
   X,
   Briefcase,
