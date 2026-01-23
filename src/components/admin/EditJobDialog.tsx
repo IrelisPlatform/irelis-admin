@@ -428,7 +428,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
                             setLogoFileName(null);
                           }
                         }}
-                        defaultPreview={logoPreview || undefined}
+                        value={companyLogo || logoPreview}
                         uploadButtonLabel="Ajouter un logo"
                         changeButtonLabel="Changer le logo"
                         removeButtonLabel="Supprimer"

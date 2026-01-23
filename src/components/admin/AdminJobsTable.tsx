@@ -37,7 +37,7 @@ async function fetchAdminJobs(filters: AdminJobsFilters) {
   }
 
   // Récupérer la page (0-indexed pour l'API)
-  const page = filters.page
+  const page = filters.page;
 
   // Appel direct au backend avec pagination
   const response = await fetch(
@@ -48,12 +48,12 @@ async function fetchAdminJobs(filters: AdminJobsFilters) {
         Accept: "application/json",
       },
       cache: "no-store",
-    }
+    },
   );
 
   if (!response.ok) {
     throw new Error(
-      response.statusText || `Failed to fetch jobs: ${response.status}`
+      response.statusText || `Failed to fetch jobs: ${response.status}`,
     );
   }
 
@@ -75,7 +75,9 @@ async function fetchAdminJobs(filters: AdminJobsFilters) {
     filteredJobs = filteredJobs.filter(
       (job) =>
         job.title.toLowerCase().includes(searchLower) ||
-        job.workCities?.some((city) => city.toLowerCase().includes(searchLower))
+        job.workCities?.some((city) =>
+          city.toLowerCase().includes(searchLower),
+        ),
     );
   }
 
@@ -85,7 +87,7 @@ async function fetchAdminJobs(filters: AdminJobsFilters) {
 
   if (typeFilter !== "all") {
     filteredJobs = filteredJobs.filter(
-      (job) => job.contractType === typeFilter
+      (job) => job.contractType === typeFilter,
     );
   }
 
@@ -127,7 +129,7 @@ function AdminJobsTableContent(props: { jobs: PublishedJob[] }) {
         <TableRow
           key={job.id}
           className="cursor-pointer hover:bg-muted/50 transition-colors"
-        /*  onClick={() => handleRowClick(job)} */
+          /*  onClick={() => handleRowClick(job)} */
         >
           <TableCell className="font-medium wrap-break-word truncate">
             <span className="truncate block" title={job.title}>
@@ -139,20 +141,24 @@ function AdminJobsTableContent(props: { jobs: PublishedJob[] }) {
               {job.companyName}
             </span>
           </TableCell>
-          <TableCell className="truncate block" title={`${job.title} - ${job.workCountryLocation} - ${job.workCities.join(", ")}`}>
+          <TableCell
+            className="truncate"
+            title={`${job.title} - ${job.workCountryLocation} - ${job.workCities.join(", ")}`}
+          >
             {job.workCities.length === 0 ? (
               <>{job.workCountryLocation}</>
             ) : (
               <span
-                title={`${job.title} - ${job.workCountryLocation
-                  } - ${job.workCities.join(", ")}`}
+                title={`${job.title} - ${
+                  job.workCountryLocation
+                } - ${job.workCities.join(", ")}`}
               >
                 {job.workCountryLocation} - {job.workCities.join(", ")}
               </span>
             )}
           </TableCell>
           <TableCell>
-            <Badge variant="outline">
+            <Badge variant="outline" className=" h-auto py-1">
               {getContractTypeLabel(job.contractType)}
             </Badge>
           </TableCell>
@@ -241,7 +247,7 @@ export function AdminJobsTable() {
               Nom de l&apos;entreprise
             </TableHead>
             <TableHead className="w-[200px]">Localisation</TableHead>
-            <TableHead className="w-[120px]">Type de contrat</TableHead>
+            <TableHead className="w-[135px]">Type de contrat</TableHead>
             <TableHead className="w-[100px]">Statut</TableHead>
             <TableHead className="w-[150px]">Date de publication</TableHead>
             <TableHead className="w-[150px]">Date d&apos;expiration</TableHead>

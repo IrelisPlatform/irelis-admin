@@ -220,15 +220,17 @@ export function JobPreviewDialog({
                   <p className="text-muted-foreground">Aucun tag spécifié</p>
                 </>
               ) : (
-                jobData.tagDto.map((tag) => (
-                  <Badge
-                    key={`${tag.type}-${tag.name}`}
-                    variant="secondary"
-                    className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-100"
-                  >
-                    {tag.name}
-                  </Badge>
-                ))
+                <div className="flex flex-wrap space-x-2">
+                  {jobData.tagDto.map((tag) => (
+                    <Badge
+                      key={`${tag.type}-${tag.name}`}
+                      variant="secondary"
+                      className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-100"
+                    >
+                      {tag.name}
+                    </Badge>
+                  ))}
+                </div>
               )}
             </div>
 

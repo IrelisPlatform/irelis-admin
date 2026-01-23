@@ -175,15 +175,17 @@ export function JobDetailsDialog({
                   <p className="text-muted-foreground">Aucun tag spécifié</p>
                 </>
               ) : (
-                job.tagDto.map((tag) => (
-                  <Badge
-                    key={`${tag.type}-${tag.name}`}
-                    variant="secondary"
-                    className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-100"
-                  >
-                    {tag.name}
-                  </Badge>
-                ))
+                <div className="flex space-x-2 flex-wrap">
+                  {job.tagDto.map((tag) => (
+                    <Badge
+                      key={`${tag.type}-${tag.name}`}
+                      variant="secondary"
+                      className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-100"
+                    >
+                      {tag.name}
+                    </Badge>
+                  ))}
+                </div>
               )}
             </div>
 

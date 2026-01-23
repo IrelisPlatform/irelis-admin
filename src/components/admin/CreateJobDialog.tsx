@@ -360,7 +360,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                             setLogoFileName(null);
                           }
                         }}
-                        defaultPreview={logoPreview || undefined}
+                        defaultPreview={logoPreview}
                         uploadButtonLabel="Ajouter un logo"
                         changeButtonLabel="Changer le logo"
                         removeButtonLabel="Supprimer"
