@@ -3,8 +3,8 @@ name: Deploy Admin Frontend Next.js
 on:
   push:
     branches:
-      - deploy
-
+      - reuse-initial-job-preview-dialog
+# test
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -44,9 +44,8 @@ jobs:
       - name: Run new container
         run: |
           docker run -d \
-            --name irelis-admin-front \
+            --name irelis-admin \
             -e PORT=3001 \
             -p 3001:3001 \
             -e NEXT_PUBLIC_BACKEND_URL=${{ secrets.NEXT_PUBLIC_BACKEND_URL }} \
             ${{ secrets.DOCKER_USERNAME }}/irelis-admin:server
-

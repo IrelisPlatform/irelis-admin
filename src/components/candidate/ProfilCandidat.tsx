@@ -1,57 +1,64 @@
 // src/components/candidate/ProfilCandidat.tsx
-'use client';
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
+"use client";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import {
-    User,
-    Mail,
-    Phone,
-    MapPin,
-    Briefcase,
-    GraduationCap,
-    Award,
-    Globe,
-    Calendar,
-    DollarSign,
-    FileText,
-    Upload,
-    Save,
-    Eye,
-    EyeOff,
-    Linkedin,
-    Plus,
-    X,
-    TrendingUp,
-    Target,
-    Languages,
-    Sparkles,
-    Trash2,
-    AlertTriangle, Download,
-} from 'lucide-react';
-import { toast } from 'sonner';
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Briefcase,
+  GraduationCap,
+  Award,
+  Globe,
+  Calendar,
+  DollarSign,
+  FileText,
+  Upload,
+  Save,
+  Eye,
+  EyeOff,
+  Linkedin,
+  Plus,
+  X,
+  TrendingUp,
+  Target,
+  Languages,
+  Sparkles,
+  Trash2,
+  AlertTriangle,
+  Download,
+} from "lucide-react";
+import { toast } from "sonner";
 import { useCandidateProfile } from "@/hooks/candidate/useCandidateProfile";
-import { monthStringToIsoDate } from '@/utils/date';
-import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle} from "../ui/dialog";
-import {Spinner} from "@/components/ui/spinner";
+import { monthStringToIsoDate } from "@/utils/date";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import { Spinner } from "@/components/ui/spinner";
 
 interface Competence {
   id: string;
   nom: string;
-  niveau: 'débutant' | 'intermédiaire' | 'avancé' | 'expert';
+  niveau: "débutant" | "intermédiaire" | "avancé" | "expert";
 }
 
 interface Experience {
@@ -76,51 +83,71 @@ interface Formation {
 interface Langue {
   id: string;
   langue: string;
-  niveau: 'débutant' | 'intermédiaire' | 'avancé' | 'bilingue' | 'langue maternelle';
+  niveau:
+    | "débutant"
+    | "intermédiaire"
+    | "avancé"
+    | "bilingue"
+    | "langue maternelle";
 }
 
 // --- Mappings pour les COMPÉTENCES ---
 const backendSkillLevelToUI = (level: string): string => {
   const map: Record<string, string> = {
-    BEGINNER: 'débutant',
-    INTERMEDIATE: 'intermédiaire',
-    ADVANCED: 'avancé',
-    EXPERT: 'expert'
+    BEGINNER: "débutant",
+    INTERMEDIATE: "intermédiaire",
+    ADVANCED: "avancé",
+    EXPERT: "expert",
   };
-  return map[level] || 'débutant';
+  return map[level] || "débutant";
 };
 
-const uiSkillLevelToBackend = (level: string): "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXPERT" => {
-  const map: Record<string, "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXPERT"> = {
-    'débutant': 'BEGINNER',
-    'intermédiaire': 'INTERMEDIATE',
-    'avancé': 'ADVANCED',
-    'expert': 'EXPERT'
+const uiSkillLevelToBackend = (
+  level: string,
+): "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXPERT" => {
+  const map: Record<
+    string,
+    "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXPERT"
+  > = {
+    débutant: "BEGINNER",
+    intermédiaire: "INTERMEDIATE",
+    avancé: "ADVANCED",
+    expert: "EXPERT",
   };
-  return map[level] || 'BEGINNER';
+  return map[level] || "BEGINNER";
 };
 
 // --- Mappings pour les LANGUES ---
 const backendLanguageLevelToUI = (level: string): string => {
   const map: Record<string, string> = {
-    BEGINNER: 'débutant',
-    INTERMEDIATE: 'intermédiaire',
-    ADVANCED: 'avancé',
-    BILINGUAL: 'bilingue',
-    NATIVE_LANGUAGE: 'langue maternelle'
+    BEGINNER: "débutant",
+    INTERMEDIATE: "intermédiaire",
+    ADVANCED: "avancé",
+    BILINGUAL: "bilingue",
+    NATIVE_LANGUAGE: "langue maternelle",
   };
-  return map[level] || 'débutant';
+  return map[level] || "débutant";
 };
 
-const uiLanguageLevelToBackend = (level: string): "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "BILINGUAL" | "NATIVE_LANGUAGE" => {
-  const map: Record<string, "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "BILINGUAL" | "NATIVE_LANGUAGE"> = {
-    'débutant': 'BEGINNER',
-    'intermédiaire': 'INTERMEDIATE',
-    'avancé': 'ADVANCED',
-    'bilingue': 'BILINGUAL',
-    'langue maternelle': 'NATIVE_LANGUAGE'
+const uiLanguageLevelToBackend = (
+  level: string,
+):
+  | "BEGINNER"
+  | "INTERMEDIATE"
+  | "ADVANCED"
+  | "BILINGUAL"
+  | "NATIVE_LANGUAGE" => {
+  const map: Record<
+    string,
+    "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "BILINGUAL" | "NATIVE_LANGUAGE"
+  > = {
+    débutant: "BEGINNER",
+    intermédiaire: "INTERMEDIATE",
+    avancé: "ADVANCED",
+    bilingue: "BILINGUAL",
+    "langue maternelle": "NATIVE_LANGUAGE",
   };
-  return map[level] || 'BEGINNER';
+  return map[level] || "BEGINNER";
 };
 
 export function ProfilCandidat() {
@@ -148,15 +175,14 @@ export function ProfilCandidat() {
       setProfilVisible(Boolean(profile.isVisible));
     }
   }, []);
-    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-    const [loadingDelete, setLoadingDelete] = useState(false);
-    const [loadingUpload, setLoadingUpload] = useState(false);
-    const [previewOpen, setPreviewOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [loadingDelete, setLoadingDelete] = useState(false);
+  const [loadingUpload, setLoadingUpload] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
-
-    // Informations personnelles
+  // Informations personnelles
   const [nom, setNom] = useState("");
-  const [emailName,setEmailName] = useState("");
+  const [emailName, setEmailName] = useState("");
   const [prenom, setPrenom] = useState("");
   const [email, setEmail] = useState("");
   const [telephone, setTelephone] = useState("");
@@ -173,11 +199,11 @@ export function ProfilCandidat() {
   // Préférences de recherche
   const [posteRecherche, setPosteRecherche] = useState("");
   const [typeContrat, setTypeContrat] = useState<string[]>([]);
-  const [disponibilite, setDisponibilite] = useState('Immédiate');
+  const [disponibilite, setDisponibilite] = useState("Immédiate");
   const [mobilite, setMobilite] = useState("");
   const [pretentionsSalariales, setPretentionsSalariales] = useState("");
   const [secteursActivite, setSecteursActivite] = useState<string[]>([]);
-  const [cvUrl,setCVUrl] = useState("");
+  const [cvUrl, setCVUrl] = useState("");
 
   // Compétences
   const [competences, setCompetences] = useState<Competence[]>([]);
@@ -212,121 +238,140 @@ export function ProfilCandidat() {
       setTitreProfessionnel(profile.professionalTitle || "");
 
       // Compétences
-      setCompetences(profile.skills.map(s => ({
-        id: s.id,
-        nom: s.name,
-        niveau: backendSkillLevelToUI(s.level)
-      })));
+      setCompetences(
+        profile.skills.map((s) => ({
+          id: s.id,
+          nom: s.name,
+          niveau: backendSkillLevelToUI(s.level),
+        })),
+      );
 
       // Expériences
-      setExperiences(profile.experiences.map(e => ({
-        id: e.id,
-        poste: e.position,
-        entreprise: e.companyName,
-        ville: e.city,
-        dateDebut: e.startDate.split('T')[0],
-        dateFin: e.endDate ? e.endDate.split('T')[0] : "",
-        actuel: e.isCurrent,
-        description: e.description
-      })));
+      setExperiences(
+        profile.experiences.map((e) => ({
+          id: e.id,
+          poste: e.position,
+          entreprise: e.companyName,
+          ville: e.city,
+          dateDebut: e.startDate.split("T")[0],
+          dateFin: e.endDate ? e.endDate.split("T")[0] : "",
+          actuel: e.isCurrent,
+          description: e.description,
+        })),
+      );
 
       // Formations
-      setFormations(profile.educations.map(ed => ({
-        id: ed.id,
-        diplome: ed.degree,
-        etablissement: ed.institution,
-        ville: ed.city,
-        annee: ed.graduationYear.toString()
-      })));
+      setFormations(
+        profile.educations.map((ed) => ({
+          id: ed.id,
+          diplome: ed.degree,
+          etablissement: ed.institution,
+          ville: ed.city,
+          annee: ed.graduationYear.toString(),
+        })),
+      );
 
       // Langues
-      setLangues(profile.languages.map(l => ({
-        id: l.id,
-        langue: l.language,
-        niveau: backendLanguageLevelToUI(l.level)
-      })));
+      setLangues(
+        profile.languages.map((l) => ({
+          id: l.id,
+          langue: l.language,
+          niveau: backendLanguageLevelToUI(l.level),
+        })),
+      );
     }
   }, [profile]);
 
+  const handleUpload = async (file: File) => {
+    setLoadingUpload(true);
+    try {
+      await uploadCV(file);
+      toast.success("CV téléchargé avec succès !");
+    } catch (err: any) {
+      toast.error(err.message || "Erreur lors de l'upload");
+    } finally {
+      setLoadingUpload(false);
+    }
+  };
 
-    const handleUpload = async (file: File) => {
-        setLoadingUpload(true);
-        try {
-            await uploadCV(file);
-            toast.success("CV téléchargé avec succès !");
-        } catch (err: any) {
-            toast.error(err.message || "Erreur lors de l'upload");
-        } finally {
-            setLoadingUpload(false);
-        }
-    };
-
-    const getFileName = (url: string) => {
-        try {
-            const decoded = decodeURIComponent(url.split("/").pop() || "");
-            return decoded.split("?")[0];
-        } catch {
-            return "CV";
-        }
-    };
+  const getFileName = (url: string) => {
+    try {
+      const decoded = decodeURIComponent(url.split("/").pop() || "");
+      return decoded.split("?")[0];
+    } catch {
+      return "CV";
+    }
+  };
   const ajouterCompetence = () => {
-    setCompetences(prev => [...prev, { id: Date.now().toString(), nom: '', niveau: 'débutant' }]);
+    setCompetences((prev) => [
+      ...prev,
+      { id: Date.now().toString(), nom: "", niveau: "débutant" },
+    ]);
   };
 
   const supprimerCompetence = (id: string) => {
-    setCompetences(prev => prev.filter(c => c.id !== id));
+    setCompetences((prev) => prev.filter((c) => c.id !== id));
   };
 
   const ajouterExperience = () => {
-    setExperiences(prev => [...prev, {
-      id: Date.now().toString(),
-      poste: '',
-      entreprise: '',
-      ville: '',
-      dateDebut: '',
-      dateFin: '',
-      actuel: false,
-      description: '',
-    }]);
+    setExperiences((prev) => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        poste: "",
+        entreprise: "",
+        ville: "",
+        dateDebut: "",
+        dateFin: "",
+        actuel: false,
+        description: "",
+      },
+    ]);
   };
 
   const supprimerExperience = (id: string) => {
-    setExperiences(prev => prev.filter(e => e.id !== id));
+    setExperiences((prev) => prev.filter((e) => e.id !== id));
   };
 
   const ajouterFormation = () => {
-    setFormations(prev => [...prev, {
-      id: Date.now().toString(),
-      diplome: '',
-      etablissement: '',
-      ville: '',
-      annee: '',
-    }]);
+    setFormations((prev) => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        diplome: "",
+        etablissement: "",
+        ville: "",
+        annee: "",
+      },
+    ]);
   };
 
-    const confirmDelete = async () => {
-        setLoadingDelete(true);
-        try {
-            await deleteCV();
-            toast.success("CV supprimé");
-            setDeleteModalOpen(false);
-        } catch (err: any) {
-            toast.error(err.message || "Erreur lors de la suppression");
-        } finally {
-            setLoadingDelete(false);
-        }
-    };
+  const confirmDelete = async () => {
+    setLoadingDelete(true);
+    try {
+      await deleteCV();
+      toast.success("CV supprimé");
+      setDeleteModalOpen(false);
+    } catch (err: any) {
+      toast.error(err.message || "Erreur lors de la suppression");
+    } finally {
+      setLoadingDelete(false);
+    }
+  };
 
   const supprimerFormation = (id: string) => {
-    setFormations(prev => prev.filter(f => f.id !== id));
+    setFormations((prev) => prev.filter((f) => f.id !== id));
   };
 
   const ajouterLangue = () => {
-    setLangues(prev => [...prev, { id: Date.now().toString(), langue: '', niveau: 'débutant' }]);
+    setLangues((prev) => [
+      ...prev,
+      { id: Date.now().toString(), langue: "", niveau: "débutant" },
+    ]);
   };
 
   const supprimerLangue = (id: string) => {
-    setLangues(prev => prev.filter(l => l.id !== id));
+    setLangues((prev) => prev.filter((l) => l.id !== id));
   };
 
   const sauvegarderProfil = async () => {
@@ -352,16 +397,18 @@ export function ProfilCandidat() {
           region: "",
           city: ville,
           sectorIds: [],
-          sectors: secteursActivite
+          sectors: secteursActivite,
         },
-        skills: competences.map(c => ({
+        skills: competences.map((c) => ({
           id: c.id,
           name: c.nom,
-          level: uiSkillLevelToBackend(c.niveau)
+          level: uiSkillLevelToBackend(c.niveau),
         })),
 
-        experiences: experiences.map(e => {
-          const startDateIso = e.dateDebut ? monthStringToIsoDate(e.dateDebut) : null;
+        experiences: experiences.map((e) => {
+          const startDateIso = e.dateDebut
+            ? monthStringToIsoDate(e.dateDebut)
+            : null;
           let endDateIso: string | null = null;
 
           if (e.actuel) {
@@ -370,7 +417,9 @@ export function ProfilCandidat() {
             endDateIso = monthStringToIsoDate(e.dateFin);
           }
           if (!startDateIso) {
-            throw new Error(`La date de début de l'expérience "${e.poste}" est invalide.`);
+            throw new Error(
+              `La date de début de l'expérience "${e.poste}" est invalide.`,
+            );
           }
 
           return {
@@ -381,34 +430,37 @@ export function ProfilCandidat() {
             startDate: startDateIso,
             endDate: endDateIso,
             isCurrent: e.actuel,
-            description: e.description
+            description: e.description,
           };
         }),
 
-        educations: formations.map(f => ({
+        educations: formations.map((f) => ({
           id: f.id,
           degree: f.diplome,
           institution: f.etablissement,
           city: f.ville,
-          graduationYear: parseInt(f.annee) || 0
+          graduationYear: parseInt(f.annee) || 0,
         })),
 
-        languages: langues.map(l => ({
+        languages: langues.map((l) => ({
           id: l.id,
           language: l.langue,
-          level: uiLanguageLevelToBackend(l.niveau)
-        }))
+          level: uiLanguageLevelToBackend(l.niveau),
+        })),
       };
 
-      const invalidFormation = formations.find(f => !f.annee || parseInt(f.annee) < 4);
+      const invalidFormation = formations.find(
+        (f) => !f.annee || parseInt(f.annee) < 4,
+      );
       if (invalidFormation) {
-        toast.error("Veuillez renseigner une année valide pour chaque formation.");
+        toast.error(
+          "Veuillez renseigner une année valide pour chaque formation.",
+        );
         return;
       }
 
       await saveProfile(updates);
-      toast.success('Profil enregistré avec succès');
-
+      toast.success("Profil enregistré avec succès");
     } catch (err: any) {
       toast.error(err.message || "Erreur lors de l’enregistrement");
     }
@@ -430,7 +482,9 @@ export function ProfilCandidat() {
     <div className="w-full">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Mon profil candidat</h1>
+          <h1 className="text-2xl font-bold text-foreground">
+            Mon profil candidat
+          </h1>
           <p className="text-muted-foreground mt-1">
             Complétez votre profil pour maximiser vos chances
           </p>
@@ -440,7 +494,7 @@ export function ProfilCandidat() {
           className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 flex items-center"
         >
           <Save className="h-4 w-4" />
-            {loading ? 'En cours...' : 'Enregistrer'}
+          {loading ? "En cours..." : "Enregistrer"}
         </Button>
       </div>
 
@@ -452,7 +506,9 @@ export function ProfilCandidat() {
           <Card className="p-6">
             <div className="flex items-center gap-2 mb-4">
               <User className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-medium text-foreground">Informations personnelles</h2>
+              <h2 className="text-lg font-medium text-foreground">
+                Informations personnelles
+              </h2>
             </div>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -524,7 +580,9 @@ export function ProfilCandidat() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Côte d'Ivoire">Côte d'Ivoire</SelectItem>
+                      <SelectItem value="Côte d'Ivoire">
+                        Côte d'Ivoire
+                      </SelectItem>
                       <SelectItem value="Sénégal">Sénégal</SelectItem>
                       <SelectItem value="Bénin">Bénin</SelectItem>
                       <SelectItem value="Togo">Togo</SelectItem>
@@ -564,100 +622,118 @@ export function ProfilCandidat() {
               {/* CV */}
               <div>
                 <Label>CV</Label>
-                  {!profile.cvUrl ? (
-                      <div
-                          className="border-2 border-dashed border-muted rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer mt-1"
-                          onClick={() => document.getElementById('cv-upload')?.click()}
+                {!profile.cvUrl ? (
+                  <div
+                    className="border-2 border-dashed border-muted rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer mt-1"
+                    onClick={() =>
+                      document.getElementById("cv-upload")?.click()
+                    }
+                  >
+                    {loadingUpload ? (
+                      <Spinner className="mx-auto h-8 w-8 text-muted-foreground" />
+                    ) : (
+                      <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                    )}
+                    <p className="text-sm text-foreground">
+                      {loadingUpload
+                        ? "Upload en cours..."
+                        : "Cliquez pour télécharger votre CV"}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      PDF, DOCX max 5 Mo
+                    </p>
+                    <input
+                      id="cv-upload"
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleUpload(file);
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="mt-2 flex flex-col gap-2 border rounded-lg p-4 bg-gray-50">
+                    <p className="text-sm font-medium truncate">
+                      {getFileName(profile.cvUrl)}
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open(profile.cvUrl, "_blank")}
                       >
-                          {loadingUpload ? (
-                              <Spinner className="mx-auto h-8 w-8 text-muted-foreground" />
-                          ) : (
-                              <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                          )}
-                          <p className="text-sm text-foreground">
-                              {loadingUpload ? "Upload en cours..." : "Cliquez pour télécharger votre CV"}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">PDF, DOCX max 5 Mo</p>
-                          <input
-                              id="cv-upload"
-                              type="file"
-                              accept=".pdf,.doc,.docx"
-                              className="hidden"
-                              onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) handleUpload(file);
-                              }}
-                          />
-                      </div>
-                  ) : (
-                      <div className="mt-2 flex flex-col gap-2 border rounded-lg p-4 bg-gray-50">
-                          <p className="text-sm font-medium truncate">{getFileName(profile.cvUrl)}</p>
-                          <div className="flex gap-2">
-                              <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => window.open(profile.cvUrl, "_blank")}
-                              >
-                                  <Eye className="w-4 h-4 mr-1" /> Voir
-                              </Button>
-                              <Button
-                                  variant="secondary"
-                                  size="sm"
-                                  onClick={() => {
-                                      const link = document.createElement("a");
-                                      link.href = profile.cvUrl;
-                                      link.download = getFileName(profile.cvUrl);
-                                      link.click();
-                                  }}
-                              >
-                                  <Download className="w-4 h-4 mr-1" /> Télécharger
-                              </Button>
-                              <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  onClick={() => setDeleteModalOpen(true)}
-                              >
-                                  <Trash2 className="h-4 w-4" /> Supprimer
-                              </Button>
-                          </div>
+                        <Eye className="w-4 h-4 mr-1" /> Voir
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          const link = document.createElement("a");
+                          link.href = profile.cvUrl;
+                          link.download = getFileName(profile.cvUrl);
+                          link.click();
+                        }}
+                      >
+                        <Download className="w-4 h-4 mr-1" /> Télécharger
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => setDeleteModalOpen(true)}
+                      >
+                        <Trash2 className="h-4 w-4" /> Supprimer
+                      </Button>
+                    </div>
 
-                          {/* Modal suppression */}
-                          <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
-                              <DialogContent>
-                                  <DialogHeader>
-                                      <DialogTitle>Supprimer le CV</DialogTitle>
-                                      <DialogDescription>
-                                          Cette action est irréversible. Êtes-vous sûr ?
-                                      </DialogDescription>
-                                  </DialogHeader>
-                                  <div className="flex justify-end gap-2 pt-4">
-                                      <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>Annuler</Button>
-                                      <Button
-                                          variant="destructive"
-                                          onClick={confirmDelete}
-                                          disabled={loadingDelete}
-                                      >
-                                          {loadingDelete ? "Suppression..." : "Supprimer"}
-                                      </Button>
-                                  </div>
-                              </DialogContent>
-                          </Dialog>
-                      </div>
-                  )}
+                    {/* Modal suppression */}
+                    <Dialog
+                      open={deleteModalOpen}
+                      onOpenChange={setDeleteModalOpen}
+                    >
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Supprimer le CV</DialogTitle>
+                          <DialogDescription>
+                            Cette action est irréversible. Êtes-vous sûr ?
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="flex justify-end gap-2 pt-4">
+                          <Button
+                            variant="outline"
+                            onClick={() => setDeleteModalOpen(false)}
+                          >
+                            Annuler
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            onClick={confirmDelete}
+                            disabled={loadingDelete}
+                          >
+                            {loadingDelete ? "Suppression..." : "Supprimer"}
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                )}
               </div>
 
               {/* Lettre */}
               <div>
                 <Label>Lettre de motivation type</Label>
-                <div 
+                <div
                   className="border-2 border-dashed border-muted rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer mt-1"
-                  onClick={() => document.getElementById('letter-upload')?.click()}
+                  onClick={() =>
+                    document.getElementById("letter-upload")?.click()
+                  }
                 >
                   <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                   <p className="text-sm text-foreground">
                     {profile?.motivationLetterUrl
-                      ? 'Lettre téléchargée' 
-                      : 'Cliquez pour télécharger votre lettre'}
+                      ? "Lettre téléchargée"
+                      : "Cliquez pour télécharger votre lettre"}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     PDF, DOCX max 5 Mo
@@ -669,9 +745,9 @@ export function ProfilCandidat() {
                     className="hidden"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
-                      if (file) 
-                        saveLetterAndPitch(file, pitchMail).catch(err => 
-                          toast.error(err.message)
+                      if (file)
+                        saveLetterAndPitch(file, pitchMail).catch((err) =>
+                          toast.error(err.message),
                         );
                     }}
                   />
@@ -701,7 +777,9 @@ export function ProfilCandidat() {
               {/* Pitch */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <Label htmlFor="pitch-mail">Pitch mail type (recommandé)</Label>
+                  <Label htmlFor="pitch-mail">
+                    Pitch mail type (recommandé)
+                  </Label>
                   <Button
                     type="button"
                     variant="outline"
@@ -712,7 +790,9 @@ Vivement intéressé(e) par le poste de [POSTE] au sein de [ENTREPRISE], je me p
 Avec mon parcours et mes compétences en [VOTRE DOMAINE], je suis convaincu(e) de pouvoir contribuer efficacement à vos objectifs. Mon expérience m'a permis de développer [VOS ATOUTS PRINCIPAUX] et je suis particulièrement motivé(e) par [CE QUI VOUS ATTIRE].
 Disponible immédiatement et mobile sur toute l'Afrique Centrale, je reste à votre disposition pour un échange et vous prie d'agréer mes salutations distinguées.`;
                       setPitchMail(template);
-                      toast.success("Modèle chargé ! Personnalisez-le selon votre profil");
+                      toast.success(
+                        "Modèle chargé ! Personnalisez-le selon votre profil",
+                      );
                     }}
                     className="text-xs"
                   >
@@ -729,7 +809,8 @@ Disponible immédiatement et mobile sur toute l'Afrique Centrale, je reste à vo
                   className="font-mono text-sm mt-1"
                 />
                 <p className="text-xs text-muted-foreground mt-2">
-                  💡 Ce pitch sera pré-rempli dans vos candidatures. Personnalisez les sections entre crochets.
+                  💡 Ce pitch sera pré-rempli dans vos candidatures.
+                  Personnalisez les sections entre crochets.
                 </p>
                 <Button
                   type="button"
@@ -737,7 +818,7 @@ Disponible immédiatement et mobile sur toute l'Afrique Centrale, je reste à vo
                   onClick={() => {
                     saveLetterAndPitch(null, pitchMail)
                       .then(() => toast.success("Pitch mis à jour"))
-                      .catch(err => toast.error(err.message));
+                      .catch((err) => toast.error(err.message));
                   }}
                 >
                   Sauvegarder le pitch
@@ -750,7 +831,9 @@ Disponible immédiatement et mobile sur toute l'Afrique Centrale, je reste à vo
           <Card className="p-6">
             <div className="flex items-center gap-2 mb-4">
               <Target className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-medium text-foreground">Préférences de recherche</h2>
+              <h2 className="text-lg font-medium text-foreground">
+                Préférences de recherche
+              </h2>
             </div>
             <div className="space-y-4">
               <div>
@@ -765,32 +848,41 @@ Disponible immédiatement et mobile sur toute l'Afrique Centrale, je reste à vo
               <div>
                 <Label>Type de contrat souhaité</Label>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {['CDI', 'CDD', 'Stage', 'Freelance', 'Alternance'].map((type) => (
-                    <Badge
-                      key={type}
-                      variant={typeContrat.includes(type) ? 'default' : 'outline'}
-                      className={`cursor-pointer ${
-                        typeContrat.includes(type)
-                          ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                          : 'hover:bg-muted'
-                      }`}
-                      onClick={() => {
-                        if (typeContrat.includes(type)) {
-                          setTypeContrat(typeContrat.filter(t => t !== type));
-                        } else {
-                          setTypeContrat([...typeContrat, type]);
+                  {["CDI", "CDD", "Stage", "Freelance", "Alternance"].map(
+                    (type) => (
+                      <Badge
+                        key={type}
+                        variant={
+                          typeContrat.includes(type) ? "default" : "outline"
                         }
-                      }}
-                    >
-                      {type}
-                    </Badge>
-                  ))}
+                        className={`cursor-pointer ${
+                          typeContrat.includes(type)
+                            ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                            : "hover:bg-muted"
+                        }`}
+                        onClick={() => {
+                          if (typeContrat.includes(type)) {
+                            setTypeContrat(
+                              typeContrat.filter((t) => t !== type),
+                            );
+                          } else {
+                            setTypeContrat([...typeContrat, type]);
+                          }
+                        }}
+                      >
+                        {type}
+                      </Badge>
+                    ),
+                  )}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="disponibilite">Disponibilité</Label>
-                  <Select value={disponibilite} onValueChange={setDisponibilite}>
+                  <Select
+                    value={disponibilite}
+                    onValueChange={setDisponibilite}
+                  >
                     <SelectTrigger className="mt-1">
                       <SelectValue />
                     </SelectTrigger>
@@ -826,18 +918,33 @@ Disponible immédiatement et mobile sur toute l'Afrique Centrale, je reste à vo
               <div>
                 <Label>Secteurs d'activité</Label>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {['Technologie', 'Services', 'Finance', 'Commerce', 'Santé', 'Éducation', 'BTP', 'Industrie'].map((secteur) => (
+                  {[
+                    "Technologie",
+                    "Services",
+                    "Finance",
+                    "Commerce",
+                    "Santé",
+                    "Éducation",
+                    "BTP",
+                    "Industrie",
+                  ].map((secteur) => (
                     <Badge
                       key={secteur}
-                      variant={secteursActivite.includes(secteur) ? 'default' : 'outline'}
+                      variant={
+                        secteursActivite.includes(secteur)
+                          ? "default"
+                          : "outline"
+                      }
                       className={`cursor-pointer ${
                         secteursActivite.includes(secteur)
-                          ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                          : 'hover:bg-muted'
+                          ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                          : "hover:bg-muted"
                       }`}
                       onClick={() => {
                         if (secteursActivite.includes(secteur)) {
-                          setSecteursActivite(secteursActivite.filter(s => s !== secteur));
+                          setSecteursActivite(
+                            secteursActivite.filter((s) => s !== secteur),
+                          );
                         } else {
                           setSecteursActivite([...secteursActivite, secteur]);
                         }
@@ -856,7 +963,9 @@ Disponible immédiatement et mobile sur toute l'Afrique Centrale, je reste à vo
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Award className="h-5 w-5 text-primary" />
-                <h2 className="text-lg font-medium text-foreground">Compétences</h2>
+                <h2 className="text-lg font-medium text-foreground">
+                  Compétences
+                </h2>
               </div>
               <Button
                 onClick={ajouterCompetence}
@@ -894,7 +1003,9 @@ Disponible immédiatement et mobile sur toute l'Afrique Centrale, je reste à vo
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="débutant">Débutant</SelectItem>
-                      <SelectItem value="intermédiaire">Intermédiaire</SelectItem>
+                      <SelectItem value="intermédiaire">
+                        Intermédiaire
+                      </SelectItem>
                       <SelectItem value="avancé">Avancé</SelectItem>
                       <SelectItem value="expert">Expert</SelectItem>
                     </SelectContent>
@@ -926,7 +1037,9 @@ Disponible immédiatement et mobile sur toute l'Afrique Centrale, je reste à vo
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Briefcase className="h-5 w-5 text-primary" />
-                <h2 className="text-lg font-medium text-foreground">Expériences professionnelles</h2>
+                <h2 className="text-lg font-medium text-foreground">
+                  Expériences professionnelles
+                </h2>
               </div>
               <Button
                 onClick={ajouterExperience}
@@ -940,25 +1053,28 @@ Disponible immédiatement et mobile sur toute l'Afrique Centrale, je reste à vo
             </div>
             <div className="space-y-6">
               {experiences.map((exp, index) => (
-                <div key={exp.id} className="border border-border rounded-lg p-4">
+                <div
+                  key={exp.id}
+                  className="border border-border rounded-lg p-4"
+                >
                   <div className="flex justify-end mb-2">
-                     <Button
-                       onClick={async () => {
-                         if (confirm("Supprimer cette expérience ?")) {
-                           try {
-                             await deleteExperience(exp.id);
-                             toast.success("Expérience supprimée");
-                           } catch (err: any) {
-                             toast.error(err.message);
-                           }
-                         }
-                       }}
-                       variant="ghost"
-                       size="icon"
-                       className="text-destructive hover:text-destructive/90"
-                     >
-                       <Trash2 className="h-4 w-4" />
-                     </Button>
+                    <Button
+                      onClick={async () => {
+                        if (confirm("Supprimer cette expérience ?")) {
+                          try {
+                            await deleteExperience(exp.id);
+                            toast.success("Expérience supprimée");
+                          } catch (err: any) {
+                            toast.error(err.message);
+                          }
+                        }
+                      }}
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive hover:text-destructive/90"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                   <div className="space-y-3">
                     <Input
@@ -1023,7 +1139,7 @@ Disponible immédiatement et mobile sur toute l'Afrique Centrale, je reste à vo
                         onCheckedChange={(checked) => {
                           const updated = [...experiences];
                           updated[index].actuel = checked;
-                          if (checked) updated[index].dateFin = '';
+                          if (checked) updated[index].dateFin = "";
                           setExperiences(updated);
                         }}
                       />
@@ -1050,7 +1166,9 @@ Disponible immédiatement et mobile sur toute l'Afrique Centrale, je reste à vo
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <GraduationCap className="h-5 w-5 text-primary" />
-                <h2 className="text-lg font-medium text-foreground">Formations et diplômes</h2>
+                <h2 className="text-lg font-medium text-foreground">
+                  Formations et diplômes
+                </h2>
               </div>
               <Button
                 onClick={ajouterFormation}
@@ -1064,7 +1182,10 @@ Disponible immédiatement et mobile sur toute l'Afrique Centrale, je reste à vo
             </div>
             <div className="space-y-4">
               {formations.map((form, index) => (
-                <div key={form.id} className="border border-border rounded-lg p-4">
+                <div
+                  key={form.id}
+                  className="border border-border rounded-lg p-4"
+                >
                   <div className="flex justify-end mb-2">
                     <Button
                       onClick={async () => {
@@ -1172,10 +1293,14 @@ Disponible immédiatement et mobile sur toute l'Afrique Centrale, je reste à vo
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="débutant">Débutant</SelectItem>
-                      <SelectItem value="intermédiaire">Intermédiaire</SelectItem>
+                      <SelectItem value="intermédiaire">
+                        Intermédiaire
+                      </SelectItem>
                       <SelectItem value="avancé">Avancé</SelectItem>
                       <SelectItem value="bilingue">Bilingue</SelectItem>
-                      <SelectItem value="langue maternelle">Langue maternelle</SelectItem>
+                      <SelectItem value="langue maternelle">
+                        Langue maternelle
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <Button
@@ -1204,7 +1329,9 @@ Disponible immédiatement et mobile sur toute l'Afrique Centrale, je reste à vo
           <Card className="p-6">
             <div className="flex items-center gap-2 mb-4">
               <Globe className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-medium text-foreground">Réseaux sociaux et liens</h2>
+              <h2 className="text-lg font-medium text-foreground">
+                Réseaux sociaux et liens
+              </h2>
             </div>
             <div className="space-y-4">
               <div>
@@ -1240,18 +1367,26 @@ Disponible immédiatement et mobile sur toute l'Afrique Centrale, je reste à vo
           <Card className="p-6">
             <div className="flex items-center gap-2 mb-4">
               <TrendingUp className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-medium text-foreground">Statistiques</h2>
+              <h2 className="text-lg font-medium text-foreground">
+                Statistiques
+              </h2>
             </div>
             <div className="space-y-4">
               <div>
-                <div className="text-sm text-muted-foreground mb-1">Vues du profil</div>
+                <div className="text-sm text-muted-foreground mb-1">
+                  Vues du profil
+                </div>
                 <div className="text-2xl text-foreground">{vuesProfil}</div>
                 <p className="text-xs text-muted-foreground mt-1">Ce mois-ci</p>
               </div>
               <Separator className="bg-border" />
               <div>
-                <div className="text-sm text-muted-foreground mb-1">Candidatures envoyées</div>
-                <div className="text-2xl text-foreground">{candidaturesEnvoyees}</div>
+                <div className="text-sm text-muted-foreground mb-1">
+                  Candidatures envoyées
+                </div>
+                <div className="text-2xl text-foreground">
+                  {candidaturesEnvoyees}
+                </div>
                 <p className="text-xs text-muted-foreground mt-1">Total</p>
               </div>
             </div>
@@ -1261,12 +1396,16 @@ Disponible immédiatement et mobile sur toute l'Afrique Centrale, je reste à vo
           <Card className="p-6">
             <div className="flex items-center gap-2 mb-4">
               <Eye className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-medium text-foreground">Visibilité</h2>
+              <h2 className="text-lg font-medium text-foreground">
+                Visibilité
+              </h2>
             </div>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm text-foreground mb-1">Profil visible</div>
+                  <div className="text-sm text-foreground mb-1">
+                    Profil visible
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     Les recruteurs peuvent voir votre profil
                   </p>
@@ -1276,25 +1415,30 @@ Disponible immédiatement et mobile sur toute l'Afrique Centrale, je reste à vo
                   onCheckedChange={async (checked) => {
                     setProfilVisible(checked);
                     await toggleVisibility();
-                    toast.success(`Profil ${checked ? 'visible' : 'masqué'}`);
+                    toast.success(`Profil ${checked ? "visible" : "masqué"}`);
                   }}
                 />
               </div>
               <Separator className="bg-border" />
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm text-foreground mb-1">Alertes emploi</div>
+                  <div className="text-sm text-foreground mb-1">
+                    Alertes emploi
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     Recevoir les nouvelles offres par email
                   </p>
                 </div>
-                <Switch checked={alertesActives} onCheckedChange={setAlertesActives} />
+                <Switch
+                  checked={alertesActives}
+                  onCheckedChange={setAlertesActives}
+                />
               </div>
             </div>
           </Card>
 
           {/* Suppression de compte RGPD */}
-          <Card className="p-6 border-destructive/20">
+          {/*   <Card className="p-6 border-destructive/20">
             <div className="flex items-start gap-3">
               <AlertTriangle className="h-5 w-5 text-destructive mt-0.5" />
               <div>
@@ -1317,27 +1461,50 @@ Disponible immédiatement et mobile sur toute l'Afrique Centrale, je reste à vo
                 </Button>
               </div>
             </div>
-          </Card>
+          </Card> */}
 
           {/* Complétion du profil */}
           <Card className="p-6">
             <div className="mb-4">
-              <h2 className="text-lg font-medium text-foreground mb-2">Complétion du profil</h2>
+              <h2 className="text-lg font-medium text-foreground mb-2">
+                Complétion du profil
+              </h2>
               <div className="w-full bg-muted rounded-full h-2">
-                <div 
-                  className="bg-primary h-2 rounded-full" 
+                <div
+                  className="bg-primary h-2 rounded-full"
                   style={{
-                    width: profile ?
-                      ([
-                        profile.firstName, profile.lastName, profile.professionalTitle,
-                        profile.phoneNumber, profile.country, profile.city
-                      ].filter(Boolean).length / 6) * 100 + '%' : '0%' 
-                  }} 
+                    width: profile
+                      ? ([
+                          profile.firstName,
+                          profile.lastName,
+                          profile.professionalTitle,
+                          profile.phoneNumber,
+                          profile.country,
+                          profile.city,
+                        ].filter(Boolean).length /
+                          6) *
+                          100 +
+                        "%"
+                      : "0%",
+                  }}
                 ></div>
               </div>
               <p className="text-sm text-muted-foreground mt-2">
-                {profile ? 
-                  ([profile.firstName, profile.lastName, profile.professionalTitle, profile.phoneNumber, profile.country, profile.city].filter(Boolean).length / 6 * 100).toFixed(0) : '0'}% complété
+                {profile
+                  ? (
+                      ([
+                        profile.firstName,
+                        profile.lastName,
+                        profile.professionalTitle,
+                        profile.phoneNumber,
+                        profile.country,
+                        profile.city,
+                      ].filter(Boolean).length /
+                        6) *
+                      100
+                    ).toFixed(0)
+                  : "0"}
+                % complété
               </p>
             </div>
             <ul className="space-y-2 text-sm">
@@ -1369,7 +1536,9 @@ Disponible immédiatement et mobile sur toute l'Afrique Centrale, je reste à vo
 
           {/* Conseils */}
           <Card className="p-6 bg-blue-50/50 border border-primary/20">
-            <h2 className="text-lg font-medium text-foreground mb-3">Conseils</h2>
+            <h2 className="text-lg font-medium text-foreground mb-3">
+              Conseils
+            </h2>
             <ul className="space-y-2 text-sm text-foreground">
               <li className="flex gap-2">
                 <span className="text-primary mt-0.5">•</span>

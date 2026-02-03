@@ -5,12 +5,14 @@ import { useEffect, useMemo, useRef } from "react";
 
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { Button } from "@/components/ui/button";
+import { getFileName } from "@/lib/file";
 
 type BasicImageUploaderProps = {
   accept?: string;
   maxSize?: number;
   onFileChange?: (file: File | null) => void;
   defaultPreview?: string;
+  value?: string | File | null;
   uploadButtonLabel?: string;
   changeButtonLabel?: string;
   removeButtonLabel?: string;
@@ -23,6 +25,7 @@ export function BasicImageUploader(props: BasicImageUploaderProps) {
     maxSize = 2 * 1024 * 1024, // 2MB par défaut
     onFileChange,
     defaultPreview,
+    value,
     uploadButtonLabel = "Ajouter un logo",
     changeButtonLabel = "Changer le logo",
     removeButtonLabel = "Supprimer",
@@ -47,14 +50,45 @@ export function BasicImageUploader(props: BasicImageUploaderProps) {
     const file = files[0]?.file;
     if (file instanceof File) {
       onFileChangeRef.current?.(file);
-    } else if (files.length === 0) {
-      onFileChangeRef.current?.(null);
     }
   }, [files]);
 
-  const previewUrl = files[0]?.preview || defaultPreview || null;
-  const fileName = useMemo(() => files[0]?.file.name || null, [files]);
+  // Derived state for display
+  const effectiveFile = files[0];
 
+  const previewUrl = useMemo(() => {
+    if (effectiveFile?.preview) return effectiveFile.preview;
+    if (typeof value === "string") return value;
+    if (value instanceof File) return URL.createObjectURL(value);
+    return defaultPreview || null;
+  }, [effectiveFile, value, defaultPreview]);
+
+  const fileName = useMemo(() => {
+    if (effectiveFile?.file.name) return effectiveFile.file.name;
+    if (value instanceof File) return value.name;
+    if (typeof value === "string") {
+      // Try to get filename from URL or return a default
+      try {
+        /*   return getFileName(value) || "Fichier"; */
+        const url = new URL(value);
+        const name = url.pathname.split("/").pop();
+        return name || "Image actuelle";
+      } catch {
+        return "Image actuelle";
+      }
+    }
+    return null;
+  }, [effectiveFile, value]);
+
+  // Cleanup object URLs if we created them for `value`
+  useEffect(() => {
+    return () => {
+      if (value instanceof File) {
+      }
+    };
+  }, [value]);
+
+  // Cleanup internal preview URLs on unmount is handled by useFileUpload or manual effect loop:
   useEffect(() => {
     return () => {
       // Cleanup preview URLs on unmount
@@ -69,6 +103,13 @@ export function BasicImageUploader(props: BasicImageUploaderProps) {
       });
     };
   }, [files]);
+
+  const handleRemove = () => {
+    if (files.length > 0) {
+      removeFile(files[0].id);
+    }
+    onFileChange?.(null);
+  };
 
   return (
     <div className={className}>
@@ -93,7 +134,11 @@ export function BasicImageUploader(props: BasicImageUploaderProps) {
             )}
           </div>
           <div className="relative inline-block">
-            <Button aria-haspopup="dialog" onClick={openFileDialog}>
+            <Button
+              aria-haspopup="dialog"
+              onClick={openFileDialog}
+              type="button"
+            >
               {fileName ? changeButtonLabel : uploadButtonLabel}
             </Button>
             <input
@@ -106,16 +151,16 @@ export function BasicImageUploader(props: BasicImageUploaderProps) {
         </div>
         {(fileName || previewUrl) && (
           <div className="inline-flex gap-2 text-xs">
-            <p aria-live="polite" className="truncate text-muted-foreground">
-              {fileName}
+            <p
+              aria-live="polite"
+              className="truncate text-muted-foreground max-w-[200px]"
+            >
+              {fileName || "Image"}
             </p>
             <button
               aria-label={`${removeButtonLabel} ${fileName}`}
               className="font-medium text-destructive hover:underline"
-              onClick={() => {
-                removeFile(files[0]?.id);
-                onFileChange?.(null);
-              }}
+              onClick={handleRemove}
               type="button"
             >
               {removeButtonLabel}
