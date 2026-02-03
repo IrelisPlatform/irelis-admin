@@ -39,7 +39,7 @@ jobs:
         run: docker pull ${{ secrets.DOCKER_USERNAME }}/irelis-admin:server
 
       - name: Stop and remove old container
-        run: docker rm -f irelis-admin || true
+        run: docker rm -f irelis-admin
 
       - name: Run new container
         run: |
