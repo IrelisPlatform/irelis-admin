@@ -3,8 +3,8 @@ name: Deploy Admin Frontend Next.js
 on:
   push:
     branches:
-      - reuse-initial-job-preview-dialog
-# test
+      - deploy
+
 jobs:
   build:
     runs-on: ubuntu-latest
