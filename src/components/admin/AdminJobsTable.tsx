@@ -2,6 +2,7 @@
 
 "use client";
 
+import Cookies from "js-cookie";
 import { useQuery } from "@tanstack/react-query";
 import { useQueryState } from "nuqs";
 import {
@@ -22,6 +23,7 @@ import { transformJob } from "@/hooks/usePublishedJobs";
 import { AlertCircle } from "lucide-react";
 import { JobDetailsDialog } from "./JobDetailsDialog";
 import { useState } from "react";
+import api from "@/services/axiosClient";
 
 type AdminJobsFilters = {
   search: string | null;
@@ -32,6 +34,7 @@ type AdminJobsFilters = {
 
 async function fetchAdminJobs(filters: AdminJobsFilters) {
   const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+  const token = Cookies.get("access_token");
   if (!API_URL) {
     throw new Error("Backend URL not configured");
   }
@@ -40,29 +43,22 @@ async function fetchAdminJobs(filters: AdminJobsFilters) {
   const page = filters.page;
 
   // Appel direct au backend avec pagination
-  const response = await fetch(
-    `${API_URL}/api/v1/jobs/published?page=${page}&size=10`,
+  const response = await api.get(`${API_URL}/admin/jobs?page=${page}&size=10`,
     {
-      method: "GET",
       headers: {
-        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
       },
-      cache: "no-store",
     },
   );
 
-  if (!response.ok) {
+  if (response.status !== 200) {
     throw new Error(
       response.statusText || `Failed to fetch jobs: ${response.status}`,
     );
   }
 
-  const rawData = await response.text();
-  if (!rawData.trim()) {
-    throw new Error("Réponse vide du serveur");
-  }
-
-  const data = JSON.parse(rawData) as JobPage;
+  const data = response.data as JobPage;
+  
   let filteredJobs: BackendPublishedJob[] = data.content;
 
   // Appliquer les filtres côté client

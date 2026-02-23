@@ -109,7 +109,7 @@ export async function deleteJobAction(id: string) {
 export async function publishJobAction(id: string) {
   try {
     const headers = await getAuthHeaders();
-    await api.patch(`/admin/jobs/${id}/publish`, null, {
+    await api.post(`/admin/jobs/${id}/publish`, null, {
       headers,
     });
     revalidatePath("/admin");

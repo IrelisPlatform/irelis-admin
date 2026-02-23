@@ -19,8 +19,8 @@ type RouteContext = {
     params: Promise<{ id: string }>;
 };
 
-// PATCH - Publier une offre d'emploi
-export async function PATCH(request: NextRequest, context: RouteContext) {
+//  - Publier une offre d'emploi
+export async function POST(request: NextRequest, context: RouteContext) {
     try {
         const { id } = await context.params;
 
@@ -33,8 +33,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
         const authHeaders = await getAuthHeaders();
 
-        await axios.patch(
-            `${API_URL}/api/v1/admin/jobs/${id}/publish`,
+        await axios.post(
+            `${API_URL}/admin/jobs/${id}/publish`,
             null,
             {
                 headers: authHeaders,

@@ -4,7 +4,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { apiRequest } from '@/lib/api/client';
 import { PublishedJob } from '@/types/job';
 import Cookies from "js-cookie";
 import api from "@/services/axiosClient";
@@ -73,7 +72,7 @@ export function useAdminJobs() {
 
     const publishJob = async (id: string) => {
         try {
-            await api.patch<void>(`/admin/jobs/${id}/publish`, null, {
+            await api.post<void>(`/admin/jobs/${id}/publish`, null, {
                 headers: {
                     Authorization: `Bearer ${Cookies.get("access_token")}`,
                 },

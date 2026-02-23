@@ -113,14 +113,14 @@ export function usePublishJob() {
 
   return useMutation<PublishJobResponse, Error, string>({
     mutationFn: async (id: string) => {
-      const response = await axios.patch<PublishJobResponse>(
+      const response = await axios.post(
         `/api/admin/jobs/${id}/publish`,
       );
       return response.data;
     },
     onSuccess: (data) => {
       if (data.success) {
-        toast.success("Offre publiée avec succès !");
+        toast.success("Offre publiée avec succès!");
         queryClient.invalidateQueries({ queryKey: ["admin-jobs"] });
       } else {
         toast.error(data.error || "Erreur lors de la publication de l'offre");
