@@ -34,14 +34,14 @@ jobs:
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
       - name: Pull image from Docker Hub
-        run: docker pull ${{ secrets.DOCKER_USERNAME }}/irelis-admin:server
+        run: sudo docker pull ${{ secrets.DOCKER_USERNAME }}/irelis-admin:server
 
       - name: Stop and remove old container
-        run: docker rm -f irelis-admin
+        run: sudo docker rm -f irelis-admin
 
       - name: Run new container
         run: |
-          docker run -d \
+          sudo docker run -d \
             --name irelis-admin \
             -e PORT=3001 \
             -p 3001:3001 \
