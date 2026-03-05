@@ -69,24 +69,16 @@ export function AdminJobsPagination() {
 
     const totalPages = paginationData?.totalPages ?? 1;
 
-    console.log("totlaPages", totalPages)
-    // Ne pas afficher la pagination s'il n'y a qu'une seule page
-    /*    if (totalPages <= 1) {
-           return null;
-       } */
 
-    // Fonction pour changer de page (mise à jour de l'URL)
     const onPageChange = (newPage: number) => {
-        // S'assurer que la page est dans les limites valides
         if (newPage >= 0 && newPage < totalPages) {
             setPage(newPage.toString());
         }
     };
 
-    // Générer les numéros de pages à afficher (affichage 1-indexed pour l'utilisateur)
     const getPageNumbers = () => {
         const pages: (number | string)[] = [];
-        const displayPage = currentPage + 1 // Convertir en 1-indexed pour l'affichage
+        const displayPage = currentPage + 1
         const showEllipsisStart = displayPage > 3;
         const showEllipsisEnd = displayPage < totalPages - 2;
 
@@ -106,7 +98,6 @@ export function AdminJobsPagination() {
         return pages;
     };
 
-    // Page actuelle pour l'affichage (1-indexed)
     const displayCurrentPage = currentPage + 1;
 
     return (

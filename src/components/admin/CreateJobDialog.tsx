@@ -94,7 +94,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
   const [logoFileName, setLogoFileName] = useState<string | null>(null);
   const [selectedCountry, setSelectedCountry] = useState("");
   const [newTagType, setNewTagType] = useState<"skill" | "tool" | "domain">(
-    "skill",
+    "skill"
   );
   const [newTagName, setNewTagName] = useState("");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -164,7 +164,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
       setCurrentStep(currentStep + 1);
     } else {
       toast.error(
-        "Veuillez remplir tous les champs obligatoires pour passer à l'étape suivante",
+        "Veuillez remplir tous les champs obligatoires pour passer à l'étape suivante"
       );
     }
   };
@@ -188,7 +188,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
     const currentTags = form.getValues("tagDto") || [];
     form.setValue(
       "tagDto",
-      currentTags.filter((_, i) => i !== index),
+      currentTags.filter((_, i) => i !== index)
     );
   };
 
@@ -198,7 +198,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
       setIsPreviewOpen(true);
     } else {
       toast.error(
-        "Veuillez remplir tous les champs obligatoires avant la prévisualisation",
+        "Veuillez remplir tous les champs obligatoires avant la prévisualisation"
       );
     }
   };
@@ -235,32 +235,25 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
       tagDto: values.tagDto || [],
       requiredDocuments: values.requiredDocuments,
     };
-    console.log("payload", { payload });
     const formData = new FormData();
     formData.append(
       "data",
       new Blob([JSON.stringify(payload)], {
         type: "application/json",
-      }),
+      })
     );
     if (companyLogo) {
       formData.append("file", companyLogo);
     }
-    console.log("formDatacClient", formData);
-    createJobMutation.mutate(formData, {
-      onSuccess: (result) => {
-        if (result.success) {
-          form.reset();
-          setCompanyLogo(null);
-          setLogoPreview(null);
-          setLogoFileName(null);
-          setSelectedCountry("");
-          setCurrentStep(1);
-          setIsOpen(false);
-          setIsPreviewOpen(false);
-        }
-      },
-    });
+    createJobMutation.mutate(formData);
+    form.reset();
+    setCompanyLogo(null);
+    setLogoPreview(null);
+    setLogoFileName(null);
+    setSelectedCountry("");
+    setCurrentStep(1);
+    setIsOpen(false);
+    setIsPreviewOpen(false);
   };
 
   const jobPreviewData = {
@@ -463,7 +456,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                         <Select
                           onValueChange={(value) =>
                             field.onChange(
-                              value === "not-specified" ? "" : value,
+                              value === "not-specified" ? "" : value
                             )
                           }
                           value={field.value || "not-specified"}
@@ -585,7 +578,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                                   (city) =>
                                     !COUNTRIES_WITH_CITIES[
                                       selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
-                                    ]?.includes(city),
+                                    ]?.includes(city)
                                 ),
                               ]
                             : [];
@@ -635,7 +628,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                                       type="button"
                                       onClick={() => {
                                         const updated = field.value.filter(
-                                          (_, i) => i !== index,
+                                          (_, i) => i !== index
                                         );
                                         field.onChange(updated);
                                       }}
@@ -713,7 +706,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                         <Select
                           onValueChange={(value) =>
                             field.onChange(
-                              value === "not-specified" ? "" : value,
+                              value === "not-specified" ? "" : value
                             )
                           }
                           value={field.value || "not-specified"}
@@ -875,7 +868,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                               },
                             ].map((lang) => {
                               const isChecked = currentLanguages.includes(
-                                lang.value,
+                                lang.value
                               );
                               const isDisabled =
                                 lang.value !== "Bilingue" && hasBilingue;
@@ -905,7 +898,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                                         }
                                       } else {
                                         updated = updated.filter(
-                                          (l) => l !== lang.value,
+                                          (l) => l !== lang.value
                                         );
                                       }
                                       field.onChange(updated);
@@ -969,7 +962,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                         <div className="flex flex-wrap gap-2">
                           {DOCUMENT_TYPES.map((doc) => {
                             const isChecked = (field.value || []).some(
-                              (d) => d.type === doc.value,
+                              (d) => d.type === doc.value
                             );
                             return (
                               <div
@@ -985,7 +978,7 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
                                       updated.push({ type: doc.value });
                                     } else {
                                       updated = updated.filter(
-                                        (d) => d.type !== doc.value,
+                                        (d) => d.type !== doc.value
                                       );
                                     }
                                     if (updated.length === 0) return;

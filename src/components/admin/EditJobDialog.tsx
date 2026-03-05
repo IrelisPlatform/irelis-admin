@@ -59,7 +59,7 @@ import { BasicImageUploader } from "@/components/ui/basic-image-uploader";
 import { SelectWithSearch } from "@/components/ui/select-with-search";
 import { SelectWithSearchAndButton } from "@/components/ui/select-with-search-and-button";
 import { useUpdateJob } from "@/hooks/admin/useJobMutations";
-import type { TagDto, RequiredDocument, PublishedJob } from "@/types/job";
+import type { PublishedJob } from "@/types/job";
 import type { Sector } from "@/app/api/sectors/route";
 import { JobPreviewDialog } from "./JobPreviewDialog"; // Import Preview Dialog
 
@@ -88,12 +88,12 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
   const [logoFileName, setLogoFileName] = useState<string | null>(null);
   const [selectedCountry, setSelectedCountry] = useState("");
   const [newTagType, setNewTagType] = useState<"skill" | "tool" | "domain">(
-    "skill",
+    "skill"
   );
   const [newTagName, setNewTagName] = useState("");
   const [customCities, setCustomCities] = useState<string[]>([]);
   const [isFormStateOpen, setIsFormStateOpen] = useState(false);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false); // Add Preview State
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false); 
 
   const form = useForm<CreateJobFormData>({
     resolver: zodResolver(createJobSchema),
@@ -185,7 +185,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
               | "PORTFOLIO"
               | "CERTIFICATE"
               | "IDENTITY_DOC",
-          }),
+          })
         ),
       });
 
@@ -197,8 +197,8 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
           (city) =>
             !COUNTRIES_WITH_CITIES[
               job.workCountryLocation as keyof typeof COUNTRIES_WITH_CITIES
-            ]?.includes(city),
-        ),
+            ]?.includes(city)
+        )
       );
     }
   }, [job, open, form]);
@@ -233,7 +233,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
       setCurrentStep(currentStep + 1);
     } else {
       toast.error(
-        "Veuillez remplir tous les champs obligatoires pour passer à l'étape suivante",
+        "Veuillez remplir tous les champs obligatoires pour passer à l'étape suivante"
       );
     }
   };
@@ -244,7 +244,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
       setIsPreviewOpen(true);
     } else {
       toast.error(
-        "Veuillez remplir tous les champs obligatoires avant la prévisualisation",
+        "Veuillez remplir tous les champs obligatoires avant la prévisualisation"
       );
     }
   };
@@ -268,7 +268,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
     const currentTags = form.getValues("tagDto") || [];
     form.setValue(
       "tagDto",
-      currentTags.filter((_, i) => i !== index),
+      currentTags.filter((_, i) => i !== index)
     );
   };
 
@@ -313,30 +313,20 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
       "data",
       new Blob([JSON.stringify(payload)], {
         type: "application/json",
-      }),
+      })
     );
-    console.log("formBeforeFile", formData);
     if (companyLogo) {
       formData.append("companyLogo", companyLogo);
     }
-    console.log("formDataEditDialog", formData);
-    updateJobMutation.mutate(
-      { id: job.id, formData },
-      {
-        onSuccess: (result) => {
-          if (result.success) {
-            form.reset();
-            setCompanyLogo(null);
-            setLogoPreview(null);
-            setLogoFileName(null);
-            setSelectedCountry("");
-            setIsPreviewOpen(false);
-            setCurrentStep(1);
-            onOpenChange(false);
-          }
-        },
-      },
-    );
+    updateJobMutation.mutate({ id: job.id, formData });
+    form.reset();
+    setCompanyLogo(null);
+    setLogoPreview(null);
+    setLogoFileName(null);
+    setSelectedCountry("");
+    setIsPreviewOpen(false);
+    setCurrentStep(1);
+    onOpenChange(false);
   };
 
   if (!job) return null;
@@ -531,7 +521,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
                         <Select
                           onValueChange={(value) =>
                             field.onChange(
-                              value === "not-specified" ? "" : value,
+                              value === "not-specified" ? "" : value
                             )
                           }
                           value={field.value || "not-specified"}
@@ -653,7 +643,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
                                   (city) =>
                                     !COUNTRIES_WITH_CITIES[
                                       selectedCountry as keyof typeof COUNTRIES_WITH_CITIES
-                                    ]?.includes(city),
+                                    ]?.includes(city)
                                 ),
                               ]
                             : [];
@@ -703,7 +693,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
                                       type="button"
                                       onClick={() => {
                                         const updated = field.value.filter(
-                                          (_, i) => i !== index,
+                                          (_, i) => i !== index
                                         );
                                         field.onChange(updated);
                                       }}
@@ -781,7 +771,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
                         <Select
                           onValueChange={(value) =>
                             field.onChange(
-                              value === "not-specified" ? "" : value,
+                              value === "not-specified" ? "" : value
                             )
                           }
                           value={field.value || "not-specified"}
@@ -943,7 +933,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
                               },
                             ].map((lang) => {
                               const isChecked = currentLanguages.includes(
-                                lang.value,
+                                lang.value
                               );
                               const isDisabled =
                                 lang.value !== "Bilingue" && hasBilingue;
@@ -973,7 +963,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
                                         }
                                       } else {
                                         updated = updated.filter(
-                                          (l) => l !== lang.value,
+                                          (l) => l !== lang.value
                                         );
                                       }
                                       field.onChange(updated);
@@ -1037,7 +1027,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
                         <div className="flex flex-wrap gap-2">
                           {DOCUMENT_TYPES.map((doc) => {
                             const isChecked = (field.value || []).some(
-                              (d) => d.type === doc.value,
+                              (d) => d.type === doc.value
                             );
                             return (
                               <div
@@ -1053,7 +1043,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
                                       updated.push({ type: doc.value });
                                     } else {
                                       updated = updated.filter(
-                                        (d) => d.type !== doc.value,
+                                        (d) => d.type !== doc.value
                                       );
                                     }
                                     if (updated.length === 0) return;

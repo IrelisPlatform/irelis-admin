@@ -1,13 +1,10 @@
-// src/hooks/admin/useJobMutations.ts
-
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import axios from "axios";
-import { BackendPublishedJob, PublishedJob } from "@/types/job";
+import { BackendPublishedJob } from "@/types/job";
+import api from "@/services/axiosClient";
 
-// Types pour les réponses API
 type ApiResponse<T = unknown> = {
   success: boolean;
   data?: T;
@@ -25,8 +22,8 @@ export function useCreateJob() {
 
   return useMutation<CreateJobResponse, Error, FormData>({
     mutationFn: async (formData: FormData) => {
-      const response = await axios.post<CreateJobResponse>(
-        "/api/admin/jobs",
+      const response = await api.post<CreateJobResponse>(
+        "/admin/jobs",
         formData,
       );
       console.log(response.data);
@@ -59,8 +56,8 @@ export function useUpdateJob() {
   >({
     mutationFn: async ({ id, formData }) => {
       console.log("formDataUpdateMutation", formData);
-      const response = await axios.patch<UpdateJobResponse>(
-        `/api/admin/jobs/${id}`,
+      const response = await api.patch<UpdateJobResponse>(
+        `/admin/jobs/${id}`,
         formData,
       );
       return response.data;
@@ -71,11 +68,6 @@ export function useUpdateJob() {
     },
     onError: (error: any) => {
       console.log(error);
-      /*  const errorMessage =
-                 error?.response?.data?.error ||
-                 error.message ||
-                 "Erreur lors de la création de l'offre"; */
-      /*    toast.error(error); */
     },
   });
 }
@@ -86,8 +78,8 @@ export function useDeleteJob() {
 
   return useMutation<DeleteJobResponse, Error, string>({
     mutationFn: async (id: string) => {
-      const response = await axios.delete<DeleteJobResponse>(
-        `/api/admin/jobs/${id}`,
+      const response = await api.delete<DeleteJobResponse>(
+        `/admin/jobs/${id}`,
       );
       if (response.data.error) throw new Error(response.data.error);
       return response.data;
@@ -113,8 +105,8 @@ export function usePublishJob() {
 
   return useMutation<PublishJobResponse, Error, string>({
     mutationFn: async (id: string) => {
-      const response = await axios.post(
-        `/api/admin/jobs/${id}/publish`,
+      const response = await api.post(
+        `/admin/jobs/${id}/publish`,
       );
       return response.data;
     },

@@ -220,19 +220,16 @@ export function AdminJobsTable() {
   const [type] = useQueryState("type");
   const [page] = useQueryState("page", { defaultValue: "0" });
 
-  // Convertir page en nombre (0-indexed)
   const pageNumber = parseInt(page, 10) || 0;
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["admin-jobs", { search, status, type, page: pageNumber }],
     queryFn: () => fetchAdminJobs({ search, status, type, page: pageNumber }),
-    staleTime: 30 * 1000, // Les données restent "fresh" pendant 30 secondes
-    refetchOnMount: false, // Ne pas refetch au montage si les données sont fresh
-    refetchOnWindowFocus: false, // Ne pas refetch lors du focus de la fenêtre
-    refetchOnReconnect: false, // Ne pas refetch lors de la reconnexion réseau
+    staleTime: 30 * 1000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
-  console.log("totalPages", data?.totalPages);
-
   return (
     <div className="border rounded-lg overflow-hidden">
       <Table className="table-fixed w-full">
