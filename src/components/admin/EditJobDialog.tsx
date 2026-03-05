@@ -318,15 +318,23 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
     if (companyLogo) {
       formData.append("companyLogo", companyLogo);
     }
-    updateJobMutation.mutate({ id: job.id, formData });
-    form.reset();
-    setCompanyLogo(null);
-    setLogoPreview(null);
-    setLogoFileName(null);
-    setSelectedCountry("");
-    setIsPreviewOpen(false);
-    setCurrentStep(1);
-    onOpenChange(false);
+    updateJobMutation.mutate(
+        { id: job.id, formData },
+        {
+          onSuccess: (result) => {
+            if (result.success) {
+              form.reset();
+              setCompanyLogo(null);
+              setLogoPreview(null);
+              setLogoFileName(null);
+              setSelectedCountry("");
+              setIsPreviewOpen(false);
+              setCurrentStep(1);
+              onOpenChange(false);
+            }
+          },
+        },
+    );
   };
 
   if (!job) return null;
