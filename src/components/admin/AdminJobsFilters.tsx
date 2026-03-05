@@ -1,4 +1,3 @@
-// src/components/admin/AdminJobsFilters.tsx
 
 "use client";
 
