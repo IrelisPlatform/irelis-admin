@@ -246,17 +246,15 @@ export function CreateJobDialog({ children }: CreateJobDialogProps) {
       formData.append("file", companyLogo);
     }
     createJobMutation.mutate(formData, {
-      onSuccess: (result) => {
-        if (result.success) {
+      onSuccess: () => {
           form.reset();
           setCompanyLogo(null);
           setLogoPreview(null);
           setLogoFileName(null);
           setSelectedCountry("");
           setCurrentStep(1);
-          setIsOpen(false);
           setIsPreviewOpen(false);
-        }
+          setIsOpen(false);
       },
     });
   };

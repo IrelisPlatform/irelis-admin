@@ -321,8 +321,7 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
     updateJobMutation.mutate(
         { id: job.id, formData },
         {
-          onSuccess: (result) => {
-            if (result.success) {
+          onSuccess: () => {
               form.reset();
               setCompanyLogo(null);
               setLogoPreview(null);
@@ -331,7 +330,6 @@ export function EditJobDialog({ open, onOpenChange, job }: EditJobDialogProps) {
               setIsPreviewOpen(false);
               setCurrentStep(1);
               onOpenChange(false);
-            }
           },
         },
     );
