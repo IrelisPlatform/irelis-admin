@@ -7,28 +7,10 @@ const api = axios.create({
 });
 
 const PUBLIC_ROUTES = [
-  "/health",
-  "/api/v1/jobs/",
-  "/api/v1/jobs/published",
-  "/api/v1/jobs/search",
-  "/api/v1/jobs/{jobOfferId}",            
-  "/api/v1/jobs/{jobOfferId}/share/**",             
   "/admin/auth/register",
   "/admin/auth/login",
-  "/api/v1/auth/otp/check-email",
-  "/api/v1/auth/otp/send",
-  "/api/v1/auth/otp/resend",
-  "/api/v1/auth/otp/verify",
   "/api/v1/auth/refresh",
-  "/oauth2/exchange",
-  "/api/v1/sectors",
-  "/oauth2/",
-  "/login/oauth2/",
-  "/error",
-  "/v3/api-docs",
-  "/swagger-ui/",
-  "/swagger-ui.html",
-  "/actuator/",
+  "/api/v1/sectors"
 ];
 
 const isPublicRoute = (url?: string) => {
@@ -81,6 +63,7 @@ api.interceptors.response.use(
       } catch (refreshError) {
         Cookies.remove("access_token");
         Cookies.remove("refresh_token");
+        window.location.replace("/admin/login");
         return Promise.reject(refreshError);
       }
     }

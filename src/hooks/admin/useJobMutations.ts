@@ -110,13 +110,9 @@ export function usePublishJob() {
       );
       return response.data;
     },
-    onSuccess: (data) => {
-      if (data.success) {
+    onSuccess: () => {
         toast.success("Offre publiée avec succès!");
         queryClient.invalidateQueries({ queryKey: ["admin-jobs"] });
-      } else {
-        toast.error(data.error || "Erreur lors de la publication de l'offre");
-      }
     },
     onError: (error: any) => {
       const errorMessage =
