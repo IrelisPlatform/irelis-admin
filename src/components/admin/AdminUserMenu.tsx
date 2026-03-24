@@ -17,7 +17,7 @@ interface User{
 
 export default function AdminUserMenu() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user,setUser] = useState<User|null>(null)
+  const [user,setUser] = useState<User|null>(null);
     const router = useRouter();
     const token = Cookies.get("access_token");
 

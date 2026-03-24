@@ -29,7 +29,7 @@ export default async function AdminDashboardPage({ searchParams }: PageProps) {
       <div className="flex max-sm:items-start items-center justify-between max-sm:flex-col gap-y-4 mb-12">
         <div>
           <h1 className="text-2xl font-bold text-[#1e3a8a]">
-            Tableau de bord administrateur
+            Gestion des offres
           </h1>
           <p className="text-muted-foreground">
             Gérez toutes les offres d'emploi de la plateforme.
