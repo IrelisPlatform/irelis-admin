@@ -203,9 +203,10 @@ export function useUpdateAccompaniment() {
       );
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (_, {id}) => {
       toast.success("Mis à jour avec succès !");
       queryClient.invalidateQueries({ queryKey: ["admin-accompaniments"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-accompaniment", id] });
     },
     onError: (error: any) => {
       const errorMessage =

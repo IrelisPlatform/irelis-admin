@@ -198,17 +198,7 @@ function ServicePreview({
             </div>
             <span>{form.duration || "Non spécifié"}</span>
           </div>
-
-          {/* <div className="flex items-center gap-3 text-gray-700">
-                    <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
-                      <CircleDollarSign className="w-4 h-4 text-[#1e3a8a]" />
-                    </div>
-                    <span>
-                      {form.price === 0
-                        ? "Gratuit"
-                        : `${form.price.toLocaleString()} FCFA`}
-                    </span>
-                  </div> */}
+          
           <div className="flex items-center gap-3 text-gray-700">
             <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
               <CircleDollarSign className="w-4 h-4 text-[#1e3a8a]" />
@@ -232,54 +222,6 @@ function ServicePreview({
           </div>
         </div>
       </div>
-      {/* <div className="border border-blue-100 bg-blue-50/50 p-4 rounded-lg">
-        <h3 className="text-xl font-bold tracking-tight text-[#14548C] mb-2">
-          {form.title || "Titre du service"}
-        </h3>
-        <p className="text-gray-600 mb-4">
-          {form.shortDescription || "Description..."}
-        </p>
-
-        <div className="flex flex-wrap gap-2 mb-4">
-          <Badge className="bg-[#14548C]/10 text-[#14548C] border-0">
-            {categoryName}
-          </Badge>
-          <Badge variant="outline" className="text-gray-600 border-gray-200">
-            {form.duration || "Non défini"}
-          </Badge>
-          <Badge className="bg-green-100 text-green-800 border-0 text-sm font-medium">
-            {form.price.toLocaleString()} FCFA
-          </Badge>
-          {form.originalPrice ? (
-            <span className="text-red-400 line-through text-xs self-center">
-              {form.originalPrice.toLocaleString()} FCFA
-            </span>
-          ) : null}
-        </div>
-
-        {form.file && (
-          <div className="mb-4">
-            <span className="text-xs font-semibold text-gray-500 uppercase">
-              Logo sélectionné :
-            </span>
-            <span className="ml-2 text-sm text-gray-700">{form.file.name}</span>
-          </div>
-        )}
-
-        {form.tagNames.length > 0 && (
-          <div className="flex gap-1 flex-wrap">
-            {form.tagNames.map((tag) => (
-              <Badge
-                key={tag.name}
-                variant="secondary"
-                className="text-xs font-normal"
-              >
-                {tag.name}
-              </Badge>
-            ))}
-          </div>
-        )}
-      </div> */}
 
       <div className="grid md:grid-cols-2 gap-6">
         <div>
@@ -471,58 +413,8 @@ export function CreateServiceDialog({
                       </Button>
                     </div>
                   )}
-                  {/* <div className="flex items-center gap-3 mt-2">
-                    <div className="w-14 h-14 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center text-sm font-semibold text-gray-600">
-                      {imagePreview ? (
-                        <img
-                          src={imagePreview}
-                          alt="preview"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span>
-                          {form.title
-                            ? form.title
-                                .split(" ")
-                                .slice(0, 2)
-                                .map((w) => w[0])
-                                .join("")
-                                .toUpperCase()
-                            : "NA"}
-                        </span>
-                      )}
-                    </div>
-
-                    {imagePreview && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleRemoveImage}
-                        className="text-red-500"
-                      >
-                        <X className="w-4 h-4 mr-1" />
-                        Supprimer
-                      </Button>
-                    )}
-                  </div> */}
                 </div>
 
-                {/* <div className="md:col-span-2 space-y-1">
-                  <Label htmlFor="c-logo">Image du service</Label>
-                  <Input
-                    id="c-logo"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="cursor-pointer"
-                  />
-                  {form.file && (
-                    <p className="text-xs text-green-600 font-medium mt-1">
-                      Fichier sélectionné : {form.file.name}
-                    </p>
-                  )}
-                </div> */}
 
                 <div className="md:col-span-2 space-y-1">
                   <Label htmlFor="c-description">
