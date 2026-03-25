@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { Plus, X, Save } from "lucide-react";
+import { Plus, X, Save, Eye, ArrowLeft } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -25,12 +25,18 @@ import {
 import { Accompaniment } from "@/types/accompaniment";
 import { useCategories, useUpdateAccompaniment, useAccompaniment } from "@/hooks/admin/useAccompaniments";
 import { Spinner } from "@/components/ui/spinner";
+import { Badge } from "@/components/ui/badge";
+import { ServicePreview } from "./ServicePreview";
 
 interface EditServiceDialogProps {
   service: Accompaniment;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+type EditFormState = Accompaniment & {
+  file?: File | null;
+};
 
 function EditableList({
   label,
@@ -98,7 +104,10 @@ export function EditServiceDialog({
   open,
   onOpenChange,
 }: EditServiceDialogProps) {
-  const [form, setForm] = useState<Accompaniment>(service);
+  const [form, setForm] = useState<EditFormState>(service);
+  const [step, setStep] = useState<"form" | "preview">("form");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  
   const { data: categories = [] } = useCategories();
   const updateMutation = useUpdateAccompaniment();
 
@@ -108,12 +117,19 @@ export function EditServiceDialog({
   // Reset form when fullService prop changes
   useEffect(() => {
     if (open) {
-      if (fullService) setForm(fullService);
-      else setForm(service);
+      if (fullService) {
+        setForm(fullService);
+        setImagePreview(fullService.imageUrl || null);
+      }
+      else {
+        setForm(service);
+        setImagePreview(service.imageUrl || null);
+      }
+      setStep("form");
     }
   }, [service, fullService, open]);
 
-  const set = <K extends keyof Accompaniment>(key: K, value: Accompaniment[K]) => {
+  const set = <K extends keyof EditFormState>(key: K, value: EditFormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -133,6 +149,7 @@ export function EditServiceDialog({
       guarantees,
       tagNames,
       categoryId,
+      file,
     } = form;
 
     updateMutation.mutate(
@@ -151,6 +168,7 @@ export function EditServiceDialog({
           guarantees,
           tagNames,
           categoryId,
+          file,
         },
       },
       {
@@ -161,17 +179,41 @@ export function EditServiceDialog({
     );
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      set("file", file);
+
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    set("file", null);
+    setImagePreview(form.imageUrl || null);
+  };
+
   const isValid =
     form.title.trim().length > 0 &&
     form.price >= 1 &&
     form.shortDescription.trim().length > 0;
 
+  const selectedCategoryName =
+    categories.find((c) => c.categoryId === form.categoryId)?.name ||
+    "Non défini";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[88vh] flex flex-col">
         <DialogHeader className="shrink-0">
-          <DialogTitle className="text-[#1e3a8a]">
+          <DialogTitle className="text-[#1e3a8a] flex items-center gap-2">
             Modifier le service
+            {step === "preview" && (
+              <Badge variant="secondary" className="font-normal text-xs ml-2">
+                Étape 2/2 : Prévisualisation
+              </Badge>
+            )}
           </DialogTitle>
         </DialogHeader>
 
@@ -182,138 +224,198 @@ export function EditServiceDialog({
           </div>
         ) : (
           <>
-            <div className="space-y-5 py-2 px-2 flex-1 overflow-y-auto pr-3">
-          {/* Informations principales */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2 space-y-1">
-              <Label htmlFor="e-title">Titre</Label>
-              <Input
-                id="e-title"
-                value={form.title}
-                onChange={(e) => set("title", e.target.value)}
-              />
+            <div className="py-2 px-2 flex-1 overflow-y-auto pr-3">
+              {step === "form" ? (
+                <div className="space-y-5">
+                  {/* Informations principales */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2 space-y-1">
+                      <Label htmlFor="e-title">Titre</Label>
+                      <Input
+                        id="e-title"
+                        value={form.title}
+                        onChange={(e) => set("title", e.target.value)}
+                      />
+                    </div>
+
+                    <div className="md:col-span-2 space-y-2">
+                      <Label htmlFor="e-logo">Image du service</Label>
+                      <Input
+                        id="e-logo"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="cursor-pointer"
+                      />
+
+                      {imagePreview && (
+                        <div className="flex items-center gap-3 mt-2">
+                          <div className="w-14 h-14 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+                            <img
+                              src={imagePreview}
+                              alt="preview"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+
+                          {form.file && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={handleRemoveImage}
+                              className="text-red-500"
+                            >
+                              <X className="w-4 h-4 mr-1" />
+                              Annuler nouvelle image
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="md:col-span-2 space-y-1">
+                      <Label htmlFor="e-description">Description courte</Label>
+                      <Textarea
+                        id="e-description"
+                        value={form.shortDescription}
+                        onChange={(e) => set("shortDescription", e.target.value)}
+                        rows={2}
+                        className="resize-none"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label htmlFor="e-category">Catégorie</Label>
+                      <Select
+                        value={form.categoryId}
+                        onValueChange={(val) => set("categoryId", val)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map((cat) => (
+                            <SelectItem key={cat.categoryId} value={cat.categoryId}>
+                              {cat.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label htmlFor="e-duration">Durée</Label>
+                      <Input
+                        id="e-duration"
+                        value={form.duration}
+                        onChange={(e) => set("duration", e.target.value)}
+                        placeholder="ex: 24 heures, 2-3 jours..."
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label htmlFor="e-price">Prix</Label>
+                      <Input
+                        id="e-price"
+                        type="number"
+                        value={form.price || ""}
+                        onChange={(e) => set("price", Number(e.target.value))}
+                        placeholder="ex: 25000"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label htmlFor="e-originalPrice">Prix original</Label>
+                      <Input
+                        id="e-originalPrice"
+                        type="number"
+                        value={form.originalPrice || ""}
+                        onChange={(e) =>
+                          set("originalPrice", Number(e.target.value))
+                        }
+                        placeholder="ex: 40000"
+                      />
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Listes dynamiques */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <EditableList
+                      label="Contenu"
+                      items={form.contents || []}
+                      onChange={(v) => set("contents", v)}
+                    />
+                    <EditableList
+                      label="Détails"
+                      items={form.details || []}
+                      onChange={(v) => set("details", v)}
+                    />
+                    <EditableList
+                      label="Cibles"
+                      items={form.targets || []}
+                      onChange={(v) => set("targets", v)}
+                    />
+                    <EditableList
+                      label="Bénéfices"
+                      items={form.rewards || []}
+                      onChange={(v) => set("rewards", v)}
+                    />
+                    <EditableList
+                      label="Garanties"
+                      items={form.guarantees || []}
+                      onChange={(v) => set("guarantees", v)}
+                    />
+                    <EditableList
+                      label="Tags"
+                      items={form.tagNames?.map(tag => tag.name) || []}
+                      onChange={(v) => set("tagNames", v.map(name => ({ name })))}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <ServicePreview form={form} categoryName={selectedCategoryName} />
+              )}
             </div>
 
-            <div className="md:col-span-2 space-y-1">
-              <Label htmlFor="e-description">Description courte</Label>
-              <Textarea
-                id="e-description"
-                value={form.shortDescription}
-                onChange={(e) => set("shortDescription", e.target.value)}
-                rows={2}
-                className="resize-none"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label htmlFor="e-category">Catégorie</Label>
-              <Select
-                value={form.categoryId}
-                onValueChange={(val) => set("categoryId", val)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.categoryId} value={cat.categoryId}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-1">
-              <Label htmlFor="e-duration">Durée</Label>
-              <Input
-                id="e-duration"
-                value={form.duration}
-                onChange={(e) => set("duration", e.target.value)}
-                placeholder="ex: 24 heures, 2-3 jours..."
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label htmlFor="e-price">Prix</Label>
-              <Input
-                id="e-price"
-                type="number"
-                value={form.price || ""}
-                onChange={(e) => set("price", Number(e.target.value))}
-                placeholder="ex: 25000"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label htmlFor="e-originalPrice">Prix original</Label>
-              <Input
-                id="e-originalPrice"
-                type="number"
-                value={form.originalPrice || ""}
-                onChange={(e) =>
-                  set("originalPrice", Number(e.target.value))
-                }
-                placeholder="ex: 40000"
-              />
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Listes dynamiques */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <EditableList
-              label="Contenu"
-              items={form.contents || []}
-              onChange={(v) => set("contents", v)}
-            />
-            <EditableList
-              label="Détails"
-              items={form.details || []}
-              onChange={(v) => set("details", v)}
-            />
-            <EditableList
-              label="Cibles"
-              items={form.targets || []}
-              onChange={(v) => set("targets", v)}
-            />
-            <EditableList
-              label="Bénéfices"
-              items={form.rewards || []}
-              onChange={(v) => set("rewards", v)}
-            />
-            <EditableList
-              label="Garanties"
-              items={form.guarantees || []}
-              onChange={(v) => set("guarantees", v)}
-            />
-            <EditableList
-              label="Tags"
-              items={form.tagNames.map(tag => tag.name) || []}
-              onChange={(v) => set("tagNames", v.map(name => ({ name })))}
-            />
-          </div>
-        </div>
-
-        <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Annuler
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={!isValid || updateMutation.isPending}
-            className="bg-[#14548C] hover:bg-[#0d3a5f]"
-          >
-            {updateMutation.isPending ? "Modification..." : (
-              <>
-                <Save className="h-4 w-4 mr-2" />
-                Enregistrer
-              </>
-            )}
-
-          </Button>
-        </DialogFooter>
+            <DialogFooter className="gap-2 mt-4 pt-4 border-t">
+              {step === "form" ? (
+                <>
+                  <Button variant="outline" onClick={() => onOpenChange(false)}>
+                    Annuler
+                  </Button>
+                  <Button
+                    onClick={() => setStep("preview")}
+                    disabled={!isValid}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    Prévisualiser
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" onClick={() => setStep("form")}>
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Retour
+                  </Button>
+                  <Button
+                    onClick={handleSave}
+                    disabled={!isValid || updateMutation.isPending}
+                    className="bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                  >
+                    {updateMutation.isPending ? "Modification..." : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Enregistrer
+                      </>
+                    )}
+                  </Button>
+                </>
+              )}
+            </DialogFooter>
           </>
         )}
       </DialogContent>
