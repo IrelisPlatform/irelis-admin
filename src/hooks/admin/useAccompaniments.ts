@@ -26,13 +26,13 @@ export function useCategories() {
   });
 }
 
-// Récupérer les accompagnements 
+// Récupérer les accompagnements
 export function useAccompaniments(page: number = 0, size: number = 10) {
   return useQuery({
     queryKey: ["admin-accompaniments", page, size],
     queryFn: async () => {
       const response = await api.get<AccompanimentPage>(
-        `/api/v1/accompaniments?page=${page}&size=${size}`
+        `/api/v1/accompaniments?page=${page}&size=${size}`,
       );
       return response.data;
     },
@@ -40,13 +40,15 @@ export function useAccompaniments(page: number = 0, size: number = 10) {
   });
 }
 
-// Récupérer un accompagnement 
+// Récupérer un accompagnement
 export function useAccompaniment(id: string | undefined | null) {
   return useQuery({
     queryKey: ["admin-accompaniment", id],
     queryFn: async () => {
       if (!id) throw new Error("ID manquant");
-      const response = await api.get<Accompaniment>(`/api/v1/accompaniments/${id}`);
+      const response = await api.get<Accompaniment>(
+        `/api/v1/accompaniments/${id}`,
+      );
       return response.data;
     },
     enabled: !!id,
@@ -55,7 +57,9 @@ export function useAccompaniment(id: string | undefined | null) {
 }
 
 // Créer un accompagnement
-type CreateAccompanimentData = Omit<Accompaniment, "id" | "accompanimentId"> & { file?: File | null; };
+type CreateAccompanimentData = Omit<Accompaniment, "id" | "accompanimentId"> & {
+  file?: File | null;
+};
 
 export function useCreateAccompaniment() {
   const queryClient = useQueryClient();
@@ -66,26 +70,39 @@ export function useCreateAccompaniment() {
 
       const payload = { ...data } as any;
       delete payload.file;
+      delete payload.imageUrl;
+
+      if (!payload.originalPrice || payload.originalPrice <= 0) {
+        delete payload.originalPrice;
+      }
 
       if (!payload.categoryId) {
         delete payload.categoryId;
       }
 
-      ["contents", "details", "targets", "rewards", "guarantees"].forEach((key) => {
-        if (Array.isArray(payload[key])) {
-          payload[key] = payload[key].filter((val: string) => val && typeof val === "string" && val.trim() !== "");
-        }
-      });
+      ["contents", "details", "targets", "rewards", "guarantees"].forEach(
+        (key) => {
+          if (Array.isArray(payload[key])) {
+            payload[key] = payload[key].filter(
+              (val: string) =>
+                val && typeof val === "string" && val.trim() !== "",
+            );
+          }
+        },
+      );
       if (Array.isArray(payload.tagNames)) {
         payload.tagNames = payload.tagNames
           .map((t: any) => (typeof t === "string" ? t : t.name))
-          .filter((val: string) => val && typeof val === "string" && val.trim() !== "");
+          .filter(
+            (val: string) =>
+              val && typeof val === "string" && val.trim() !== "",
+          );
       }
 
       const formData = new FormData();
       formData.append(
         "data",
-        new Blob([JSON.stringify(payload)], { type: "application/json" })
+        new Blob([JSON.stringify(payload)], { type: "application/json" }),
       );
 
       if (data.file) {
@@ -96,7 +113,6 @@ export function useCreateAccompaniment() {
         console.log(key, value);
       }
 
-
       const response = await api.post<Accompaniment>(
         "/api/v1/accompaniments",
         formData,
@@ -104,12 +120,12 @@ export function useCreateAccompaniment() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       return response.data;
     },
     onSuccess: () => {
-      toast.success("Service d'accompagnement créé avec succès !");
+      toast.success("Créé avec succès !");
       queryClient.invalidateQueries({ queryKey: ["admin-accompaniments"] });
     },
     onError: (error: any) => {
@@ -117,6 +133,7 @@ export function useCreateAccompaniment() {
         error?.response?.data?.message ||
         error.message ||
         "Erreur lors de la création du service";
+
       toast.error(errorMessage);
     },
   });
@@ -136,26 +153,39 @@ export function useUpdateAccompaniment() {
 
       const payload = { ...data } as any;
       delete payload.file;
+      delete payload.imageUrl;
 
       if (!payload.categoryId) {
         delete payload.categoryId;
       }
 
-      ["contents", "details", "targets", "rewards", "guarantees"].forEach((key) => {
-        if (Array.isArray(payload[key])) {
-          payload[key] = payload[key].filter((val: string) => val && typeof val === "string" && val.trim() !== "");
-        }
-      });
+      if (!payload.originalPrice || payload.originalPrice <= 0) {
+        delete payload.originalPrice;
+      }
+
+      ["contents", "details", "targets", "rewards", "guarantees"].forEach(
+        (key) => {
+          if (Array.isArray(payload[key])) {
+            payload[key] = payload[key].filter(
+              (val: string) =>
+                val && typeof val === "string" && val.trim() !== "",
+            );
+          }
+        },
+      );
       if (Array.isArray(payload.tagNames)) {
         payload.tagNames = payload.tagNames
           .map((t: any) => (typeof t === "string" ? t : t.name))
-          .filter((val: string) => val && typeof val === "string" && val.trim() !== "");
+          .filter(
+            (val: string) =>
+              val && typeof val === "string" && val.trim() !== "",
+          );
       }
 
       const formData = new FormData();
       formData.append(
         "data",
-        new Blob([JSON.stringify(payload)], { type: "application/json" })
+        new Blob([JSON.stringify(payload)], { type: "application/json" }),
       );
 
       if (data.file) {
@@ -169,12 +199,12 @@ export function useUpdateAccompaniment() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       return response.data;
     },
     onSuccess: () => {
-      toast.success("Service d'accompagnement mis à jour avec succès !");
+      toast.success("Mis à jour avec succès !");
       queryClient.invalidateQueries({ queryKey: ["admin-accompaniments"] });
     },
     onError: (error: any) => {
@@ -200,12 +230,12 @@ export function useDeleteAccompaniment() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       return response.data;
     },
     onSuccess: () => {
-      toast.success("Service d'accompagnement supprimé avec succès !");
+      toast.success("Supprimé avec succès !");
       queryClient.invalidateQueries({ queryKey: ["admin-accompaniments"] });
     },
     onError: (error: any) => {

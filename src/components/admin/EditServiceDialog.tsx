@@ -163,7 +163,6 @@ export function EditServiceDialog({
 
   const isValid =
     form.title.trim().length > 0 &&
-    form.categoryId?.trim().length > 0 &&
     form.price >= 1 &&
     form.shortDescription.trim().length > 0;
 

@@ -3,7 +3,7 @@ export interface Accompaniment {
   id: string;
   accompanimentId: string;
   title: string;
-  imageUrl: string;
+  imageUrl?: string;
   shortDescription: string;
 
   contents: string[];

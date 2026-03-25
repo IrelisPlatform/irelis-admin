@@ -22,7 +22,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, X, Save, Eye, ArrowLeft, Tag, Clock, CircleDollarSign } from "lucide-react";
+import {
+  Plus,
+  X,
+  Save,
+  Eye,
+  ArrowLeft,
+  Tag,
+  Clock,
+  CircleDollarSign,
+} from "lucide-react";
 import { Accompaniment } from "@/types/accompaniment";
 import { Category } from "@/types/category";
 import { useCreateAccompaniment } from "@/hooks/admin/useAccompaniments";
@@ -214,12 +223,11 @@ function ServicePreview({
               </span>
 
               {/* PRIX ORIGINAL */}
-              {form.originalPrice &&
-                form.originalPrice > form.price && (
-                  <span className="line-through text-gray-400 text-sm">
-                    {form.originalPrice.toLocaleString()} FCFA
-                  </span>
-                )}
+              {form.originalPrice && form.originalPrice > form.price && (
+                <span className="line-through text-gray-400 text-sm">
+                  {form.originalPrice.toLocaleString()} FCFA
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -361,6 +369,7 @@ export function CreateServiceDialog({
 
   const isValid =
     form.title.trim().length > 0 &&
+    form.duration.trim().length > 0 &&
     form.price >= 1 &&
     form.shortDescription.trim().length > 0;
 
@@ -440,7 +449,29 @@ export function CreateServiceDialog({
                   />
 
                   {/* PREVIEW */}
-                  <div className="flex items-center gap-3 mt-2">
+                  {imagePreview && (
+                    <div className="flex items-center gap-3 mt-2">
+                      <div className="w-14 h-14 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+                        <img
+                          src={imagePreview}
+                          alt="preview"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleRemoveImage}
+                        className="text-red-500"
+                      >
+                        <X className="w-4 h-4 mr-1" />
+                        Supprimer
+                      </Button>
+                    </div>
+                  )}
+                  {/* <div className="flex items-center gap-3 mt-2">
                     <div className="w-14 h-14 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center text-sm font-semibold text-gray-600">
                       {imagePreview ? (
                         <img
@@ -474,7 +505,7 @@ export function CreateServiceDialog({
                         Supprimer
                       </Button>
                     )}
-                  </div>
+                  </div> */}
                 </div>
 
                 {/* <div className="md:col-span-2 space-y-1">
@@ -527,7 +558,9 @@ export function CreateServiceDialog({
                 </div>
 
                 <div className="space-y-1">
-                  <Label htmlFor="c-duration">Durée</Label>
+                  <Label htmlFor="c-duration">
+                    Durée <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="c-duration"
                     value={form.duration}
