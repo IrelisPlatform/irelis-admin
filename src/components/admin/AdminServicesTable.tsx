@@ -377,7 +377,7 @@ export function AdminServicesTable() {
               displayedServices.map((service) => {
                 return (
                   <TableRow
-                    key={service.title || service.id}
+                    key={service.id}
                     className="hover:bg-gray-50 transition-colors"
                   >
                     {/* Titre */}
@@ -417,14 +417,14 @@ export function AdminServicesTable() {
                     {/* Prix Original */}
                     <TableCell>
                       <span className="text-sm text-gray-600">
-                        {service.originalPrice.toLocaleString()} FCFA
+                        {service.originalPrice?.toLocaleString()} FCFA
                       </span>
                     </TableCell>
 
                     {/* Prix */}
                     <TableCell>
                       <span className="text-sm font-semibold text-gray-900">
-                        {service.price.toLocaleString()} FCFA
+                        {service.price?.toLocaleString()} FCFA
                       </span>
                     </TableCell>
 
