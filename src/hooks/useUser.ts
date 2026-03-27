@@ -54,7 +54,9 @@ export function useUser() {
       Cookies.remove("admin_session");
     }
     setUserD(null);
+    queryClient.setQueryData(["user"], null);
     router.push("/admin/login");
+    router.refresh();
   };
 
   return { user, isLoading, error, logout };

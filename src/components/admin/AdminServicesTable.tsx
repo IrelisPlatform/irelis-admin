@@ -367,7 +367,7 @@ export function AdminServicesTable() {
             ) : displayedServices.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={7}
                   className="text-center py-12 text-muted-foreground"
                 >
                   Aucun service trouvé.

@@ -49,7 +49,7 @@ export default function AdminLoginPage() {
       appCookies.set("refresh_token", data.refreshToken);
       appCookies.set("admin_session", "true");
 
-      router.push("/admin");
+      router.push("/admin/dashboard");
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);

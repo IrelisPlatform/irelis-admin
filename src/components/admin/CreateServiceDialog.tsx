@@ -95,7 +95,8 @@ function EditableList({
             <Input
               value={item}
               onChange={(e) => handleChange(i, e.target.value)}
-              className="h-8 text-sm"
+              className="h-8 text-sm border border-gray-100"
+              placeholder="Saisir ici..."
             />
             <Button
               type="button"
