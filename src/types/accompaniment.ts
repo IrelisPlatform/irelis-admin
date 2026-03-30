@@ -6,16 +6,16 @@ export interface Accompaniment {
   imageUrl?: string;
   shortDescription: string;
 
-  contents: string[];
-  details: string[];
-  targets: string[];
+  contents: string;
+  details: string;
+  targets: string;
 
   duration: string;
   price: number;
   originalPrice: number;
 
-  rewards: string[];
-  guarantees: string[];
+  rewards: string;
+  guarantees: string;
 
   categoryId: string;
   tagNames: { name: string }[];

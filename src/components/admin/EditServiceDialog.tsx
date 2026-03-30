@@ -23,10 +23,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Accompaniment } from "@/types/accompaniment";
-import { useCategories, useUpdateAccompaniment, useAccompaniment } from "@/hooks/admin/useAccompaniments";
+import {
+  useCategories,
+  useUpdateAccompaniment,
+  useAccompaniment,
+} from "@/hooks/admin/useAccompaniments";
 import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
 import { ServicePreview } from "./ServicePreview";
+import { Editor } from "../blocks/editor-00/editor";
+import { SerializedEditorState } from "lexical";
 
 interface EditServiceDialogProps {
   service: Accompaniment;
@@ -34,8 +40,16 @@ interface EditServiceDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-type EditFormState = Accompaniment & {
-  file?: File | null;
+type EditFormState = Omit<
+  Accompaniment,
+  "contents" | "details" | "targets" | "rewards" | "guarantees"
+> & {
+  file: File | null;
+  contents: SerializedEditorState | null;
+  details: SerializedEditorState | null;
+  targets: SerializedEditorState | null;
+  rewards: SerializedEditorState | null;
+  guarantees: SerializedEditorState | null;
 };
 
 function EditableList({
@@ -100,37 +114,68 @@ function EditableList({
   );
 }
 
+const safeParse = (val?: string | null): SerializedEditorState | null => {
+  if (!val) return null;
+
+  try {
+    return JSON.parse(val);
+  } catch {
+    return null;
+  }
+};
+
+const mapServiceToForm = (s: Accompaniment): EditFormState => ({
+  ...s,
+
+  file: null,
+
+  contents: safeParse(s.contents),
+  details: safeParse(s.details),
+  targets: safeParse(s.targets),
+  rewards: safeParse(s.rewards),
+  guarantees: safeParse(s.guarantees),
+});
+
+const serialize = (val: SerializedEditorState | null) => {
+  if (!val) return "";
+  return JSON.stringify(val);
+};
+
 export function EditServiceDialog({
   service,
   open,
   onOpenChange,
 }: EditServiceDialogProps) {
-  const [form, setForm] = useState<EditFormState>(service);
+  const [form, setForm] = useState<EditFormState>(() => mapServiceToForm(service));
   const [step, setStep] = useState<"form" | "preview">("form");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  
+
   const { data: categories = [] } = useCategories();
   const updateMutation = useUpdateAccompaniment();
 
   const targetId = service.accompanimentId || service.id;
-  const { data: fullService, isLoading } = useAccompaniment(open ? targetId : null);
+  const { data: fullService, isLoading } = useAccompaniment(
+    open ? targetId : null,
+  );
 
   // Reset form when fullService prop changes
   useEffect(() => {
     if (open) {
       if (fullService) {
-        setForm(fullService);
+        setForm(mapServiceToForm(fullService));
         setImagePreview(fullService.imageUrl || null);
-      }
-      else {
-        setForm(service);
+      } else {
+        setForm(mapServiceToForm(service));
         setImagePreview(service.imageUrl || null);
       }
       setStep("form");
     }
   }, [service, fullService, open]);
 
-  const set = <K extends keyof EditFormState>(key: K, value: EditFormState[K]) => {
+  const set = <K extends keyof EditFormState>(
+    key: K,
+    value: EditFormState[K],
+  ) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -162,11 +207,11 @@ export function EditServiceDialog({
           duration,
           price,
           originalPrice,
-          contents,
-          details,
-          targets,
-          rewards,
-          guarantees,
+          contents: serialize(contents),
+          details: serialize(details),
+          targets: serialize(targets),
+          rewards: serialize(rewards),
+          guarantees: serialize(guarantees),
           tagNames,
           categoryId,
           file,
@@ -176,7 +221,7 @@ export function EditServiceDialog({
         onSuccess: () => {
           onOpenChange(false);
         },
-      }
+      },
     );
   };
 
@@ -280,7 +325,9 @@ export function EditServiceDialog({
                       <Textarea
                         id="e-description"
                         value={form.shortDescription}
-                        onChange={(e) => set("shortDescription", e.target.value)}
+                        onChange={(e) =>
+                          set("shortDescription", e.target.value)
+                        }
                         rows={2}
                         className="resize-none"
                       />
@@ -297,7 +344,10 @@ export function EditServiceDialog({
                         </SelectTrigger>
                         <SelectContent>
                           {categories.map((cat) => (
-                            <SelectItem key={cat.categoryId} value={cat.categoryId}>
+                            <SelectItem
+                              key={cat.categoryId}
+                              value={cat.categoryId}
+                            >
                               {cat.name}
                             </SelectItem>
                           ))}
@@ -342,8 +392,59 @@ export function EditServiceDialog({
 
                   <Separator />
 
+                  <div className="md:col-span-2 space-y-1">
+                    <Label>Contenu</Label>
+                    <Editor
+                      editorSerializedState={form.contents || undefined}
+                      onSerializedChange={(val) => set("contents", val)}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 space-y-1">
+                    <Label>Détails</Label>
+                    <Editor
+                      editorSerializedState={form.details || undefined}
+                      onSerializedChange={(val) => set("details", val)}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 space-y-1">
+                    <Label>Cibles</Label>
+                    <Editor
+                      editorSerializedState={form.targets || undefined}
+                      onSerializedChange={(val) => set("targets", val)}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 space-y-1">
+                    <Label>Bénéfices</Label>
+                    <Editor
+                      editorSerializedState={form.rewards || undefined}
+                      onSerializedChange={(val) => set("rewards", val)}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 space-y-1">
+                    <Label>Garanties</Label>
+                    <Editor
+                      editorSerializedState={form.guarantees || undefined}
+                      onSerializedChange={(val) => set("guarantees", val)}
+                    />
+                  </div>
+
+                  <EditableList
+                    label="Tags"
+                    items={form.tagNames?.map((tag) => tag.name) || []}
+                    onChange={(v) =>
+                      set(
+                        "tagNames",
+                        v.map((name) => ({ name })),
+                      )
+                    }
+                  />
+
                   {/* Listes dynamiques */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <EditableList
                       label="Contenu"
                       items={form.contents || []}
@@ -374,10 +475,13 @@ export function EditServiceDialog({
                       items={form.tagNames?.map(tag => tag.name) || []}
                       onChange={(v) => set("tagNames", v.map(name => ({ name })))}
                     />
-                  </div>
+                  </div> */}
                 </div>
               ) : (
-                <ServicePreview form={form} categoryName={selectedCategoryName} />
+                <ServicePreview
+                  form={form}
+                  categoryName={selectedCategoryName}
+                />
               )}
             </div>
 
@@ -407,7 +511,9 @@ export function EditServiceDialog({
                     disabled={!isValid || updateMutation.isPending}
                     className="bg-green-600 hover:bg-green-700 disabled:opacity-50"
                   >
-                    {updateMutation.isPending ? "Modification..." : (
+                    {updateMutation.isPending ? (
+                      "Modification..."
+                    ) : (
                       <>
                         <Save className="h-4 w-4 mr-2" />
                         Enregistrer

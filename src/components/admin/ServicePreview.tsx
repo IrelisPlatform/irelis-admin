@@ -2,7 +2,9 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { SerializedEditorState } from "lexical";
 import { Tag, Clock, CircleDollarSign } from "lucide-react";
+import ReadonlyEditor from "../ReadonlyEditor";
 
 interface ServicePreviewProps {
   form: {
@@ -13,12 +15,12 @@ interface ServicePreviewProps {
     originalPrice?: number;
     imageUrl?: string;
     file?: File | null;
+    contents?: SerializedEditorState | null;
+    details?: SerializedEditorState | null;
+    targets?: SerializedEditorState | null;
+    rewards?: SerializedEditorState | null;
+    guarantees?: SerializedEditorState | null;
     tagNames?: { name: string }[];
-    contents: string[];
-    details: string[];
-    targets: string[];
-    rewards: string[];
-    guarantees?: string[];
   };
   categoryName: string;
 }
@@ -119,56 +121,81 @@ export function ServicePreview({ form, categoryName }: ServicePreviewProps) {
       </div>
 
       {/* Listes */}
-      <div className="grid md:grid-cols-2 gap-6">
         <div>
           <h4 className="font-semibold text-gray-900 mb-2 border-b pb-1">
             Contenu
           </h4>
-          <ul className="list-disc pl-5 space-y-1 text-gray-700">
-            {form.contents && form.contents.length > 0 ? (
-              form.contents.map((c, i) => <li key={i}>{c}</li>)
-            ) : (
-              <span className="text-gray-400 italic">Vide</span>
-            )}
-          </ul>
+          {form.contents ? (
+            <div className="prose prose-sm max-w-none text-gray-600">
+              <ReadonlyEditor
+                value={form.contents}
+                namespace="preview-contents"
+              />
+            </div>
+          ) : (
+            <p className="text-gray-500 italic">Aucun contenu fourni.</p>
+          )}
         </div>
         <div>
           <h4 className="font-semibold text-gray-900 mb-2 border-b pb-1">
             Détails
           </h4>
-          <ul className="list-disc pl-5 space-y-1 text-gray-700">
-            {form.details && form.details.length > 0 ? (
-              form.details.map((c, i) => <li key={i}>{c}</li>)
-            ) : (
-              <span className="text-gray-400 italic">Vide</span>
-            )}
-          </ul>
+          {form.details ? (
+            <div className="prose prose-sm max-w-none text-gray-600">
+              <ReadonlyEditor
+                value={form.details}
+                namespace="preview-details"
+              />
+            </div>
+          ) : (
+            <p className="text-gray-500 italic">Aucun détail fourni.</p>
+          )}
         </div>
         <div>
           <h4 className="font-semibold text-gray-900 mb-2 border-b pb-1">
             Cibles
           </h4>
-          <ul className="list-disc pl-5 space-y-1 text-gray-700">
-            {form.targets && form.targets.length > 0 ? (
-              form.targets.map((c, i) => <li key={i}>{c}</li>)
-            ) : (
-              <span className="text-gray-400 italic">Vide</span>
-            )}
-          </ul>
+          {form.targets ? (
+            <div className="prose prose-sm max-w-none text-gray-600">
+              <ReadonlyEditor
+                value={form.targets}
+                namespace="preview-targets"
+              />
+            </div>
+          ) : (
+            <p className="text-gray-500 italic">Aucune cible fournie.</p>
+          )}
         </div>
         <div>
           <h4 className="font-semibold text-gray-900 mb-2 border-b pb-1">
             Bénéfices
           </h4>
-          <ul className="list-disc pl-5 space-y-1 text-gray-700">
-            {form.rewards && form.rewards.length > 0 ? (
-              form.rewards.map((c, i) => <li key={i}>{c}</li>)
-            ) : (
-              <span className="text-gray-400 italic">Vide</span>
-            )}
-          </ul>
+          {form.rewards ? (
+            <div className="prose prose-sm max-w-none text-gray-600">
+              <ReadonlyEditor
+                value={form.rewards}
+                namespace="preview-rewards"
+              />
+            </div>
+          ) : (
+            <p className="text-gray-500 italic">Aucun bénéfice fourni.</p>
+          )}
         </div>
-      </div>
+        <div>
+          <h4 className="font-semibold text-gray-900 mb-2 border-b pb-1">
+            Garanties
+          </h4>
+          {form.guarantees ? (
+            <div className="prose prose-sm max-w-none text-gray-600">
+              <ReadonlyEditor
+                value={form.guarantees}
+                namespace="preview-guarantees"
+              />
+            </div>
+          ) : (
+            <p className="text-gray-500 italic">Aucune garantie fournie.</p>
+          )}
+        </div>
     </div>
   );
 }

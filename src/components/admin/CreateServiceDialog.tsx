@@ -22,26 +22,36 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Plus,
-  X,
-  Save,
-  Eye,
-  ArrowLeft,
-} from "lucide-react";
+import { Plus, X, Save, Eye, ArrowLeft } from "lucide-react";
 import { Accompaniment } from "@/types/accompaniment";
 import { Category } from "@/types/category";
 import { useCreateAccompaniment } from "@/hooks/admin/useAccompaniments";
 import { Badge } from "@/components/ui/badge";
 import { ServicePreview } from "./ServicePreview";
+import { Editor } from "../blocks/editor-00/editor";
+import { SerializedEditorState } from "lexical";
 
 interface CreateServiceDialogProps {
   categories: Category[];
   children?: React.ReactNode;
 }
 
-type CreateFormState = Omit<Accompaniment, "id" | "accompanimentId"> & {
+type CreateFormState = Omit<
+  Accompaniment,
+  | "id"
+  | "accompanimentId"
+  | "contents"
+  | "details"
+  | "targets"
+  | "rewards"
+  | "guarantees"
+> & {
   file: File | null;
+  contents: SerializedEditorState | null;
+  details: SerializedEditorState | null;
+  targets: SerializedEditorState | null;
+  rewards: SerializedEditorState | null;
+  guarantees: SerializedEditorState | null;
 };
 
 const emptyService = (): CreateFormState => ({
@@ -52,11 +62,11 @@ const emptyService = (): CreateFormState => ({
   imageUrl: "",
   price: 0,
   originalPrice: 0,
-  contents: [],
-  details: [],
-  targets: [],
-  rewards: [],
-  guarantees: [],
+  contents: null,
+  details: null,
+  targets: null,
+  rewards: null,
+  guarantees: null,
   tagNames: [],
   file: null,
 });
@@ -148,7 +158,15 @@ export function CreateServiceDialog({
   };
 
   const handleCreate = () => {
-    createMutation.mutate(form, {
+    const payload = {
+      ...form,
+      contents: form.contents ? JSON.stringify(form.contents) : null,
+      details: form.details ? JSON.stringify(form.details) : null,
+      targets: form.targets ? JSON.stringify(form.targets) : null,
+      rewards: form.rewards ? JSON.stringify(form.rewards) : null,
+      guarantees: form.guarantees ? JSON.stringify(form.guarantees) : null,
+    };
+    createMutation.mutate(payload, {
       onSuccess: () => {
         resetState();
       },
@@ -260,7 +278,6 @@ export function CreateServiceDialog({
                   )}
                 </div>
 
-
                 <div className="md:col-span-2 space-y-1">
                   <Label htmlFor="c-description">
                     Description courte <span className="text-red-500">*</span>
@@ -336,8 +353,59 @@ export function CreateServiceDialog({
 
               <Separator />
 
+              <div className="md:col-span-2 space-y-1">
+                <Label>Contenu</Label>
+                <Editor
+                  editorSerializedState={form.contents || undefined}
+                  onSerializedChange={(val) => set("contents", val)}
+                />
+              </div>
+
+              <div className="md:col-span-2 space-y-1">
+                <Label>Détails</Label>
+                <Editor
+                  editorSerializedState={form.details || undefined}
+                  onSerializedChange={(val) => set("details", val)}
+                />
+              </div>
+
+              <div className="md:col-span-2 space-y-1">
+                <Label>Cibles</Label>
+                <Editor
+                  editorSerializedState={form.targets || undefined}
+                  onSerializedChange={(val) => set("targets", val)}
+                />
+              </div>
+
+              <div className="md:col-span-2 space-y-1">
+                <Label>Bénéfices</Label>
+                <Editor
+                  editorSerializedState={form.rewards || undefined}
+                  onSerializedChange={(val) => set("rewards", val)}
+                />
+              </div>
+
+              <div className="md:col-span-2 space-y-1">
+                <Label>Garanties</Label>
+                <Editor
+                  editorSerializedState={form.guarantees || undefined}
+                  onSerializedChange={(val) => set("guarantees", val)}
+                />
+              </div>
+
+              <EditableList
+                label="Tags"
+                items={form.tagNames.map((tag) => tag.name)}
+                onChange={(v) =>
+                  set(
+                    "tagNames",
+                    v.map((name) => ({ name })),
+                  )
+                }
+              />
+
               {/* Listes dynamiques */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <EditableList
                   label="Contenu"
                   items={form.contents}
@@ -373,7 +441,7 @@ export function CreateServiceDialog({
                     )
                   }
                 />
-              </div>
+              </div> */}
             </div>
           ) : (
             // --- ETAPE 2 : PREVISUALISATION ---

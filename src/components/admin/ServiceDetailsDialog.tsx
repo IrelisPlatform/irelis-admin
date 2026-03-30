@@ -26,6 +26,8 @@ import {
   useCategories,
 } from "@/hooks/admin/useAccompaniments";
 import { Spinner } from "@/components/ui/spinner";
+import ReadonlyEditor from "../ReadonlyEditor";
+import { SerializedEditorState } from "lexical";
 
 interface ServiceDetailsDialogProps {
   service: Accompaniment;
@@ -62,6 +64,18 @@ function BulletList({ items }: { items: string[] }) {
     </ul>
   );
 }
+
+const parseEditorState = (
+  val?: string | null
+): SerializedEditorState | null => {
+  if (!val) return null;
+
+  try {
+    return JSON.parse(val);
+  } catch {
+    return null;
+  }
+};
 
 export function ServiceDetailsDialog({
   service,
@@ -259,13 +273,22 @@ export function ServiceDetailsDialog({
                 )}
               </div> */}
 
-              <div className="mt-10 grid md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h3 className="text-[#1e3a8a] text-lg font-bold flex items-center gap-2">
-                    <ListChecks className="w-5 h-5" /> Contenu
-                  </h3>
+              <div className="space-y-4">
+                <h3 className="text-[#1e3a8a] text-lg font-bold flex items-center gap-2">
+                  <ListChecks className="w-5 h-5" /> Contenu
+                </h3>
+                {displayService.contents ? (
+                  <div className="prose prose-sm max-w-none text-gray-600">
+                    <ReadonlyEditor
+                      value={parseEditorState(displayService.contents)}
+                      namespace="preview-contents"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-gray-500 italic">Aucun contenu fourni.</p>
+                )}
 
-                  {displayService.contents?.length > 0 ? (
+                {/* {displayService.contents?.length > 0 ? (
                     <ul className="space-y-2">
                       {displayService.contents.map((item, i) => (
                         <li
@@ -279,156 +302,133 @@ export function ServiceDetailsDialog({
                     </ul>
                   ) : (
                     <p className="text-gray-500 italic">Aucun contenu</p>
-                  )}
-                </div>
-                {/* <div>
-                  <h4 className="font-semibold text-gray-900 mb-2 border-b pb-1">
-                    Contenu
-                  </h4>
-                  <ul className="list-disc pl-5 space-y-1 text-gray-700">
-                    {displayService.contents.length > 0 ? (
-                      displayService.contents.map((c, i) => (
-                        <li key={i}>{c}</li>
-                      ))
-                    ) : (
-                      <span className="text-gray-400 italic">Vide</span>
-                    )}
-                  </ul>
-                </div> */}
-                <div className="space-y-4">
-                  <h3 className="text-[#1e3a8a] text-lg font-bold flex items-center gap-2">
-                    <Package className="w-5 h-5" /> Détails
-                  </h3>
+                  )} */}
+              </div>
+              <div className="space-y-4">
+                <h3 className="text-[#1e3a8a] text-lg font-bold flex items-center gap-2">
+                  <Package className="w-5 h-5" /> Détails
+                </h3>
+                {displayService.details ? (
+                  <div className="prose prose-sm max-w-none text-gray-600">
+                    <ReadonlyEditor
+                      value={parseEditorState(displayService.details)}
+                      namespace="preview-details"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-gray-500 italic">Aucun détail fourni.</p>
+                )}
 
-                  {displayService.details?.length > 0 ? (
-                    <ul className="space-y-2">
-                      {displayService.details.map((item, i) => (
-                        <li
-                          key={i}
-                          className="flex items-start gap-2 text-gray-700"
-                        >
-                          <CheckCircle2 className="w-4 h-4 text-green-500 mt-1" />
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-gray-500 italic">Aucun détail</p>
-                  )}
-                </div>
-                {/* <div>
-                  <h4 className="font-semibold text-gray-900 mb-2 border-b pb-1">
-                    Détails
-                  </h4>
-                  <ul className="list-disc pl-5 space-y-1 text-gray-700">
-                    {displayService.details.length > 0 ? (
-                      displayService.details.map((c, i) => <li key={i}>{c}</li>)
-                    ) : (
-                      <span className="text-gray-400 italic">Vide</span>
-                    )}
+                {/* {displayService.details?.length > 0 ? (
+                  <ul className="space-y-2">
+                    {displayService.details.map((item, i) => (
+                      <li
+                        key={i}
+                        className="flex items-start gap-2 text-gray-700"
+                      >
+                        <CheckCircle2 className="w-4 h-4 text-green-500 mt-1" />
+                        {item}
+                      </li>
+                    ))}
                   </ul>
-                </div> */}
-                <div className="space-y-4">
-                  <h3 className="text-[#1e3a8a] text-lg font-bold flex items-center gap-2">
-                    <Users className="w-5 h-5" /> Cibles
-                  </h3>
+                ) : (
+                  <p className="text-gray-500 italic">Aucun détail</p>
+                )} */}
+              </div>
+              <div className="space-y-4">
+                <h3 className="text-[#1e3a8a] text-lg font-bold flex items-center gap-2">
+                  <Users className="w-5 h-5" /> Cibles
+                </h3>
+                {displayService.targets ? (
+                  <div className="prose prose-sm max-w-none text-gray-600">
+                    <ReadonlyEditor
+                      value={parseEditorState(displayService.targets)}
+                      namespace="preview-targets"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-gray-500 italic">Aucune cible fournie.</p>
+                )}
 
-                  {displayService.targets?.length > 0 ? (
-                    <ul className="space-y-2">
-                      {displayService.targets.map((item, i) => (
-                        <li
-                          key={i}
-                          className="flex items-start gap-2 text-gray-700"
-                        >
-                          <CheckCircle2 className="w-4 h-4 text-green-500 mt-1" />
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-gray-500 italic">Aucune cible</p>
-                  )}
-                </div>
-                {/* <div>
-                  <h4 className="font-semibold text-gray-900 mb-2 border-b pb-1">
-                    Cibles
-                  </h4>
-                  <ul className="list-disc pl-5 space-y-1 text-gray-700">
-                    {displayService.targets.length > 0 ? (
-                      displayService.targets.map((c, i) => <li key={i}>{c}</li>)
-                    ) : (
-                      <span className="text-gray-400 italic">Vide</span>
-                    )}
+                {/* {displayService.targets?.length > 0 ? (
+                  <ul className="space-y-2">
+                    {displayService.targets.map((item, i) => (
+                      <li
+                        key={i}
+                        className="flex items-start gap-2 text-gray-700"
+                      >
+                        <CheckCircle2 className="w-4 h-4 text-green-500 mt-1" />
+                        {item}
+                      </li>
+                    ))}
                   </ul>
-                </div> */}
-                <div className="space-y-4">
-                  <h3 className="text-[#1e3a8a] text-lg font-bold flex items-center gap-2">
-                    <CheckCircle2 className="w-5 h-5" /> Bénéfices
-                  </h3>
+                ) : (
+                  <p className="text-gray-500 italic">Aucune cible</p>
+                )} */}
+              </div>
+              <div className="space-y-4">
+                <h3 className="text-[#1e3a8a] text-lg font-bold flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5" /> Bénéfices
+                </h3>
+                {displayService.rewards ? (
+                  <div className="prose prose-sm max-w-none text-gray-600">
+                    <ReadonlyEditor
+                      value={parseEditorState(displayService.rewards)}
+                      namespace="preview-rewards"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-gray-500 italic">Aucun bénéfice fourni.</p>
+                )}
 
-                  {displayService.rewards?.length > 0 ? (
-                    <ul className="space-y-2">
-                      {displayService.rewards.map((item, i) => (
-                        <li
-                          key={i}
-                          className="flex items-start gap-2 text-gray-700"
-                        >
-                          <CheckCircle2 className="w-4 h-4 text-green-500 mt-1" />
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-gray-500 italic">Aucun bénéfice</p>
-                  )}
-                </div>
-                {/* <div>
-                  <h4 className="font-semibold text-gray-900 mb-2 border-b pb-1">
-                    Bénéfices
-                  </h4>
-                  <ul className="list-disc pl-5 space-y-1 text-gray-700">
-                    {displayService.rewards.length > 0 ? (
-                      displayService.rewards.map((c, i) => <li key={i}>{c}</li>)
-                    ) : (
-                      <span className="text-gray-400 italic">Vide</span>
-                    )}
+                {/* {displayService.rewards?.length > 0 ? (
+                  <ul className="space-y-2">
+                    {displayService.rewards.map((item, i) => (
+                      <li
+                        key={i}
+                        className="flex items-start gap-2 text-gray-700"
+                      >
+                        <CheckCircle2 className="w-4 h-4 text-green-500 mt-1" />
+                        {item}
+                      </li>
+                    ))}
                   </ul>
-                </div> */}
-                <div className="space-y-4">
-                  <h3 className="text-[#1e3a8a] text-lg font-bold flex items-center gap-2">
-                    <ShieldCheck className="w-5 h-5" /> Garanties
-                  </h3>
+                ) : (
+                  <p className="text-gray-500 italic">Aucun bénéfice</p>
+                )} */}
+              </div>
+              <div className="space-y-4">
+                <h3 className="text-[#1e3a8a] text-lg font-bold flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5" /> Garanties
+                </h3>
+                {displayService.guarantees ? (
+                  <div className="prose prose-sm max-w-none text-gray-600">
+                    <ReadonlyEditor
+                      value={parseEditorState(displayService.guarantees)}
+                      namespace="preview-guarantees"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-gray-500 italic">
+                    Aucune garantie fournie.
+                  </p>
+                )}
 
-                  {displayService.guarantees?.length > 0 ? (
-                    <ul className="space-y-2">
-                      {displayService.guarantees.map((item, i) => (
-                        <li
-                          key={i}
-                          className="flex items-start gap-2 text-gray-700"
-                        >
-                          <CheckCircle2 className="w-4 h-4 text-green-500 mt-1" />
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-gray-500 italic">Aucune garantie</p>
-                  )}
-                </div>
-                {/* <div>
-                  <h4 className="font-semibold text-gray-900 mb-2 border-b pb-1">
-                    Garanties
-                  </h4>
-                  <ul className="list-disc pl-5 space-y-1 text-gray-700">
-                    {displayService.guarantees.length > 0 ? (
-                      displayService.guarantees.map((c, i) => (
-                        <li key={i}>{c}</li>
-                      ))
-                    ) : (
-                      <span className="text-gray-400 italic">Vide</span>
-                    )}
+                {/* {displayService.guarantees?.length > 0 ? (
+                  <ul className="space-y-2">
+                    {displayService.guarantees.map((item, i) => (
+                      <li
+                        key={i}
+                        className="flex items-start gap-2 text-gray-700"
+                      >
+                        <CheckCircle2 className="w-4 h-4 text-green-500 mt-1" />
+                        {item}
+                      </li>
+                    ))}
                   </ul>
-                </div> */}
+                ) : (
+                  <p className="text-gray-500 italic">Aucune garantie</p>
+                )} */}
               </div>
             </div>
             {/* le design */}

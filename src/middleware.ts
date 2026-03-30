@@ -12,12 +12,12 @@ export function middleware(request: NextRequest) {
   const isAdminLogin = pathname === "/admin/login";
 
   // admin non connecté
-  if (isAdminRoute && !isAdminLogin && !isAdminSession) {
+  if (isAdminRoute && !isAdminLogin && (!isAdminSession || !token)) {
     return NextResponse.redirect(new URL("/admin/login", request.url));
   }
 
   // admin déjà connecté
-  if (isAdminLogin && isAdminSession) {
+  if (isAdminLogin && isAdminSession && token) {
     return NextResponse.redirect(new URL("/admin", request.url));
   }
 
