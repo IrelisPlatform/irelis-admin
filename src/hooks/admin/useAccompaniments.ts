@@ -109,9 +109,9 @@ export function useCreateAccompaniment() {
         formData.append("file", data.file);
       }
 
-      for (const [key, value] of formData.entries()) {
-        console.log(key, value);
-      }
+      // for (const [key, value] of formData.entries()) {
+      //   console.log(key, value);
+      // }
 
       const response = await api.post<Accompaniment>(
         "/api/v1/accompaniments",
@@ -203,7 +203,7 @@ export function useUpdateAccompaniment() {
       );
       return response.data;
     },
-    onSuccess: (_, {id}) => {
+    onSuccess: (_, { id }) => {
       toast.success("Mis à jour avec succès !");
       queryClient.invalidateQueries({ queryKey: ["admin-accompaniments"] });
       queryClient.invalidateQueries({ queryKey: ["admin-accompaniment", id] });

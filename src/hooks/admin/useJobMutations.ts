@@ -26,7 +26,7 @@ export function useCreateJob() {
         "/admin/jobs",
         formData,
       );
-      console.log(response.data);
+      // console.log(response.data);
       if (response.data.error) throw new Error(response.data.error);
       return response.data;
     },
@@ -35,7 +35,7 @@ export function useCreateJob() {
       await queryClient.invalidateQueries({ queryKey: ["admin-jobs"] });
     },
     onError: (error: any) => {
-      console.log(error);
+      // console.log(error);
       const errorMessage =
         error?.response?.data?.error ||
         error.message ||
@@ -55,7 +55,7 @@ export function useUpdateJob() {
     { id: string; formData: FormData }
   >({
     mutationFn: async ({ id, formData }) => {
-      console.log("formDataUpdateMutation", formData);
+      // console.log("formDataUpdateMutation", formData);
       const response = await api.patch<UpdateJobResponse>(
         `/admin/jobs/${id}`,
         formData,
@@ -67,7 +67,7 @@ export function useUpdateJob() {
       queryClient.invalidateQueries({ queryKey: ["admin-jobs"] });
     },
     onError: (error: any) => {
-      console.log(error);
+      // console.log(error);
     },
   });
 }
@@ -89,7 +89,7 @@ export function useDeleteJob() {
       queryClient.invalidateQueries({ queryKey: ["admin-jobs"] });
     },
     onError: (error: any) => {
-      console.log(error);
+      // console.log(error);
       const errorMessage =
         error?.response?.data?.error ||
         error.message ||
@@ -111,8 +111,8 @@ export function usePublishJob() {
       return response.data;
     },
     onSuccess: () => {
-        toast.success("Offre publiée avec succès!");
-        queryClient.invalidateQueries({ queryKey: ["admin-jobs"] });
+      toast.success("Offre publiée avec succès!");
+      queryClient.invalidateQueries({ queryKey: ["admin-jobs"] });
     },
     onError: (error: any) => {
       const errorMessage =
