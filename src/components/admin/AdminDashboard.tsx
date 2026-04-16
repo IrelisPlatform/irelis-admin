@@ -3,39 +3,42 @@
 "use client";
 
 import React from "react";
-import { 
-  Users, 
-  Briefcase, 
-  Handshake, 
-  Layers, 
-  TrendingUp, 
-  Clock, 
+import {
+  Users,
+  Briefcase,
+  Handshake,
+  Layers,
+  TrendingUp,
+  Clock,
   Plus,
   ArrowUpRight,
   ArrowDownRight,
   FileText,
-  LayoutDashboard
+  LayoutDashboard,
+  GraduationCap,
+  Target,
+  Eye,
 } from "lucide-react";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  ResponsiveContainer, 
-  PieChart, 
-  Pie, 
-  Cell, 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   Legend,
   AreaChart,
   Area
@@ -43,14 +46,15 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import api from "@/services/axiosClient";
 import Cookies from "js-cookie";
-import { JobPage, PublishedJob } from "@/types/job";
+import { JobPage } from "@/types/job";
 import { AccompanimentPage } from "@/types/accompaniment";
 import { Category } from "@/types/category";
 import { formatDateRelative } from "@/services/date";
-import { getStatusBadge, getContractTypeLabel } from "@/lib/jobs/job-helpers";
+import { getStatusBadge } from "@/lib/jobs/job-helpers";
 import { Spinner } from "@/components/ui/spinner";
 import Link from "next/link";
 import { CreateJobDialog } from "./CreateJobDialog";
+import { useDashboardStats } from "@/hooks/dashboard/useDashboard";
 
 // --- Types ---
 
@@ -63,42 +67,57 @@ interface StatsCardProps {
     value: string;
     isUp: boolean;
   };
-  color: string;
-  bgColor: string;
+  trend2?: {
+    value: string;
+    isUp: boolean;
+  };
+  iconColor: string;
+  iconBg: string;
+  bottomBarColor: string;
 }
 
 // --- Components ---
 
-const StatsCard = ({ title, value, description, icon: Icon, trend, color, bgColor }: StatsCardProps) => (
-  <Card className="overflow-hidden border-none shadow-md hover:shadow-lg transition-shadow duration-300">
-    <CardContent className="p-6">
-      <div className="flex items-center justify-between space-x-4">
-        <div className="space-y-1">
+const StatsCard = ({ title, value, description, icon: Icon, trend, trend2, iconColor, iconBg, bottomBarColor }: StatsCardProps) => (
+  <Card className="group overflow-hidden border-none shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full relative">
+    <CardContent className="px-4 pt-4 pb-3 lg:px-5 lg:pt-5 lg:pb-3 flex-1 flex flex-col">
+      <div className="flex items-start justify-between space-x-2">
+        <div className="space-y-0.5">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <div className="flex items-baseline space-x-2">
-            <h2 className="text-3xl font-bold tracking-tight">{value}</h2>
+          <h2 className="text-2xl font-bold tracking-tight">{value}</h2>
+        </div>
+        <div className={`p-2.5 rounded-xl ${iconBg} shrink-0`}>
+          <Icon className={`w-5 h-5 ${iconColor}`} />
+        </div>
+      </div>
+      <div className="mt-auto pt-3 flex items-center justify-between text-xs text-muted-foreground">
+        <span>{description}</span>
+        {(trend || trend2) && (
+          <div className="absolute right-4 bottom-3 lg:right-5 flex flex-col items-end gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
             {trend && (
-              <span className={`inline-flex items-center text-xs font-medium ${trend.isUp ? 'text-green-600' : 'text-red-600'}`}>
-                {trend.isUp ? <ArrowUpRight className="w-3 h-3 mr-1" /> : <ArrowDownRight className="w-3 h-3 mr-1" />}
+              <span className={`inline-flex items-center font-bold px-1.5 py-0.5 rounded backdrop-blur-md bg-white/90 shadow-sm border border-black/5 dark:bg-card/90 dark:border-white/10 ${trend.isUp ? 'text-green-600' : 'text-red-600'}`}>
+                {trend.isUp ? <ArrowUpRight className="w-3 h-3 mr-0.5" /> : <ArrowDownRight className="w-3 h-3 mr-0.5" />}
                 {trend.value}
               </span>
             )}
+            {trend2 && (
+              <span className={`inline-flex items-center font-bold px-1.5 py-0.5 rounded backdrop-blur-md bg-white/90 shadow-sm border border-black/5 dark:bg-card/90 dark:border-white/10 ${trend2.isUp ? 'text-green-600' : 'text-red-600'}`}>
+                {trend2.isUp ? <ArrowUpRight className="w-3 h-3 mr-0.5" /> : <ArrowDownRight className="w-3 h-3 mr-0.5" />}
+                {trend2.value}
+              </span>
+            )}
           </div>
-          <p className="text-xs text-muted-foreground">{description}</p>
-        </div>
-        <div className={`p-3 rounded-2xl ${bgColor}`}>
-          <Icon className={`w-6 h-6 ${color}`} />
-        </div>
+        )}
       </div>
     </CardContent>
-    <div className={`h-1.5 w-full ${color.replace('text-', 'bg-')}`} />
+    <div className={`h-1.5 w-full ${bottomBarColor}`} />
   </Card>
 );
 
 export function AdminDashboard() {
   const token = Cookies.get("access_token");
 
-  // Fetch Jobs Stats
+  // Fetch Jobs Stats (Keep for recent jobs)
   const { data: jobsData, isLoading: isLoadingJobs } = useQuery({
     queryKey: ["admin-jobs-stats"],
     queryFn: async () => {
@@ -109,7 +128,7 @@ export function AdminDashboard() {
     }
   });
 
-  // Fetch Accompaniments Stats
+  // Fetch Accompaniments Stats (Keep for now if needed, but we'll use stats)
   const { data: accData, isLoading: isLoadingAcc } = useQuery({
     queryKey: ["admin-acc-stats"],
     queryFn: async () => {
@@ -118,16 +137,10 @@ export function AdminDashboard() {
     }
   });
 
-  // Fetch Categories
-  const { data: categories, isLoading: isLoadingCat } = useQuery({
-    queryKey: ["admin-categories-stats"],
-    queryFn: async () => {
-      const response = await api.get<Category[]>("/api/v1/categories");
-      return response.data;
-    }
-  });
+  // Fetch Global Stats
+  const { data: statsData, isLoading: isLoadingStats } = useDashboardStats();
 
-  if (isLoadingJobs || isLoadingAcc || isLoadingCat) {
+  if (isLoadingJobs || isLoadingAcc || isLoadingStats) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Spinner className="w-8 h-8" />
@@ -136,21 +149,29 @@ export function AdminDashboard() {
     );
   }
 
-  const totalJobs = jobsData?.total_elements || 0;
-  const totalAcc = accData?.total_elements || 0;
-  const totalCat = categories?.length || 0;
+  const statusColors: Record<string, string> = {
+    PENDING: "#f59e0b",
+    REVIEWED: "#3b82f6",
+    ACCEPTED: "#10b981",
+    REJECTED: "#ef4444",
+    WITHDRAWN: "#6b7280",
+  };
 
-  // Mock data for distribution (Real data would need an analytics endpoint)
-  const jobStatusDistribution = [
-    { name: "Publiées", value: Math.floor(totalJobs * 0.7), color: "#10b981" },
-    { name: "Brouillons", value: Math.floor(totalJobs * 0.2), color: "#f59e0b" },
-    { name: "Expirées", value: Math.ceil(totalJobs * 0.1), color: "#ef4444" },
-  ];
+  const statusLabels: Record<string, string> = {
+    PENDING: "En attente",
+    REVIEWED: "En revue",
+    ACCEPTED: "Acceptées",
+    REJECTED: "Refusées",
+    WITHDRAWN: "Retirées",
+  };
 
-  const jobsByCategory = categories?.slice(0, 5).map(cat => ({
-    name: cat.name,
-    count: Math.floor(Math.random() * 20) + 5 // Mock count per category
-  })) || [];
+  const applicationsChartData = statsData?.applicationsByStatus
+    ? Object.entries(statsData.applicationsByStatus).map(([status, count]) => ({
+      name: statusLabels[status] || status,
+      value: count,
+      color: statusColors[status] || "#cbd5e1"
+    }))
+    : [];
 
   const activityData = [
     { name: "Lun", jobs: 4, acc: 2 },
@@ -192,40 +213,83 @@ export function AdminDashboard() {
 
       {/* KPI Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatsCard 
-          title="Offres d'emploi" 
-          value={totalJobs} 
-          description="Total des offres créées"
-          icon={Briefcase}
-          trend={{ value: "+12%", isUp: true }}
-          color="text-blue-600"
-          bgColor="bg-blue-50"
+        <StatsCard
+          title="Utilisateurs"
+          value={statsData?.totalUsers || 0}
+          description="Utilisateurs inscrits"
+          icon={Users}
+          trend={{ value: `+${statsData?.newUsersToday || 0} aujourd'hui`, isUp: true }}
+          iconColor="text-indigo-600"
+          iconBg="bg-indigo-50"
+          bottomBarColor="bg-indigo-600"
         />
-        <StatsCard 
-          title="Services d'Accomp." 
-          value={totalAcc} 
-          description="Services disponibles"
+        <StatsCard
+          title="Candidats"
+          value={statsData?.totalCandidates || 0}
+          description="Candidats qualifiés"
+          icon={GraduationCap}
+          trend={{ value: `+${statsData?.newCandidatesLastMonth || 0} ce dernier mois`, isUp: true }}
+          iconColor="text-emerald-600"
+          iconBg="bg-emerald-50"
+          bottomBarColor="bg-emerald-600"
+        />
+        <StatsCard
+          title="Recruteurs"
+          value={statsData?.totalRecruiters || 0}
+          description="Entreprises partenaires"
           icon={Handshake}
-          trend={{ value: "+5%", isUp: true }}
-          color="text-emerald-600"
-          bgColor="bg-emerald-50"
+          iconColor="text-amber-600"
+          iconBg="bg-amber-50"
+          bottomBarColor="bg-amber-600"
         />
-        <StatsCard 
-          title="Catégories" 
-          value={totalCat} 
-          description="Secteurs d'activité"
-          icon={Layers}
-          color="text-purple-600"
-          bgColor="bg-purple-50"
+        <StatsCard
+          title="Offres d'emploi"
+          value={statsData?.totalJobOffers || 0}
+          description="Offres publiées"
+          icon={Briefcase}
+          trend={{ value: `+${statsData?.newJobOffersToday || 0} aujourd'hui`, isUp: true }}
+          trend2={{ value: `+${statsData?.newJobOffersLastMonth || 0} ce dernier mois`, isUp: true }}
+          iconColor="text-blue-600"
+          iconBg="bg-blue-50"
+          bottomBarColor="bg-blue-600"
         />
-        <StatsCard 
-          title="Vues Totales" 
-          value="1.2K" 
+        <StatsCard
+          title="Candidatures"
+          value={statsData?.totalApplications || 0}
+          description="Soumissions totales"
+          icon={FileText}
+          trend={{ value: `+${statsData?.newApplicationsToday || 0} aujourd'hui`, isUp: true }}
+          trend2={{ value: `+${statsData?.newApplicationsLastMonth || 0} ce dernier mois`, isUp: true }}
+          iconColor="text-cyan-600"
+          iconBg="bg-cyan-50"
+          bottomBarColor="bg-cyan-600"
+        />
+        <StatsCard
+          title="Vues Offres"
+          value={statsData?.totalViews || 0}
           description="Vues cumulées ce mois"
           icon={TrendingUp}
-          trend={{ value: "+18%", isUp: true }}
-          color="text-orange-600"
-          bgColor="bg-orange-50"
+          iconColor="text-orange-600"
+          iconBg="bg-orange-50"
+          bottomBarColor="bg-orange-600"
+        />
+        <StatsCard
+          title="Conversion Moy."
+          value={`${((statsData?.averageConversionRate || 0) * 100).toFixed(1)} %`}
+          description="Taux de candidature"
+          icon={Target}
+          iconColor="text-purple-600"
+          iconBg="bg-purple-50"
+          bottomBarColor="bg-purple-600"
+        />
+        <StatsCard
+          title="Délai Traitement"
+          value={`${(statsData?.averageProcessingTimeDays || 0).toFixed(1)} j`}
+          description="Durée moyenne d'embauche"
+          icon={Clock}
+          iconColor="text-rose-600"
+          iconBg="bg-rose-50"
+          bottomBarColor="bg-rose-600"
         />
       </div>
 
@@ -242,8 +306,8 @@ export function AdminDashboard() {
                 <AreaChart data={activityData}>
                   <defs>
                     <linearGradient id="colorJobs" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/>
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -251,21 +315,21 @@ export function AdminDashboard() {
                   <YAxis axisLine={false} tickLine={false} />
                   <Tooltip />
                   <Legend />
-                  <Area 
-                    type="monotone" 
-                    dataKey="jobs" 
-                    stroke="#3b82f6" 
+                  <Area
+                    type="monotone"
+                    dataKey="jobs"
+                    stroke="#3b82f6"
                     strokeWidth={3}
-                    fillOpacity={1} 
-                    fill="url(#colorJobs)" 
+                    fillOpacity={1}
+                    fill="url(#colorJobs)"
                     name="Offres d'emploi"
                   />
-                  <Area 
-                    type="monotone" 
-                    dataKey="acc" 
-                    stroke="#10b981" 
+                  <Area
+                    type="monotone"
+                    dataKey="acc"
+                    stroke="#10b981"
                     strokeWidth={3}
-                    fillOpacity={0} 
+                    fillOpacity={0}
                     name="Services"
                   />
                 </AreaChart>
@@ -277,114 +341,173 @@ export function AdminDashboard() {
         {/* Status Distribution */}
         <Card className="border-none shadow-md">
           <CardHeader>
-            <CardTitle className="text-xl">Statut des offres</CardTitle>
-            <CardDescription>Répartition par état de publication</CardDescription>
+            <CardTitle className="text-xl">État des candidatures</CardTitle>
+            <CardDescription>Répartition par statut global</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[250px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={jobStatusDistribution}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {jobStatusDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="mt-4 space-y-2">
-              {jobStatusDistribution.map((item) => (
-                <div key={item.name} className="flex items-center justify-between text-sm">
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: item.color }} />
-                    <span className="text-muted-foreground">{item.name}</span>
-                  </div>
-                  <span className="font-semibold">{item.value}</span>
+            {applicationsChartData.length > 0 ? (
+              <>
+                <div className="h-[250px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={applicationsChartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {applicationsChartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-              ))}
-            </div>
+                <div className="mt-4 space-y-2">
+                  {applicationsChartData.map((item) => (
+                    <div key={item.name} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center">
+                        <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: item.color }} />
+                        <span className="text-muted-foreground">{item.name}</span>
+                      </div>
+                      <span className="font-semibold">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                Aucune donnée
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Recent Jobs */}
-        <Card className="border-none shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-xl">Offres récentes</CardTitle>
-              <CardDescription>Les 5 dernières offres publiées</CardDescription>
-            </div>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/admin">Voir tout</Link>
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {jobsData?.content.length === 0 ? (
-                <p className="text-center text-muted-foreground py-4">Aucune offre récente</p>
-              ) : (
-                jobsData?.content.map((job) => (
-                  <div key={job.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <FileText className="w-5 h-5 text-blue-600" />
+      <div className="space-y-8">
+        {/* ROW 1: Top Offers Side by Side */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Top Offers By Applications */}
+          <Card className="border-none shadow-md">
+            <CardHeader>
+              <CardTitle className="text-xl">Top Offres (Candidatures)</CardTitle>
+              <CardDescription>Offres attirant le plus de postulants</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {!statsData?.topOffersByApplications || statsData.topOffersByApplications.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-4">Aucune donnée</p>
+                ) : (
+                  statsData.topOffersByApplications.map((offer, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors border max-w-full">
+                      <div className="flex items-center space-x-4 max-w-[60%]">
+                        <div className="flex-shrink-0 w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                          <TrendingUp className="w-5 h-5 text-emerald-600" />
+                        </div>
+                        <div className="truncate">
+                          <p className="font-medium text-sm truncate">{offer.jobTitle}</p>
+                          <p className="text-xs text-muted-foreground truncate">{offer.status}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-sm line-clamp-1">{job.title}</p>
-                        <p className="text-xs text-muted-foreground">{job.companyName} • {job.workCountryLocation}</p>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-lg font-bold text-emerald-600">{offer.applicationCount}</p>
+                        <p className="text-[10px] text-muted-foreground">candidatures</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      {getStatusBadge(job.status)}
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        {job.publishedAt ? formatDateRelative(job.publishedAt) : "—"}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Sectors Distribution */}
-        <Card className="border-none shadow-md">
-          <CardHeader>
-            <CardTitle className="text-xl">Secteurs dynamiques</CardTitle>
-            <CardDescription>Top secteurs par volume d'offres</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={jobsByCategory} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                  <XAxis type="number" axisLine={false} tickLine={false} hide />
-                  <YAxis 
-                    dataKey="name" 
-                    type="category" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    width={100} 
-                    fontSize={12}
-                  />
-                  <Tooltip />
-                  <Bar dataKey="count" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+          {/* Top Offers By Views */}
+          <Card className="border-none shadow-md">
+            <CardHeader>
+              <CardTitle className="text-xl">Top Offres (Vues)</CardTitle>
+              <CardDescription>Offres les plus consultées</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {!statsData?.topOffersByViews || statsData.topOffersByViews.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-4">Aucune donnée</p>
+                ) : (
+                  statsData.topOffersByViews.map((offer, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors border max-w-full">
+                      <div className="flex items-center space-x-4 max-w-[60%]">
+                        <div className="flex-shrink-0 w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                          <Eye className="w-5 h-5 text-orange-600" />
+                        </div>
+                        <div className="truncate">
+                          <p className="font-medium text-sm truncate">{offer.jobTitle}</p>
+                          <p className="text-xs text-muted-foreground truncate">{offer.status}</p>
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-lg font-bold text-orange-600">{offer.viewCount}</p>
+                        <p className="text-[10px] text-muted-foreground">vues</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              {statsData?.applicationsPerJobRatio !== undefined && (
+                <div className="mt-4 pt-4 border-t flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Ratio global (Candidature / Offre) :</span>
+                  <span className="font-bold text-blue-600">{statsData.applicationsPerJobRatio.toFixed(2)}</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* ROW 2: Recent Jobs */}
+        <div className="gap-8">
+          <Card className="border-none shadow-md flex flex-col">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-xl">Offres récentes</CardTitle>
+                <CardDescription>Dernières publications</CardDescription>
+              </div>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/admin">Tout voir</Link>
+              </Button>
+            </CardHeader>
+            <CardContent className="flex-1">
+              <div className="space-y-4">
+                {jobsData?.content.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-4">Aucune offre récente</p>
+                ) : (
+                  jobsData?.content.map((job) => (
+                    <div key={job.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                          <FileText className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div className="truncate">
+                          <p className="font-medium text-sm line-clamp-1">{job.title}</p>
+                          <p className="text-xs text-muted-foreground">{job.companyName} • {job.workCountryLocation}</p>
+                        </div>
+                      </div>
+                      <div className="hidden lg:block text-right">
+                        {getStatusBadge(job.status)}
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          {job.publishedAt ? formatDateRelative(job.publishedAt) : "—"}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+          {/* Right column placeholder, leaving it empty on large screens to keep "Offres recentes" at left. */}
+          <div className="hidden lg:block"></div>
+        </div>
       </div>
     </div>
   );

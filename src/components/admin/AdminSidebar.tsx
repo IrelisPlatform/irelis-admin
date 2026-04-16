@@ -12,6 +12,7 @@ import {
   FileText,
   Grid,
   Handshake,
+  Users,
 } from "lucide-react";
 import { useUser } from "@/hooks/useUser";
 
@@ -31,6 +32,12 @@ const menuItems = [
     label: "Offres",
     icon: FileText,
     href: "/admin",
+  },
+  {
+    id: "candidates",
+    label: "Candidats",
+    icon: Users,
+    href: "/admin/candidates",
   },
   {
     id: "modules",
