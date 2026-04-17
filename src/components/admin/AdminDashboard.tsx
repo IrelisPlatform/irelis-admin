@@ -140,6 +140,7 @@ export function AdminDashboard() {
   // Fetch Global Stats
   const { data: statsData, isLoading: isLoadingStats } = useDashboardStats();
 
+
   if (isLoadingJobs || isLoadingAcc || isLoadingStats) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -275,7 +276,7 @@ export function AdminDashboard() {
         />
         <StatsCard
           title="Conversion Moy."
-          value={`${((statsData?.averageConversionRate || 0) * 100).toFixed(1)} %`}
+          value={`${((statsData?.averageConversionRate || 0) / 100).toFixed(2)} %`}
           description="Taux de candidature"
           icon={Target}
           iconColor="text-purple-600"

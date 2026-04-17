@@ -22,6 +22,7 @@ import {
   Clock,
   Factory,
   UsersRound,
+  Eye,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -161,6 +162,15 @@ export function JobDetailsDialog({
                     <Users className="w-4 h-4 text-[#1e3a8a]" />
                   </div>
                   <span>{job.postNumber} poste(s)</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-700">
+                  <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm shrink-0">
+                    <Eye className="w-4 h-4 text-[#1e3a8a]" />
+                  </div>
+                  <span>
+                    {job.viewCount ?? 0}{" "}
+                    {(job.viewCount ?? 0) <= 1 ? "vue" : "vues"}
+                  </span>
                 </div>
               </div>
             </div>

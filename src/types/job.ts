@@ -54,6 +54,7 @@ export interface BackendPublishedJob {
   companyEmail: string;
   sectorId: string;
   workCities: string[];
+  viewCount?: number;
 }
 
 // 🔹 Version transformée pour le frontend
@@ -84,10 +85,11 @@ export interface PublishedJob {
   status: string;
   // competences (requirements) (à revoir)
   /* qualifications: string[]; */
-  requiredLanguages: string[]
+  requiredLanguages: string[];
   requiredDocuments: RequiredDocument[];
   tagDto: Array<{ name: string; type: "skill" | "tool" | "domain" | "SKILL" }>;
   contractType: string;
+  viewCount?: number;
 }
 
 // 🔹 Pour les réponses paginées (réutilisable partout)
