@@ -406,7 +406,7 @@ export function AdminDashboard() {
                   statsData.topOffersByApplications.map((offer, index) => (
                     <div key={index} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors border max-w-full">
                       <div className="flex items-center space-x-4 max-w-[60%]">
-                        <div className="flex-shrink-0 w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                        <div className="shrink-0 w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
                           <TrendingUp className="w-5 h-5 text-emerald-600" />
                         </div>
                         <div className="truncate">
@@ -414,7 +414,7 @@ export function AdminDashboard() {
                           <p className="text-xs text-muted-foreground truncate">{offer.status}</p>
                         </div>
                       </div>
-                      <div className="text-right flex-shrink-0">
+                      <div className="text-right shrink-0">
                         <p className="text-lg font-bold text-emerald-600">{offer.applicationCount}</p>
                         <p className="text-[10px] text-muted-foreground">candidatures</p>
                       </div>
@@ -439,7 +439,7 @@ export function AdminDashboard() {
                   statsData.topOffersByViews.map((offer, index) => (
                     <div key={index} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors border max-w-full">
                       <div className="flex items-center space-x-4 max-w-[60%]">
-                        <div className="flex-shrink-0 w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                        <div className="shrink-0 w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
                           <Eye className="w-5 h-5 text-orange-600" />
                         </div>
                         <div className="truncate">
@@ -447,7 +447,7 @@ export function AdminDashboard() {
                           <p className="text-xs text-muted-foreground truncate">{offer.status}</p>
                         </div>
                       </div>
-                      <div className="text-right flex-shrink-0">
+                      <div className="text-right shrink-0">
                         <p className="text-lg font-bold text-orange-600">{offer.viewCount}</p>
                         <p className="text-[10px] text-muted-foreground">vues</p>
                       </div>
@@ -485,7 +485,7 @@ export function AdminDashboard() {
                   jobsData?.content.map((job) => (
                     <div key={job.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
                       <div className="flex items-center space-x-4">
-                        <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                        <div className="shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                           <FileText className="w-5 h-5 text-blue-600" />
                         </div>
                         <div className="truncate">

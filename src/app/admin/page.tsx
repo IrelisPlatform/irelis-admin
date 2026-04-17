@@ -17,7 +17,7 @@ export default async function AdminDashboardPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-8">
-      <Alert className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-300">
+      <Alert className="bg-linear-to-r from-green-50 to-emerald-50 border-green-300">
         <ShieldCheck className="h-5 w-5 text-green-600" />
         <AlertDescription className="ml-2">
           <p className="text-sm text-green-900">

@@ -73,12 +73,12 @@ export function AdminCandidateDetail({ id }: { id: string }) {
       </div>
 
       {/* Main Profile Header */}
-      <Card className="border-none shadow-lg bg-gradient-to-br from-blue-50/50 via-white to-indigo-50/30 overflow-hidden relative">
+      <Card className="border-none shadow-lg bg-linear-to-br from-blue-50/50 via-white to-indigo-50/30 overflow-hidden relative">
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
         <CardContent className="p-8">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-8 relative z-10">
             <Avatar className="w-32 h-32 border-4 border-white shadow-xl ring-2 ring-blue-100">
-              <AvatarFallback className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white text-4xl font-bold">
+              <AvatarFallback className="bg-linear-to-br from-blue-600 to-indigo-600 text-white text-4xl font-bold">
                 {getInitials(candidate.firstName, candidate.lastName)}
               </AvatarFallback>
             </Avatar>
