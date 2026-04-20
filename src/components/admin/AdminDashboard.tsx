@@ -351,108 +351,53 @@ export function AdminDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Chart */}
-        <Card className="lg:col-span-2 border-none shadow-md">
-          <CardHeader>
-            <CardTitle className="text-xl">Activité de la semaine</CardTitle>
-            <CardDescription>
-              Évolution des publications d'offres et de services
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={activityData}>
-                  <defs>
-                    <linearGradient id="colorJobs" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                  <YAxis axisLine={false} tickLine={false} />
-                  <Tooltip />
-                  <Legend />
-                  <Area
-                    type="monotone"
-                    dataKey="jobs"
-                    stroke="#3b82f6"
-                    strokeWidth={3}
-                    fillOpacity={1}
-                    fill="url(#colorJobs)"
-                    name="Offres d'emploi"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="acc"
-                    stroke="#10b981"
-                    strokeWidth={3}
-                    fillOpacity={0}
-                    name="Services"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        {/*<Card className="lg:col-span-2 border-none shadow-md">*/}
+        {/*  <CardHeader>*/}
+        {/*    <CardTitle className="text-xl">Activité de la semaine</CardTitle>*/}
+        {/*    <CardDescription>*/}
+        {/*      Évolution des publications d'offres et de services*/}
+        {/*    </CardDescription>*/}
+        {/*  </CardHeader>*/}
+        {/*  /!*<CardContent>*!/*/}
+        {/*  /!*  <div className="h-[300px] w-full">*!/*/}
+        {/*  /!*    <ResponsiveContainer width="100%" height="100%">*!/*/}
+        {/*  /!*      <AreaChart data={activityData}>*!/*/}
+        {/*  /!*        <defs>*!/*/}
+        {/*  /!*          <linearGradient id="colorJobs" x1="0" y1="0" x2="0" y2="1">*!/*/}
+        {/*  /!*            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />*!/*/}
+        {/*  /!*            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />*!/*/}
+        {/*  /!*          </linearGradient>*!/*/}
+        {/*  /!*        </defs>*!/*/}
+        {/*  /!*        <CartesianGrid strokeDasharray="3 3" vertical={false} />*!/*/}
+        {/*  /!*        <XAxis dataKey="name" axisLine={false} tickLine={false} />*!/*/}
+        {/*  /!*        <YAxis axisLine={false} tickLine={false} />*!/*/}
+        {/*  /!*        <Tooltip />*!/*/}
+        {/*  /!*        <Legend />*!/*/}
+        {/*  /!*        <Area*!/*/}
+        {/*  /!*          type="monotone"*!/*/}
+        {/*  /!*          dataKey="jobs"*!/*/}
+        {/*  /!*          stroke="#3b82f6"*!/*/}
+        {/*  /!*          strokeWidth={3}*!/*/}
+        {/*  /!*          fillOpacity={1}*!/*/}
+        {/*  /!*          fill="url(#colorJobs)"*!/*/}
+        {/*  /!*          name="Offres d'emploi"*!/*/}
+        {/*  /!*        />*!/*/}
+        {/*  /!*        <Area*!/*/}
+        {/*  /!*          type="monotone"*!/*/}
+        {/*  /!*          dataKey="acc"*!/*/}
+        {/*  /!*          stroke="#10b981"*!/*/}
+        {/*  /!*          strokeWidth={3}*!/*/}
+        {/*  /!*          fillOpacity={0}*!/*/}
+        {/*  /!*          name="Services"*!/*/}
+        {/*  /!*        />*!/*/}
+        {/*  /!*      </AreaChart>*!/*/}
+        {/*  /!*    </ResponsiveContainer>*!/*/}
+        {/*  /!*  </div>*!/*/}
+        {/*  /!*</CardContent>*!/*/}
+        {/*</Card>*/}
 
         {/* Status Distribution */}
-        <Card className="border-none shadow-md">
-          <CardHeader>
-            <CardTitle className="text-xl">État des candidatures</CardTitle>
-            <CardDescription>Répartition par statut global</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {applicationsChartData.length > 0 ? (
-              <>
-                <div className="h-[250px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={applicationsChartData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {applicationsChartData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="mt-4 space-y-2">
-                  {applicationsChartData.map((item) => (
-                    <div
-                      key={item.name}
-                      className="flex items-center justify-between text-sm"
-                    >
-                      <div className="flex items-center">
-                        <div
-                          className="w-3 h-3 rounded-full mr-2"
-                          style={{ backgroundColor: item.color }}
-                        />
-                        <span className="text-muted-foreground">
-                          {item.name}
-                        </span>
-                      </div>
-                      <span className="font-semibold">{item.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-                Aucune donnée
-              </div>
-            )}
-          </CardContent>
-        </Card>
+
       </div>
 
       <div className="space-y-8">
@@ -537,7 +482,7 @@ export function AdminDashboard() {
                             {offer.jobTitle}
                           </p>
                           <p className="text-xs text-muted-foreground truncate">
-                            {offer.status}
+                            {getJobStatusLabel(offer.status)}
                           </p>
                         </div>
                       </div>
@@ -565,6 +510,62 @@ export function AdminDashboard() {
               )}
             </CardContent>
           </Card>
+          {/*<Card className="border-none shadow-md">*/}
+          {/*  <CardHeader>*/}
+          {/*    <CardTitle className="text-xl">État des candidatures</CardTitle>*/}
+          {/*    <CardDescription>Répartition par statut global</CardDescription>*/}
+          {/*  </CardHeader>*/}
+          {/*  <CardContent>*/}
+          {/*    {applicationsChartData.length > 0 ? (*/}
+          {/*        <>*/}
+          {/*          <div className="h-[250px] w-full">*/}
+          {/*            <ResponsiveContainer width="100%" height="100%">*/}
+          {/*              <PieChart>*/}
+          {/*                <Pie*/}
+          {/*                    data={applicationsChartData}*/}
+          {/*                    cx="50%"*/}
+          {/*                    cy="50%"*/}
+          {/*                    innerRadius={60}*/}
+          {/*                    outerRadius={80}*/}
+          {/*                    paddingAngle={5}*/}
+          {/*                    dataKey="value"*/}
+          {/*                >*/}
+          {/*                  {applicationsChartData.map((entry, index) => (*/}
+          {/*                      <Cell key={`cell-${index}`} fill={entry.color} />*/}
+          {/*                  ))}*/}
+          {/*                </Pie>*/}
+          {/*                <Tooltip />*/}
+          {/*                <Legend />*/}
+          {/*              </PieChart>*/}
+          {/*            </ResponsiveContainer>*/}
+          {/*          </div>*/}
+          {/*          <div className="mt-4 space-y-2">*/}
+          {/*            {applicationsChartData.map((item) => (*/}
+          {/*                <div*/}
+          {/*                    key={item.name}*/}
+          {/*                    className="flex items-center justify-between text-sm"*/}
+          {/*                >*/}
+          {/*                  <div className="flex items-center">*/}
+          {/*                    <div*/}
+          {/*                        className="w-3 h-3 rounded-full mr-2"*/}
+          {/*                        style={{ backgroundColor: item.color }}*/}
+          {/*                    />*/}
+          {/*                    <span className="text-muted-foreground">*/}
+          {/*                {item.name}*/}
+          {/*              </span>*/}
+          {/*                  </div>*/}
+          {/*                  <span className="font-semibold">{item.value}</span>*/}
+          {/*                </div>*/}
+          {/*            ))}*/}
+          {/*          </div>*/}
+          {/*        </>*/}
+          {/*    ) : (*/}
+          {/*        <div className="flex items-center justify-center h-[300px] text-muted-foreground">*/}
+          {/*          Aucune donnée*/}
+          {/*        </div>*/}
+          {/*    )}*/}
+          {/*  </CardContent>*/}
+          {/*</Card>*/}
         </div>
 
         {/* ROW 2: Recent Jobs */}
