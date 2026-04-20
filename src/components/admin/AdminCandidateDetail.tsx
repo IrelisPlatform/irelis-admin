@@ -199,7 +199,7 @@ export function AdminCandidateDetail({ id }: { id: string }) {
 
                 <div className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-gray-500" /> CV Uploadé
+                    <FileText className="w-4 h-4 text-gray-500" /> CV 
                   </span>
                   {candidate.hasCv ? (
                     <CheckCircle2 className="w-5 h-5 text-emerald-500" />

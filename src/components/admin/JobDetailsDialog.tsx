@@ -48,6 +48,7 @@ export function JobDetailsDialog({
   job,
 }: JobDetailsDialogProps) {
   if (!job) return null;
+  console.log(job)
 
   let description: SerializedEditorState | null = null;
   try {

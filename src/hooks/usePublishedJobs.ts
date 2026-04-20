@@ -54,6 +54,7 @@ export const transformJob = (job: BackendPublishedJob): PublishedJob => {
     status: job.status,
     tagDto: job.tagDto,
     contractType: job.contractType,
+    viewCount: job.viewCount,
   };
 };
 

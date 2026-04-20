@@ -14,6 +14,7 @@ export interface AdminDashboardResponse {
   totalApplications: number;
   
   newCandidatesLastMonth: number;
+  newRecruitersLastMonth: number;
   newJobOffersLastMonth: number;
   newApplicationsLastMonth: number;
   

@@ -270,6 +270,10 @@ export function AdminDashboard() {
           value={statsData?.totalRecruiters || 0}
           description="Entreprises partenaires"
           icon={Handshake}
+          trend={{
+            value: `+${statsData?.newRecruitersLastMonth || 0} ce dernier mois`,
+            isUp: true,
+          }}
           iconColor="text-amber-600"
           iconBg="bg-amber-50"
           bottomBarColor="bg-amber-600"
