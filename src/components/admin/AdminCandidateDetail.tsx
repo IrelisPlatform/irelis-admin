@@ -14,10 +14,16 @@ import {
   XCircle,
   AlertCircle,
   FileText,
-  PieChart
+  PieChart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Spinner } from "@/components/ui/spinner";
@@ -33,7 +39,9 @@ export function AdminCandidateDetail({ id }: { id: string }) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <Spinner className="w-10 h-10 mb-4 text-blue-600" />
-        <p className="text-muted-foreground">Chargement du profil candidat...</p>
+        <p className="text-muted-foreground">
+          Chargement du profil candidat...
+        </p>
       </div>
     );
   }
@@ -54,19 +62,41 @@ export function AdminCandidateDetail({ id }: { id: string }) {
     return `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase();
   };
 
+  // Mapping des champs manquants
+  const missingFieldsLabels: Record<string, string> = {
+    firstName: "Prénom",
+    lastName: "Nom",
+    phoneNumber: "Numéro de téléphone",
+    city: "Ville",
+    professionalTitle: "Titre professionnel",
+    cv: "CV",
+    experiences: "Expériences professionnelles",
+    educations: "Formations",
+    skills: "Compétences",
+  };
+
+  // Fonction qui retourne en francais le champ manquant
+  const getMissingFieldLabel = (field: string) => {
+    return missingFieldsLabels[field] || field;
+  };
+
   const formattedDate = candidate.createdAt
-    ? new Date(candidate.createdAt).toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    })
+    ? new Date(candidate.createdAt).toLocaleDateString("fr-FR", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
     : "Date inconnue";
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-5xl mx-auto pb-12">
       {/* Header Actions */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={() => router.back()} className="hover:bg-muted">
+        <Button
+          variant="ghost"
+          onClick={() => router.back()}
+          className="hover:bg-muted"
+        >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Retour à la liste
         </Button>
@@ -89,14 +119,20 @@ export function AdminCandidateDetail({ id }: { id: string }) {
                   {candidate.firstName} {candidate.lastName}
                 </h1>
                 <p className="text-xl text-blue-600 font-medium mt-1">
-                  {candidate.professionalTitle || "Aucun titre professionnel renseigné"}
+                  {candidate.professionalTitle ||
+                    "Aucun titre professionnel renseigné"}
                 </p>
               </div>
 
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm text-gray-600">
                 <div className="flex items-center gap-1.5 bg-white/60 px-3 py-1.5 rounded-full shadow-sm">
                   <Mail className="w-4 h-4 text-blue-500" />
-                  <a href={`mailto:${candidate.email}`} className="hover:text-blue-700 hover:underline">{candidate.email}</a>
+                  <a
+                    href={`mailto:${candidate.email}`}
+                    className="hover:text-blue-700 hover:underline"
+                  >
+                    {candidate.email}
+                  </a>
                 </div>
                 <div className="flex items-center gap-1.5 bg-white/60 px-3 py-1.5 rounded-full shadow-sm">
                   <Phone className="w-4 h-4 text-green-500" />
@@ -126,7 +162,6 @@ export function AdminCandidateDetail({ id }: { id: string }) {
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
         {/* Left Column: Stats & Status */}
         <div className="space-y-6">
           <Card className="border-none shadow-md">
@@ -140,7 +175,13 @@ export function AdminCandidateDetail({ id }: { id: string }) {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm font-medium">
                   <span>Score global</span>
-                  <span className={candidate.completionRate >= 80 ? "text-emerald-600" : "text-orange-600"}>
+                  <span
+                    className={
+                      candidate.completionRate >= 80
+                        ? "text-emerald-600"
+                        : "text-orange-600"
+                    }
+                  >
                     {/* {Math.round(candidate.completionRate * 100)}% */}
                     {candidate.completionRate}%
                   </span>
@@ -152,34 +193,54 @@ export function AdminCandidateDetail({ id }: { id: string }) {
               </div>
 
               <div className="space-y-3 pt-4 border-t">
-                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">Checklist Profil</p>
+                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Checklist Profil
+                </p>
 
                 <div className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-2">
                     <FileText className="w-4 h-4 text-gray-500" /> CV Uploadé
                   </span>
-                  {candidate.hasCv ? <CheckCircle2 className="w-5 h-5 text-emerald-500" /> : <XCircle className="w-5 h-5 text-red-400" />}
+                  {candidate.hasCv ? (
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                  ) : (
+                    <XCircle className="w-5 h-5 text-red-400" />
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-2">
                     <Briefcase className="w-4 h-4 text-gray-500" /> Expériences
                   </span>
-                  {candidate.hasExperiences ? <CheckCircle2 className="w-5 h-5 text-emerald-500" /> : <XCircle className="w-5 h-5 text-red-400" />}
+                  {candidate.hasExperiences ? (
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                  ) : (
+                    <XCircle className="w-5 h-5 text-red-400" />
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-2">
-                    <GraduationCap className="w-4 h-4 text-gray-500" /> Formations
+                    <GraduationCap className="w-4 h-4 text-gray-500" />{" "}
+                    Formations
                   </span>
-                  {candidate.hasEducation ? <CheckCircle2 className="w-5 h-5 text-emerald-500" /> : <XCircle className="w-5 h-5 text-red-400" />}
+                  {candidate.hasEducation ? (
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                  ) : (
+                    <XCircle className="w-5 h-5 text-red-400" />
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-gray-500" /> Compétences
+                    <AlertCircle className="w-4 h-4 text-gray-500" />{" "}
+                    Compétences
                   </span>
-                  {candidate.hasSkills ? <CheckCircle2 className="w-5 h-5 text-emerald-500" /> : <XCircle className="w-5 h-5 text-red-400" />}
+                  {candidate.hasSkills ? (
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                  ) : (
+                    <XCircle className="w-5 h-5 text-red-400" />
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -194,8 +255,12 @@ export function AdminCandidateDetail({ id }: { id: string }) {
             </CardHeader>
             <CardContent>
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-black text-blue-600">{candidate.applicationCount || 0}</span>
-                <span className="text-sm font-medium text-blue-800/60 uppercase">Total</span>
+                <span className="text-4xl font-black text-blue-600">
+                  {candidate.applicationCount || 0}
+                </span>
+                <span className="text-sm font-medium text-blue-800/60 uppercase">
+                  Total
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -203,7 +268,6 @@ export function AdminCandidateDetail({ id }: { id: string }) {
 
         {/* Right Column: Details & Missing Fields */}
         <div className="lg:col-span-2 space-y-6">
-
           {/* Missing Fields Alert */}
           {candidate.missingFields && candidate.missingFields.length > 0 && (
             <Card className="border-orange-200 shadow-sm bg-orange-50/50">
@@ -213,14 +277,19 @@ export function AdminCandidateDetail({ id }: { id: string }) {
                   Informations Manquantes
                 </CardTitle>
                 <CardDescription className="text-orange-700/80">
-                  Ce candidat doit compléter les éléments suivants pour avoir un profil parfait :
+                  Ce candidat doit compléter les éléments suivants pour avoir un
+                  profil parfait :
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
                   {candidate.missingFields.map((field, idx) => (
-                    <Badge key={idx} variant="outline" className="bg-white border-orange-200 text-orange-700 px-3 py-1">
-                      {field}
+                    <Badge
+                      key={idx}
+                      variant="outline"
+                      className="bg-white border-orange-200 text-orange-700 px-3 py-1"
+                    >
+                      {getMissingFieldLabel(field)}
                     </Badge>
                   ))}
                 </div>
@@ -234,20 +303,23 @@ export function AdminCandidateDetail({ id }: { id: string }) {
               <CardTitle className="text-xl">Aperçu Professionnel</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                     <Briefcase className="w-4 h-4" /> Niveau d'expérience
                   </p>
-                  <p className="text-base font-semibold">{candidate.experienceLevel || "Non spécifié"}</p>
+                  <p className="text-base font-semibold">
+                    {candidate.experienceLevel || "Non spécifié"}
+                  </p>
                 </div>
 
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                     <GraduationCap className="w-4 h-4" /> Niveau d'études
                   </p>
-                  <p className="text-base font-semibold">{candidate.schoolLevel || "Non spécifié"}</p>
+                  <p className="text-base font-semibold">
+                    {candidate.schoolLevel || "Non spécifié"}
+                  </p>
                 </div>
               </div>
 
@@ -260,14 +332,13 @@ export function AdminCandidateDetail({ id }: { id: string }) {
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
                   >
-                    <FileText className="w-4 h-4 mr-2 text-blue-500" /> Consulter le CV
+                    <FileText className="w-4 h-4 mr-2 text-blue-500" />{" "}
+                    Consulter le CV
                   </a>
                 </div>
               )}
-
             </CardContent>
           </Card>
-
         </div>
       </div>
     </div>

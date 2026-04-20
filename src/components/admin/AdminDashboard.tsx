@@ -24,7 +24,7 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
+  CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +41,7 @@ import {
   Tooltip,
   Legend,
   AreaChart,
-  Area
+  Area,
 } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/services/axiosClient";
@@ -78,7 +78,17 @@ interface StatsCardProps {
 
 // --- Components ---
 
-const StatsCard = ({ title, value, description, icon: Icon, trend, trend2, iconColor, iconBg, bottomBarColor }: StatsCardProps) => (
+const StatsCard = ({
+  title,
+  value,
+  description,
+  icon: Icon,
+  trend,
+  trend2,
+  iconColor,
+  iconBg,
+  bottomBarColor,
+}: StatsCardProps) => (
   <Card className="group overflow-hidden border-none shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full relative">
     <CardContent className="px-4 pt-4 pb-3 lg:px-5 lg:pt-5 lg:pb-3 flex-1 flex flex-col">
       <div className="flex items-start justify-between space-x-2">
@@ -95,14 +105,26 @@ const StatsCard = ({ title, value, description, icon: Icon, trend, trend2, iconC
         {(trend || trend2) && (
           <div className="absolute right-4 bottom-3 lg:right-5 flex flex-col items-end gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
             {trend && (
-              <span className={`inline-flex items-center font-bold px-1.5 py-0.5 rounded backdrop-blur-md bg-white/90 shadow-sm border border-black/5 dark:bg-card/90 dark:border-white/10 ${trend.isUp ? 'text-green-600' : 'text-red-600'}`}>
-                {trend.isUp ? <ArrowUpRight className="w-3 h-3 mr-0.5" /> : <ArrowDownRight className="w-3 h-3 mr-0.5" />}
+              <span
+                className={`inline-flex items-center font-bold px-1.5 py-0.5 rounded backdrop-blur-md bg-white/90 shadow-sm border border-black/5 dark:bg-card/90 dark:border-white/10 ${trend.isUp ? "text-green-600" : "text-red-600"}`}
+              >
+                {trend.isUp ? (
+                  <ArrowUpRight className="w-3 h-3 mr-0.5" />
+                ) : (
+                  <ArrowDownRight className="w-3 h-3 mr-0.5" />
+                )}
                 {trend.value}
               </span>
             )}
             {trend2 && (
-              <span className={`inline-flex items-center font-bold px-1.5 py-0.5 rounded backdrop-blur-md bg-white/90 shadow-sm border border-black/5 dark:bg-card/90 dark:border-white/10 ${trend2.isUp ? 'text-green-600' : 'text-red-600'}`}>
-                {trend2.isUp ? <ArrowUpRight className="w-3 h-3 mr-0.5" /> : <ArrowDownRight className="w-3 h-3 mr-0.5" />}
+              <span
+                className={`inline-flex items-center font-bold px-1.5 py-0.5 rounded backdrop-blur-md bg-white/90 shadow-sm border border-black/5 dark:bg-card/90 dark:border-white/10 ${trend2.isUp ? "text-green-600" : "text-red-600"}`}
+              >
+                {trend2.isUp ? (
+                  <ArrowUpRight className="w-3 h-3 mr-0.5" />
+                ) : (
+                  <ArrowDownRight className="w-3 h-3 mr-0.5" />
+                )}
                 {trend2.value}
               </span>
             )}
@@ -122,30 +144,34 @@ export function AdminDashboard() {
     queryKey: ["admin-jobs-stats"],
     queryFn: async () => {
       const response = await api.get<JobPage>("/admin/jobs?page=0&size=5", {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       return response.data;
-    }
+    },
   });
 
   // Fetch Accompaniments Stats (Keep for now if needed, but we'll use stats)
   const { data: accData, isLoading: isLoadingAcc } = useQuery({
     queryKey: ["admin-acc-stats"],
     queryFn: async () => {
-      const response = await api.get<AccompanimentPage>("/api/v1/accompaniments?page=0&size=5");
+      const response = await api.get<AccompanimentPage>(
+        "/api/v1/accompaniments?page=0&size=5",
+      );
       return response.data;
-    }
+    },
   });
 
   // Fetch Global Stats
   const { data: statsData, isLoading: isLoadingStats } = useDashboardStats();
-
+  console.log(statsData)
 
   if (isLoadingJobs || isLoadingAcc || isLoadingStats) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Spinner className="w-8 h-8" />
-        <span className="ml-3 text-muted-foreground">Chargement du tableau de bord...</span>
+        <span className="ml-3 text-muted-foreground">
+          Chargement du tableau de bord...
+        </span>
       </div>
     );
   }
@@ -168,10 +194,10 @@ export function AdminDashboard() {
 
   const applicationsChartData = statsData?.applicationsByStatus
     ? Object.entries(statsData.applicationsByStatus).map(([status, count]) => ({
-      name: statusLabels[status] || status,
-      value: count,
-      color: statusColors[status] || "#cbd5e1"
-    }))
+        name: statusLabels[status] || status,
+        value: count,
+        color: statusColors[status] || "#cbd5e1",
+      }))
     : [];
 
   const activityData = [
@@ -219,7 +245,10 @@ export function AdminDashboard() {
           value={statsData?.totalUsers || 0}
           description="Utilisateurs inscrits"
           icon={Users}
-          trend={{ value: `+${statsData?.newUsersToday || 0} aujourd'hui`, isUp: true }}
+          trend={{
+            value: `+${statsData?.newUsersToday || 0} aujourd'hui`,
+            isUp: true,
+          }}
           iconColor="text-indigo-600"
           iconBg="bg-indigo-50"
           bottomBarColor="bg-indigo-600"
@@ -229,7 +258,10 @@ export function AdminDashboard() {
           value={statsData?.totalCandidates || 0}
           description="Candidats qualifiés"
           icon={GraduationCap}
-          trend={{ value: `+${statsData?.newCandidatesLastMonth || 0} ce dernier mois`, isUp: true }}
+          trend={{
+            value: `+${statsData?.newCandidatesLastMonth || 0} ce dernier mois`,
+            isUp: true,
+          }}
           iconColor="text-emerald-600"
           iconBg="bg-emerald-50"
           bottomBarColor="bg-emerald-600"
@@ -248,8 +280,14 @@ export function AdminDashboard() {
           value={statsData?.totalJobOffers || 0}
           description="Offres publiées"
           icon={Briefcase}
-          trend={{ value: `+${statsData?.newJobOffersToday || 0} aujourd'hui`, isUp: true }}
-          trend2={{ value: `+${statsData?.newJobOffersLastMonth || 0} ce dernier mois`, isUp: true }}
+          trend={{
+            value: `+${statsData?.newJobOffersToday || 0} aujourd'hui`,
+            isUp: true,
+          }}
+          trend2={{
+            value: `+${statsData?.newJobOffersLastMonth || 0} ce dernier mois`,
+            isUp: true,
+          }}
           iconColor="text-blue-600"
           iconBg="bg-blue-50"
           bottomBarColor="bg-blue-600"
@@ -259,8 +297,14 @@ export function AdminDashboard() {
           value={statsData?.totalApplications || 0}
           description="Soumissions totales"
           icon={FileText}
-          trend={{ value: `+${statsData?.newApplicationsToday || 0} aujourd'hui`, isUp: true }}
-          trend2={{ value: `+${statsData?.newApplicationsLastMonth || 0} ce dernier mois`, isUp: true }}
+          trend={{
+            value: `+${statsData?.newApplicationsToday || 0} aujourd'hui`,
+            isUp: true,
+          }}
+          trend2={{
+            value: `+${statsData?.newApplicationsLastMonth || 0} ce dernier mois`,
+            isUp: true,
+          }}
           iconColor="text-cyan-600"
           iconBg="bg-cyan-50"
           bottomBarColor="bg-cyan-600"
@@ -299,7 +343,9 @@ export function AdminDashboard() {
         <Card className="lg:col-span-2 border-none shadow-md">
           <CardHeader>
             <CardTitle className="text-xl">Activité de la semaine</CardTitle>
-            <CardDescription>Évolution des publications d'offres et de services</CardDescription>
+            <CardDescription>
+              Évolution des publications d'offres et de services
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px] w-full">
@@ -371,10 +417,18 @@ export function AdminDashboard() {
                 </div>
                 <div className="mt-4 space-y-2">
                   {applicationsChartData.map((item) => (
-                    <div key={item.name} className="flex items-center justify-between text-sm">
+                    <div
+                      key={item.name}
+                      className="flex items-center justify-between text-sm"
+                    >
                       <div className="flex items-center">
-                        <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: item.color }} />
-                        <span className="text-muted-foreground">{item.name}</span>
+                        <div
+                          className="w-3 h-3 rounded-full mr-2"
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <span className="text-muted-foreground">
+                          {item.name}
+                        </span>
                       </div>
                       <span className="font-semibold">{item.value}</span>
                     </div>
@@ -396,28 +450,46 @@ export function AdminDashboard() {
           {/* Top Offers By Applications */}
           <Card className="border-none shadow-md">
             <CardHeader>
-              <CardTitle className="text-xl">Top Offres (Candidatures)</CardTitle>
-              <CardDescription>Offres attirant le plus de postulants</CardDescription>
+              <CardTitle className="text-xl">
+                Top Offres (Candidatures)
+              </CardTitle>
+              <CardDescription>
+                Offres attirant le plus de postulants
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {!statsData?.topOffersByApplications || statsData.topOffersByApplications.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-4">Aucune donnée</p>
+                {!statsData?.topOffersByApplications ||
+                statsData.topOffersByApplications.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-4">
+                    Aucune donnée
+                  </p>
                 ) : (
                   statsData.topOffersByApplications.map((offer, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors border max-w-full">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors border max-w-full"
+                    >
                       <div className="flex items-center space-x-4 max-w-[60%]">
                         <div className="shrink-0 w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
                           <TrendingUp className="w-5 h-5 text-emerald-600" />
                         </div>
                         <div className="truncate">
-                          <p className="font-medium text-sm truncate">{offer.jobTitle}</p>
-                          <p className="text-xs text-muted-foreground truncate">{offer.status}</p>
+                          <p className="font-medium text-sm truncate">
+                            {offer.jobTitle}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {offer.status}
+                          </p>
                         </div>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="text-lg font-bold text-emerald-600">{offer.applicationCount}</p>
-                        <p className="text-[10px] text-muted-foreground">candidatures</p>
+                        <p className="text-lg font-bold text-emerald-600">
+                          {offer.applicationCount}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          candidatures
+                        </p>
                       </div>
                     </div>
                   ))
@@ -434,23 +506,37 @@ export function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {!statsData?.topOffersByViews || statsData.topOffersByViews.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-4">Aucune donnée</p>
+                {!statsData?.topOffersByViews ||
+                statsData.topOffersByViews.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-4">
+                    Aucune donnée
+                  </p>
                 ) : (
                   statsData.topOffersByViews.map((offer, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors border max-w-full">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors border max-w-full"
+                    >
                       <div className="flex items-center space-x-4 max-w-[60%]">
                         <div className="shrink-0 w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
                           <Eye className="w-5 h-5 text-orange-600" />
                         </div>
                         <div className="truncate">
-                          <p className="font-medium text-sm truncate">{offer.jobTitle}</p>
-                          <p className="text-xs text-muted-foreground truncate">{offer.status}</p>
+                          <p className="font-medium text-sm truncate">
+                            {offer.jobTitle}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {offer.status}
+                          </p>
                         </div>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="text-lg font-bold text-orange-600">{offer.viewCount}</p>
-                        <p className="text-[10px] text-muted-foreground">vues</p>
+                        <p className="text-lg font-bold text-orange-600">
+                          {offer.viewCount}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          vues
+                        </p>
                       </div>
                     </div>
                   ))
@@ -458,8 +544,12 @@ export function AdminDashboard() {
               </div>
               {statsData?.applicationsPerJobRatio !== undefined && (
                 <div className="mt-4 pt-4 border-t flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground">Ratio global (Candidature / Offre) :</span>
-                  <span className="font-bold text-blue-600">{statsData.applicationsPerJobRatio.toFixed(2)}</span>
+                  <span className="text-muted-foreground">
+                    Ratio global (Candidature / Offre) :
+                  </span>
+                  <span className="font-bold text-blue-600">
+                    {statsData.applicationsPerJobRatio.toFixed(2)}
+                  </span>
                 </div>
               )}
             </CardContent>
@@ -481,23 +571,34 @@ export function AdminDashboard() {
             <CardContent className="flex-1">
               <div className="space-y-4">
                 {jobsData?.content.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-4">Aucune offre récente</p>
+                  <p className="text-center text-muted-foreground py-4">
+                    Aucune offre récente
+                  </p>
                 ) : (
                   jobsData?.content.map((job) => (
-                    <div key={job.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                    <div
+                      key={job.id}
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                    >
                       <div className="flex items-center space-x-4">
                         <div className="shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                           <FileText className="w-5 h-5 text-blue-600" />
                         </div>
                         <div className="truncate">
-                          <p className="font-medium text-sm line-clamp-1">{job.title}</p>
-                          <p className="text-xs text-muted-foreground">{job.companyName} • {job.workCountryLocation}</p>
+                          <p className="font-medium text-sm line-clamp-1">
+                            {job.title}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {job.companyName} • {job.workCountryLocation}
+                          </p>
                         </div>
                       </div>
                       <div className="hidden lg:block text-right">
                         {getStatusBadge(job.status)}
                         <p className="text-[10px] text-muted-foreground mt-1">
-                          {job.publishedAt ? formatDateRelative(job.publishedAt) : "—"}
+                          {job.publishedAt
+                            ? formatDateRelative(job.publishedAt)
+                            : "—"}
                         </p>
                       </div>
                     </div>

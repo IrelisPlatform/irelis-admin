@@ -61,6 +61,7 @@ export function AdminCandidates() {
   const [size, setSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [experienceFilter, setExperienceFilter] = useState("all");
+  const [profileFilter, setProfileFilter] = useState("all");
 
   const { data, isLoading } = useAdminCandidates(page, size);
 
@@ -78,7 +79,15 @@ export function AdminCandidates() {
     const matchesExp =
       experienceFilter === "all" || c.experienceLevel === experienceFilter;
 
-    return matchesSearch && matchesExp;
+    const matchesProfile =
+      profileFilter === "all" ||
+      (profileFilter === "complete" && c.completionRate >= 80) ||
+      (profileFilter === "medium" &&
+        c.completionRate >= 50 &&
+        c.completionRate < 80) ||
+      (profileFilter === "incomplete" && c.completionRate < 50);
+
+    return matchesSearch && matchesExp && matchesProfile;
   });
 
   const getInitials = (firstName: string, lastName: string) => {
@@ -145,11 +154,9 @@ export function AdminCandidates() {
         <UsersIcon className="h-5 w-5 text-blue-600" />
         <AlertDescription className="ml-2">
           <p className="text-sm text-blue-900">
-            <span className="font-semibold">
-              Base de Candidats :
-            </span>{" "}
-            Consultez et analysez les profils candidats centralisés sur
-            la plateforme Irelis.
+            <span className="font-semibold">Base de Candidats :</span> Consultez
+            et analysez les profils candidats centralisés sur la plateforme
+            Irelis.
           </p>
         </AlertDescription>
       </Alert>
@@ -158,7 +165,8 @@ export function AdminCandidates() {
           Base de Candidats
         </h1>
         <p className="text-muted-foreground mt-2">
-           Accédez à l’ensemble des profils candidats, explorez leurs compétences, formations et d'autres informations.
+          Accédez à l’ensemble des profils candidats, explorez leurs
+          compétences, formations et d'autres informations.
         </p>
       </div>
 
@@ -174,7 +182,7 @@ export function AdminCandidates() {
           />
         </div>
 
-        <Select value={experienceFilter} onValueChange={setExperienceFilter}>
+        {/* <Select value={experienceFilter} onValueChange={setExperienceFilter}>
           <SelectTrigger className="w-full sm:w-64">
             <SelectValue placeholder="Expérience" />
           </SelectTrigger>
@@ -186,6 +194,18 @@ export function AdminCandidates() {
             <SelectItem value="ADVANCED">Avancé</SelectItem>
             <SelectItem value="SENIOR">Sénior</SelectItem>
             <SelectItem value="EXPERT">Expert</SelectItem>
+          </SelectContent>
+        </Select> */}
+
+        <Select value={profileFilter} onValueChange={setProfileFilter}>
+          <SelectTrigger className="w-full sm:w-64">
+            <SelectValue placeholder="Profil" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous profils</SelectItem>
+            <SelectItem value="incomplete">Incomplet</SelectItem>
+            <SelectItem value="medium">Moyen</SelectItem>
+            <SelectItem value="complete">Excellent</SelectItem>
           </SelectContent>
         </Select>
 
@@ -199,202 +219,210 @@ export function AdminCandidates() {
       </div>
 
       {/* Table */}
-        <div className="border rounded-lg overflow-hidden bg-white">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-gray-50">
-                <TableHead className="font-semibold text-gray-700">Candidat</TableHead>
-                <TableHead className="font-semibold text-gray-700 w-[220px] max-w-[220px]">Titre Professionnel</TableHead>
-                <TableHead className="font-semibold text-gray-700">Expérience</TableHead>
-                <TableHead className="font-semibold text-gray-700">Profil</TableHead>
-                <TableHead className="font-semibold text-gray-700">Candidatures</TableHead>
-                <TableHead className="font-semibold text-gray-700 text-right">Actions</TableHead>
+      <div className="border rounded-lg overflow-hidden bg-white">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-gray-50">
+              <TableHead className="font-semibold text-gray-700">
+                Candidat
+              </TableHead>
+              <TableHead className="font-semibold text-gray-700 w-[220px] max-w-[220px]">
+                Titre Professionnel
+              </TableHead>
+              <TableHead className="font-semibold text-gray-700">
+                Expérience
+              </TableHead>
+              <TableHead className="font-semibold text-gray-700">
+                Profil
+              </TableHead>
+              <TableHead className="font-semibold text-gray-700">
+                Candidatures
+              </TableHead>
+              <TableHead className="font-semibold text-gray-700 text-right">
+                Actions
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="h-64 text-center">
+                  <div className="flex flex-col items-center justify-center text-muted-foreground">
+                    <Spinner className="w-8 h-8 mb-4 text-blue-600" />
+                    Chargement des candidats...
+                  </div>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-64 text-center">
-                    <div className="flex flex-col items-center justify-center text-muted-foreground">
-                      <Spinner className="w-8 h-8 mb-4 text-blue-600" />
-                      Chargement des candidats...
+            ) : filteredCandidates.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="h-64 text-center">
+                  <div className="flex flex-col items-center justify-center text-muted-foreground">
+                    <UsersIcon className="w-12 h-12 mb-4 text-muted-foreground/50" />
+                    Aucun candidat trouvé
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredCandidates.map((candidate) => (
+                <TableRow
+                  key={candidate.id}
+                  className="bg-gray-50 hover:bg-muted/30 transition-colors"
+                >
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10 border shadow-sm">
+                        <AvatarFallback className="bg-blue-100 text-blue-700 font-medium">
+                          {getInitials(candidate.firstName, candidate.lastName)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-semibold text-sm">
+                          {candidate.firstName} {candidate.lastName}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {candidate.email}
+                        </p>
+                      </div>
                     </div>
                   </TableCell>
-                </TableRow>
-              ) : filteredCandidates.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-64 text-center">
-                    <div className="flex flex-col items-center justify-center text-muted-foreground">
-                      <UsersIcon className="w-12 h-12 mb-4 text-muted-foreground/50" />
-                      Aucun candidat trouvé
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredCandidates.map((candidate) => (
-                  <TableRow
-                    key={candidate.id}
-                    className="bg-gray-50 hover:bg-muted/30 transition-colors"
-                  >
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10 border shadow-sm">
-                          <AvatarFallback className="bg-blue-100 text-blue-700 font-medium">
-                            {getInitials(
-                              candidate.firstName,
-                              candidate.lastName,
-                            )}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-semibold text-sm">
-                            {candidate.firstName} {candidate.lastName}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {candidate.email}
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="max-w-[220px]">
-                      <div className="font-medium text-sm text-foreground/80 leading-tight truncate">
-                        {candidate.professionalTitle || (
-                          <span className="text-muted-foreground italic ">
-                            Non renseigné
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {candidate.experienceLevel ? (
-                        <Badge variant="secondary" className="capitalize">
-                          {candidate.experienceLevel.toLowerCase()}
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">—</span>
+                  <TableCell className="max-w-[220px]">
+                    <div className="font-medium text-sm text-foreground/80 leading-tight truncate">
+                      {candidate.professionalTitle || (
+                        <span className="text-muted-foreground italic ">
+                          Non renseigné
+                        </span>
                       )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-1 items-start">
-                        {getCompletionBadge(
-                          candidate.completionRate,
-                          candidate.missingFields,
-                        )}
-                        <div className="flex gap-1 mt-1">
-                          {candidate.hasCv && (
-                            <FileText className="w-3 h-3 text-blue-500" />
-                          )}
-                          {candidate.hasExperiences && (
-                            <Briefcase className="w-3 h-3 text-blue-500" />
-                          )}
-                          {candidate.hasEducation && (
-                            <GraduationCap className="w-3 h-3 text-blue-500" />
-                          )}
-                          {candidate.hasSkills && (
-                            <AlertCircle className="w-3 h-3 text-blue-500" />
-                          )}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center font-medium text-sm text-foreground/80">
-                          {candidate.applicationCount}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          router.push(`/admin/candidates/${candidate.id}`)
-                        }
-                        className="text-blue-600 cursor-pointer hover:text-blue-800 hover:bg-blue-50"
-                      >
-                        <Eye className="w-4 h-4 mr-1" />
-                        
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="border-t p-4">
-            <Pagination>
-              <PaginationContent className="gap-1">
-                {/* Bouton Précédent */}
-                <PaginationItem>
-                  <PaginationLink
-                    href="#"
-                    size="sm"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (page > 0) onPageChange(page - 1);
-                    }}
-                    aria-disabled={page === 0}
-                    className={`gap-1 pl-2.5 rounded-full ${
-                      page === 0
-                        ? "pointer-events-none opacity-50 border border-input"
-                        : "border border-input hover:border-[#1e3a8a] text-gray-700 hover:text-[#1e3a8a] bg-background"
-                    }`}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    <span className="hidden sm:inline">Précédent</span>
-                  </PaginationLink>
-                </PaginationItem>
-
-                {/* Numéros de pages */}
-                {getPageNumbers().map((pageNum, index) => (
-                  <PaginationItem key={index}>
-                    {pageNum === "..." ? (
-                      <PaginationEllipsis />
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {candidate.experienceLevel ? (
+                      <Badge variant="secondary" className="capitalize">
+                        {candidate.experienceLevel.toLowerCase()}
+                      </Badge>
                     ) : (
-                      <PaginationLink
-                        href="#"
-                        size="sm"
-                        isActive={displayCurrentPage === pageNum}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          onPageChange((pageNum as number) - 1);
-                        }}
-                        className={`rounded-full min-w-[40px] ${
-                          displayCurrentPage === pageNum
-                            ? "bg-[#1e3a8a] hover:bg-[#1e40af] text-white hover:text-white border-0"
-                            : "border border-input text-gray-700 hover:border-[#1e3a8a] hover:text-[#1e3a8a] bg-background"
-                        }`}
-                      >
-                        {pageNum}
-                      </PaginationLink>
+                      <span className="text-muted-foreground text-sm">—</span>
                     )}
-                  </PaginationItem>
-                ))}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1 items-start">
+                      {getCompletionBadge(
+                        candidate.completionRate,
+                        candidate.missingFields,
+                      )}
+                      <div className="flex gap-1 mt-1">
+                        {candidate.hasCv && (
+                          <FileText className="w-3 h-3 text-blue-500" />
+                        )}
+                        {candidate.hasExperiences && (
+                          <Briefcase className="w-3 h-3 text-blue-500" />
+                        )}
+                        {candidate.hasEducation && (
+                          <GraduationCap className="w-3 h-3 text-blue-500" />
+                        )}
+                        {candidate.hasSkills && (
+                          <AlertCircle className="w-3 h-3 text-blue-500" />
+                        )}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center font-medium text-sm text-foreground/80">
+                    {candidate.applicationCount}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        router.push(`/admin/candidates/${candidate.id}`)
+                      }
+                      className="text-blue-600 cursor-pointer hover:text-blue-800 hover:bg-blue-50"
+                    >
+                      <Eye className="w-4 h-4 mr-1" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
-                {/* Bouton Suivant */}
-                <PaginationItem>
-                  <PaginationLink
-                    href="#"
-                    size="sm"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (page < totalPages - 1) onPageChange(page + 1);
-                    }}
-                    aria-disabled={page >= totalPages - 1}
-                    className={`gap-1 pr-2.5 rounded-full ${
-                      page >= totalPages - 1
-                        ? "pointer-events-none opacity-50 border border-input"
-                        : "border border-input hover:border-[#1e3a8a] text-gray-700 hover:text-[#1e3a8a] bg-background"
-                    }`}
-                  >
-                    <span className="hidden sm:inline">Suivant</span>
-                    <ChevronRight className="h-4 w-4" />
-                  </PaginationLink>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="border-t p-4">
+          <Pagination>
+            <PaginationContent className="gap-1">
+              {/* Bouton Précédent */}
+              <PaginationItem>
+                <PaginationLink
+                  href="#"
+                  size="sm"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (page > 0) onPageChange(page - 1);
+                  }}
+                  aria-disabled={page === 0}
+                  className={`gap-1 pl-2.5 rounded-full ${
+                    page === 0
+                      ? "pointer-events-none opacity-50 border border-input"
+                      : "border border-input hover:border-[#1e3a8a] text-gray-700 hover:text-[#1e3a8a] bg-background"
+                  }`}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  <span className="hidden sm:inline">Précédent</span>
+                </PaginationLink>
+              </PaginationItem>
+
+              {/* Numéros de pages */}
+              {getPageNumbers().map((pageNum, index) => (
+                <PaginationItem key={index}>
+                  {pageNum === "..." ? (
+                    <PaginationEllipsis />
+                  ) : (
+                    <PaginationLink
+                      href="#"
+                      size="sm"
+                      isActive={displayCurrentPage === pageNum}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onPageChange((pageNum as number) - 1);
+                      }}
+                      className={`rounded-full min-w-10 ${
+                        displayCurrentPage === pageNum
+                          ? "bg-[#1e3a8a] hover:bg-[#1e40af] text-white hover:text-white border-0"
+                          : "border border-input text-gray-700 hover:border-[#1e3a8a] hover:text-[#1e3a8a] bg-background"
+                      }`}
+                    >
+                      {pageNum}
+                    </PaginationLink>
+                  )}
                 </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </div>
-        )}
+              ))}
+
+              {/* Bouton Suivant */}
+              <PaginationItem>
+                <PaginationLink
+                  href="#"
+                  size="sm"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (page < totalPages - 1) onPageChange(page + 1);
+                  }}
+                  aria-disabled={page >= totalPages - 1}
+                  className={`gap-1 pr-2.5 rounded-full ${
+                    page >= totalPages - 1
+                      ? "pointer-events-none opacity-50 border border-input"
+                      : "border border-input hover:border-[#1e3a8a] text-gray-700 hover:text-[#1e3a8a] bg-background"
+                  }`}
+                >
+                  <span className="hidden sm:inline">Suivant</span>
+                  <ChevronRight className="h-4 w-4" />
+                </PaginationLink>
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
     </div>
   );
 }
