@@ -163,7 +163,6 @@ export function AdminDashboard() {
 
   // Fetch Global Stats
   const { data: statsData, isLoading: isLoadingStats } = useDashboardStats();
-  console.log(statsData)
 
   if (isLoadingJobs || isLoadingAcc || isLoadingStats) {
     return (
