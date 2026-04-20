@@ -1,3 +1,28 @@
+export interface CandidateSkill {
+  id: string;
+  name: string;
+  level: "BEGINNER" | "ELEMENTARY" | "INTERMEDIATE" | "ADVANCED" | "EXPERT";
+}
+
+export interface CandidateEducation {
+  id: string;
+  degree: string;
+  institution: string;
+  city: string;
+  graduationYear: number;
+}
+
+export interface CandidateExperience {
+  id: string;
+  position: string;
+  companyName: string;
+  city: string;
+  startDate: string;
+  endDate: string | null;
+  isCurrent: boolean;
+  description: string;
+}
+
 export interface CandidateResponse {
   id: string;
   email: string;
@@ -5,18 +30,22 @@ export interface CandidateResponse {
   lastName: string;
   phoneNumber: string;
   professionalTitle: string;
-  experienceLevel: "BEGINNER" | "JUNIOR" | "INTERMEDIATE" | "ADVANCED" | "SENIOR" | "EXPERT";
-  schoolLevel: "BAC" | "DEUG" | "BTS" | "DUT" | "LICENCE" | "MASTER" | "DOCTORAL" | "UNKNOWN";
-  cvUrl?: string; // Optional since they might not have uploaded one
-  completionRate: number; // 0 to 1
-  createdAt: string; // ISO DateTime
+  experienceLevel?: "BEGINNER" | "JUNIOR" | "INTERMEDIATE" | "ADVANCED" | "SENIOR" | "EXPERT";
+  schoolLevel?: "BAC" | "DEUG" | "BTS" | "DUT" | "LICENCE" | "MASTER" | "DOCTORAL" | "UNKNOWN";
+  cvUrl?: string;
+  completionRate: number;
+  createdAt: string;
   missingFields: string[];
-  
+
   hasCv: boolean;
   hasExperiences: boolean;
   hasEducation: boolean;
   hasSkills: boolean;
-  
+
+  skills?: CandidateSkill[];
+  educations?: CandidateEducation[];
+  experiences?: CandidateExperience[];
+
   applicationCount: number;
 }
 
@@ -24,7 +53,7 @@ export interface CandidatePageResponse {
   content: CandidateResponse[];
   page: number;
   size: number;
-  total_elements: number; // Snake case is used in DTO
+  total_elements: number;
   total_pages: number;
   first: boolean;
   last: boolean;

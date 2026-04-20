@@ -6,7 +6,6 @@ import {
   ArrowLeft,
   Mail,
   Phone,
-  MapPin,
   Calendar,
   GraduationCap,
   Briefcase,
@@ -15,6 +14,11 @@ import {
   AlertCircle,
   FileText,
   PieChart,
+  MapPin,
+  Star,
+  Award,
+  Building2,
+  CalendarDays,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,21 +31,192 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Spinner } from "@/components/ui/spinner";
-import { formatDateRelative } from "@/services/date";
 import { Progress } from "../ui/progress";
+import { CandidateExperience, CandidateEducation, CandidateSkill } from "@/types/candidate";
 
+// Mapping du niveau de compétence vers un badge coloré
+const skillLevelConfig: Record<string, { label: string; class: string }> = {
+  BEGINNER:     { label: "Débutant",    class: "bg-slate-100 text-slate-700 border-slate-200" },
+  ELEMENTARY:   { label: "Élémentaire", class: "bg-blue-50 text-blue-700 border-blue-200" },
+  INTERMEDIATE: { label: "Intermédiaire", class: "bg-indigo-50 text-indigo-700 border-indigo-200" },
+  ADVANCED:     { label: "Avancé",      class: "bg-violet-50 text-violet-700 border-violet-200" },
+  EXPERT:       { label: "Expert",      class: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+};
+
+function formatDateRange(startDate: string, endDate: string | null, isCurrent: boolean) {
+  const start = new Date(startDate).toLocaleDateString("fr-FR", {
+    month: "short",
+    year: "numeric",
+  });
+  if (isCurrent) return `${start} – Actuellement`;
+  if (!endDate) return start;
+  const end = new Date(endDate).toLocaleDateString("fr-FR", {
+    month: "short",
+    year: "numeric",
+  });
+  return `${start} – ${end}`;
+}
+
+// Expériences Section
+function ExperiencesSection({ experiences }: { experiences: CandidateExperience[] }) {
+  if (!experiences || experiences.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 text-muted-foreground gap-2">
+        <Briefcase className="w-8 h-8 opacity-30" />
+        <p className="text-sm">Aucune expérience renseignée</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {experiences.map((exp, idx) => (
+        <div
+          key={exp.id}
+          className="flex gap-4 group"
+        >
+          {/* Timeline indicator */}
+          <div className="flex flex-col items-center">
+            <div className="w-9 h-9 rounded-full bg-blue-50 border-2 border-blue-200 flex items-center justify-center shrink-0 group-hover:border-blue-400 transition-colors">
+              <Building2 className="w-4 h-4 text-blue-600" />
+            </div>
+            {idx < experiences.length - 1 && (
+              <div className="w-0.5 flex-1 mt-2 bg-border min-h-6" />
+            )}
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 pb-6">
+            <div className="bg-muted/40 hover:bg-muted/60 transition-colors rounded-xl p-4 border border-border">
+              <div className="flex flex-wrap items-start justify-between gap-2 mb-1">
+                <div>
+                  <h4 className="font-semibold text-base text-foreground">{exp.position}</h4>
+                  <p className="text-sm text-blue-600 font-medium">{exp.companyName}</p>
+                </div>
+                {exp.isCurrent && (
+                  <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs shrink-0">
+                    Poste actuel
+                  </Badge>
+                )}
+              </div>
+
+              <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
+                {exp.city && (
+                  <span className="flex items-center gap-1">
+                    <MapPin className="w-3 h-3" />
+                    {exp.city}
+                  </span>
+                )}
+                <span className="flex items-center gap-1">
+                  <CalendarDays className="w-3 h-3" />
+                  {formatDateRange(exp.startDate, exp.endDate, exp.isCurrent)}
+                </span>
+              </div>
+
+              {exp.description && (
+                <p className="text-sm text-muted-foreground mt-3 leading-relaxed border-t border-border pt-3">
+                  {exp.description}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Formations Section 
+function EducationsSection({ educations }: { educations: CandidateEducation[] }) {
+  if (!educations || educations.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 text-muted-foreground gap-2">
+        <GraduationCap className="w-8 h-8 opacity-30" />
+        <p className="text-sm">Aucune formation renseignée</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {educations.map((edu, idx) => (
+        <div key={edu.id} className="flex gap-4 group">
+          {/* Timeline indicator */}
+          <div className="flex flex-col items-center">
+            <div className="w-9 h-9 rounded-full bg-indigo-50 border-2 border-indigo-200 flex items-center justify-center shrink-0 group-hover:border-indigo-400 transition-colors">
+              <GraduationCap className="w-4 h-4 text-indigo-600" />
+            </div>
+            {idx < educations.length - 1 && (
+              <div className="w-0.5 flex-1 mt-2 bg-border min-h-6" />
+            )}
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 pb-6">
+            <div className="bg-muted/40 hover:bg-muted/60 transition-colors rounded-xl p-4 border border-border">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <h4 className="font-semibold text-base text-foreground">{edu.degree}</h4>
+                  <p className="text-sm text-indigo-600 font-medium">{edu.institution}</p>
+                </div>
+                <Badge variant="outline" className="text-xs border-indigo-200 text-indigo-700 shrink-0">
+                  Promo {edu.graduationYear}
+                </Badge>
+              </div>
+              {edu.city && (
+                <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                  <MapPin className="w-3 h-3" />
+                  {edu.city}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Skills Section
+function SkillsSection({ skills }: { skills: CandidateSkill[] }) {
+  if (!skills || skills.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-6 text-muted-foreground gap-2">
+        <Star className="w-8 h-8 opacity-30" />
+        <p className="text-sm">Aucune compétence renseignée</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {skills.map((skill) => {
+        const cfg = skillLevelConfig[skill.level] ?? skillLevelConfig["BEGINNER"];
+        return (
+          <div
+            key={skill.id}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium ${cfg.class}`}
+          >
+            <span>{skill.name}</span>
+            <span className="opacity-60">·</span>
+            <span className="opacity-80">{cfg.label}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Main Component 
 export function AdminCandidateDetail({ id }: { id: string }) {
   const router = useRouter();
   const { data: candidate, isLoading } = useAdminCandidateDetail(id);
-  console.log(candidate);
 
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <Spinner className="w-10 h-10 mb-4 text-blue-600" />
-        <p className="text-muted-foreground">
-          Chargement du profil candidat...
-        </p>
+        <p className="text-muted-foreground">Chargement du profil candidat...</p>
       </div>
     );
   }
@@ -58,11 +233,9 @@ export function AdminCandidateDetail({ id }: { id: string }) {
     );
   }
 
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase();
-  };
+  const getInitials = (firstName: string, lastName: string) =>
+    `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase();
 
-  // Mapping des champs manquants
   const missingFieldsLabels: Record<string, string> = {
     firstName: "Prénom",
     lastName: "Nom",
@@ -75,10 +248,8 @@ export function AdminCandidateDetail({ id }: { id: string }) {
     skills: "Compétences",
   };
 
-  // Fonction qui retourne en francais le champ manquant
-  const getMissingFieldLabel = (field: string) => {
-    return missingFieldsLabels[field] || field;
-  };
+  const getMissingFieldLabel = (field: string) =>
+    missingFieldsLabels[field] || field;
 
   const formattedDate = candidate.createdAt
     ? new Date(candidate.createdAt).toLocaleDateString("fr-FR", {
@@ -90,19 +261,15 @@ export function AdminCandidateDetail({ id }: { id: string }) {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-5xl mx-auto pb-12">
-      {/* Header Actions */}
+      {/* Back Button */}
       <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          onClick={() => router.back()}
-          className="hover:bg-muted"
-        >
+        <Button variant="ghost" onClick={() => router.back()} className="hover:bg-muted">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Retour à la liste
         </Button>
       </div>
 
-      {/* Main Profile Header */}
+      {/* Profile Header */}
       <Card className="border-none shadow-lg bg-linear-to-br from-blue-50/50 via-white to-indigo-50/30 overflow-hidden relative">
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
         <CardContent className="p-8">
@@ -119,18 +286,14 @@ export function AdminCandidateDetail({ id }: { id: string }) {
                   {candidate.firstName} {candidate.lastName}
                 </h1>
                 <p className="text-xl text-blue-600 font-medium mt-1">
-                  {candidate.professionalTitle ||
-                    "Aucun titre professionnel renseigné"}
+                  {candidate.professionalTitle || "Aucun titre professionnel renseigné"}
                 </p>
               </div>
 
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm text-gray-600">
                 <div className="flex items-center gap-1.5 bg-white/60 px-3 py-1.5 rounded-full shadow-sm">
                   <Mail className="w-4 h-4 text-blue-500" />
-                  <a
-                    href={`mailto:${candidate.email}`}
-                    className="hover:text-blue-700 hover:underline"
-                  >
+                  <a href={`mailto:${candidate.email}`} className="hover:text-blue-700 hover:underline">
                     {candidate.email}
                   </a>
                 </div>
@@ -161,9 +324,12 @@ export function AdminCandidateDetail({ id }: { id: string }) {
         </CardContent>
       </Card>
 
+      {/* Body Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Stats & Status */}
+
+        {/* Left Sidebar */}
         <div className="space-y-6">
+          {/* Completion */}
           <Card className="border-none shadow-md">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
@@ -175,14 +341,7 @@ export function AdminCandidateDetail({ id }: { id: string }) {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm font-medium">
                   <span>Score global</span>
-                  <span
-                    className={
-                      candidate.completionRate >= 80
-                        ? "text-emerald-600"
-                        : "text-orange-600"
-                    }
-                  >
-                    {/* {Math.round(candidate.completionRate * 100)}% */}
+                  <span className={candidate.completionRate >= 80 ? "text-emerald-600" : "text-orange-600"}>
                     {candidate.completionRate}%
                   </span>
                 </div>
@@ -197,55 +356,28 @@ export function AdminCandidateDetail({ id }: { id: string }) {
                   Checklist Profil
                 </p>
 
-                <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-gray-500" /> CV 
-                  </span>
-                  {candidate.hasCv ? (
-                    <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                  ) : (
-                    <XCircle className="w-5 h-5 text-red-400" />
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2">
-                    <Briefcase className="w-4 h-4 text-gray-500" /> Expériences
-                  </span>
-                  {candidate.hasExperiences ? (
-                    <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                  ) : (
-                    <XCircle className="w-5 h-5 text-red-400" />
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2">
-                    <GraduationCap className="w-4 h-4 text-gray-500" />{" "}
-                    Formations
-                  </span>
-                  {candidate.hasEducation ? (
-                    <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                  ) : (
-                    <XCircle className="w-5 h-5 text-red-400" />
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-gray-500" />{" "}
-                    Compétences
-                  </span>
-                  {candidate.hasSkills ? (
-                    <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                  ) : (
-                    <XCircle className="w-5 h-5 text-red-400" />
-                  )}
-                </div>
+                {[
+                  { label: "CV", icon: FileText, checked: candidate.hasCv },
+                  { label: "Expériences", icon: Briefcase, checked: candidate.hasExperiences },
+                  { label: "Formations", icon: GraduationCap, checked: candidate.hasEducation },
+                  { label: "Compétences", icon: Award, checked: candidate.hasSkills },
+                ].map(({ label, icon: Icon, checked }) => (
+                  <div key={label} className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-2">
+                      <Icon className="w-4 h-4 text-gray-500" /> {label}
+                    </span>
+                    {checked ? (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                    ) : (
+                      <XCircle className="w-5 h-5 text-red-400" />
+                    )}
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
 
+          {/* Candidatures */}
           <Card className="border-none shadow-md bg-blue-50/50">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center gap-2 text-blue-900">
@@ -258,17 +390,39 @@ export function AdminCandidateDetail({ id }: { id: string }) {
                 <span className="text-4xl font-black text-blue-600">
                   {candidate.applicationCount || 0}
                 </span>
-                <span className="text-sm font-medium text-blue-800/60 uppercase">
-                  Total
-                </span>
+                <span className="text-sm font-medium text-blue-800/60 uppercase">Total</span>
               </div>
             </CardContent>
           </Card>
+
+          {/* CV Link */}
+          {candidate.cvUrl && (
+            <Card className="border-none shadow-md">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-blue-500" />
+                  Curriculum Vitae
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <a
+                  href={candidate.cvUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 w-full"
+                >
+                  <FileText className="w-4 h-4 mr-2 text-blue-500" />
+                  Consulter le CV
+                </a>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
-        {/* Right Column: Details & Missing Fields */}
+        {/* Right Column */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Missing Fields Alert */}
+
+          {/* Missing Fields */}
           {candidate.missingFields && candidate.missingFields.length > 0 && (
             <Card className="border-orange-200 shadow-sm bg-orange-50/50">
               <CardHeader className="pb-3">
@@ -277,8 +431,7 @@ export function AdminCandidateDetail({ id }: { id: string }) {
                   Informations Manquantes
                 </CardTitle>
                 <CardDescription className="text-orange-700/80">
-                  Ce candidat doit compléter les éléments suivants pour avoir un
-                  profil parfait :
+                  Ce candidat doit compléter les éléments suivants pour avoir un profil parfait :
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -297,48 +450,88 @@ export function AdminCandidateDetail({ id }: { id: string }) {
             </Card>
           )}
 
-          {/* General Information */}
+          {/* Expériences Professionnelles */}
           <Card className="border-none shadow-md">
-            <CardHeader>
-              <CardTitle className="text-xl">Aperçu Professionnel</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <Briefcase className="w-4 h-4" /> Niveau d'expérience
-                  </p>
-                  <p className="text-base font-semibold">
-                    {candidate.experienceLevel || "Non spécifié"}
-                  </p>
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <GraduationCap className="w-4 h-4" /> Niveau d'études
-                  </p>
-                  <p className="text-base font-semibold">
-                    {candidate.schoolLevel || "Non spécifié"}
-                  </p>
-                </div>
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-blue-500" />
+                <CardTitle className="text-xl">Expériences Professionnelles</CardTitle>
               </div>
-
-              {candidate.cvUrl && (
-                <div className="pt-6 border-t">
-                  <h4 className="text-sm font-medium mb-3">Curriculum Vitae</h4>
-                  <a
-                    href={candidate.cvUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
-                  >
-                    <FileText className="w-4 h-4 mr-2 text-blue-500" />{" "}
-                    Consulter le CV
-                  </a>
-                </div>
+              {candidate.experiences && candidate.experiences.length > 0 && (
+                <CardDescription>
+                  {candidate.experiences.length} expérience{candidate.experiences.length > 1 ? "s" : ""} renseignée{candidate.experiences.length > 1 ? "s" : ""}
+                </CardDescription>
               )}
+            </CardHeader>
+            <CardContent className="pt-4">
+              <ExperiencesSection experiences={candidate.experiences ?? []} />
             </CardContent>
           </Card>
+
+          {/* Formations */}
+          <Card className="border-none shadow-md">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <GraduationCap className="w-5 h-5 text-indigo-500" />
+                <CardTitle className="text-xl">Formations & Diplômes</CardTitle>
+              </div>
+              {candidate.educations && candidate.educations.length > 0 && (
+                <CardDescription>
+                  {candidate.educations.length} formation{candidate.educations.length > 1 ? "s" : ""} renseignée{candidate.educations.length > 1 ? "s" : ""}
+                </CardDescription>
+              )}
+            </CardHeader>
+            <CardContent className="pt-4">
+              <EducationsSection educations={candidate.educations ?? []} />
+            </CardContent>
+          </Card>
+
+          {/* Compétences */}
+          <Card className="border-none shadow-md">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <Star className="w-5 h-5 text-yellow-500" />
+                <CardTitle className="text-xl">Compétences</CardTitle>
+              </div>
+              {candidate.skills && candidate.skills.length > 0 && (
+                <CardDescription>
+                  {candidate.skills.length} compétence{candidate.skills.length > 1 ? "s" : ""} renseignée{candidate.skills.length > 1 ? "s" : ""}
+                </CardDescription>
+              )}
+            </CardHeader>
+            <CardContent className="pt-4">
+              <SkillsSection skills={candidate.skills ?? []} />
+            </CardContent>
+          </Card>
+
+          {/* Aperçu Professionnel */}
+          {(candidate.experienceLevel || candidate.schoolLevel) && (
+            <Card className="border-none shadow-md">
+              <CardHeader>
+                <CardTitle className="text-xl">Aperçu Professionnel</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {candidate.experienceLevel && (
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                        <Briefcase className="w-4 h-4" /> Niveau d'expérience
+                      </p>
+                      <p className="text-base font-semibold">{candidate.experienceLevel}</p>
+                    </div>
+                  )}
+                  {candidate.schoolLevel && (
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                        <GraduationCap className="w-4 h-4" /> Niveau d'études
+                      </p>
+                      <p className="text-base font-semibold">{candidate.schoolLevel}</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
