@@ -55,6 +55,7 @@ import { Spinner } from "@/components/ui/spinner";
 import Link from "next/link";
 import { CreateJobDialog } from "./CreateJobDialog";
 import { useDashboardStats } from "@/hooks/dashboard/useDashboard";
+import usePublishedJobs from "@/hooks/usePublishedJobs";
 
 // --- Types ---
 
@@ -174,6 +175,13 @@ export function AdminDashboard() {
       </div>
     );
   }
+
+  const jobStatusLabels: Record<string, string> = {
+    PUBLISHED: "Publiée",
+  };
+
+  const getJobStatusLabel = (field: string) =>
+    jobStatusLabels[field] || field;
 
   const statusColors: Record<string, string> = {
     PENDING: "#f59e0b",
@@ -482,7 +490,7 @@ export function AdminDashboard() {
                             {offer.jobTitle}
                           </p>
                           <p className="text-xs text-muted-foreground truncate">
-                            {offer.status}
+                            {getJobStatusLabel(offer.status)}
                           </p>
                         </div>
                       </div>

@@ -36,11 +36,11 @@ import { CandidateExperience, CandidateEducation, CandidateSkill } from "@/types
 
 // Mapping du niveau de compétence vers un badge coloré
 const skillLevelConfig: Record<string, { label: string; class: string }> = {
-  BEGINNER:     { label: "Débutant",    class: "bg-slate-100 text-slate-700 border-slate-200" },
-  ELEMENTARY:   { label: "Élémentaire", class: "bg-blue-50 text-blue-700 border-blue-200" },
+  BEGINNER: { label: "Débutant", class: "bg-slate-100 text-slate-700 border-slate-200" },
+  ELEMENTARY: { label: "Élémentaire", class: "bg-blue-50 text-blue-700 border-blue-200" },
   INTERMEDIATE: { label: "Intermédiaire", class: "bg-indigo-50 text-indigo-700 border-indigo-200" },
-  ADVANCED:     { label: "Avancé",      class: "bg-violet-50 text-violet-700 border-violet-200" },
-  EXPERT:       { label: "Expert",      class: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  ADVANCED: { label: "Avancé", class: "bg-violet-50 text-violet-700 border-violet-200" },
+  EXPERT: { label: "Expert", class: "bg-emerald-50 text-emerald-700 border-emerald-200" },
 };
 
 function formatDateRange(startDate: string, endDate: string | null, isCurrent: boolean) {
@@ -253,10 +253,10 @@ export function AdminCandidateDetail({ id }: { id: string }) {
 
   const formattedDate = candidate.createdAt
     ? new Date(candidate.createdAt).toLocaleDateString("fr-FR", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      })
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    })
     : "Date inconnue";
 
   return (
@@ -330,7 +330,7 @@ export function AdminCandidateDetail({ id }: { id: string }) {
         {/* Left Sidebar */}
         <div className="space-y-6">
           {/* Completion */}
-          <Card className="border-none shadow-md">
+          <Card className="border-none shadow-md gap-0">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
                 <PieChart className="w-5 h-5 text-indigo-500" />
@@ -378,7 +378,7 @@ export function AdminCandidateDetail({ id }: { id: string }) {
           </Card>
 
           {/* Candidatures */}
-          <Card className="border-none shadow-md bg-blue-50/50">
+          <Card className="border-none shadow-md bg-blue-50/50 gap-0">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center gap-2 text-blue-900">
                 <FileText className="w-5 h-5 text-blue-500" />
@@ -397,11 +397,11 @@ export function AdminCandidateDetail({ id }: { id: string }) {
 
           {/* CV Link */}
           {candidate.cvUrl && (
-            <Card className="border-none shadow-md">
+            <Card className="border-none shadow-md gap-0">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
                   <FileText className="w-4 h-4 text-blue-500" />
-                  Curriculum Vitae
+                  Documents
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -409,7 +409,7 @@ export function AdminCandidateDetail({ id }: { id: string }) {
                   href={candidate.cvUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 w-full"
+                  className="inline-flex items-start justify-start whitespace-nowrap rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 py-2 w-full"
                 >
                   <FileText className="w-4 h-4 mr-2 text-blue-500" />
                   Consulter le CV
