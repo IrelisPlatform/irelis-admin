@@ -229,9 +229,9 @@ export function AdminCandidates() {
               <TableHead className="font-semibold text-gray-700 w-[220px] max-w-[220px]">
                 Titre Professionnel
               </TableHead>
-              <TableHead className="font-semibold text-gray-700">
+              {/* <TableHead className="font-semibold text-gray-700">
                 Expérience
-              </TableHead>
+              </TableHead> */}
               <TableHead className="font-semibold text-gray-700">
                 Profil
               </TableHead>
@@ -246,7 +246,7 @@ export function AdminCandidates() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-64 text-center">
+                <TableCell colSpan={5} className="h-64 text-center">
                   <div className="flex flex-col items-center justify-center text-muted-foreground">
                     <Spinner className="w-8 h-8 mb-4 text-blue-600" />
                     Chargement des candidats...
@@ -255,7 +255,7 @@ export function AdminCandidates() {
               </TableRow>
             ) : filteredCandidates.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-64 text-center">
+                <TableCell colSpan={5} className="h-64 text-center">
                   <div className="flex flex-col items-center justify-center text-muted-foreground">
                     <UsersIcon className="w-12 h-12 mb-4 text-muted-foreground/50" />
                     Aucun candidat trouvé
@@ -294,7 +294,7 @@ export function AdminCandidates() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
+                  {/* <TableCell>
                     {candidate.experienceLevel ? (
                       <Badge variant="secondary" className="capitalize">
                         {candidate.experienceLevel.toLowerCase()}
@@ -302,7 +302,7 @@ export function AdminCandidates() {
                     ) : (
                       <span className="text-muted-foreground text-sm">—</span>
                     )}
-                  </TableCell>
+                  </TableCell> */}
                   <TableCell>
                     <div className="flex flex-col gap-1 items-start">
                       {getCompletionBadge(

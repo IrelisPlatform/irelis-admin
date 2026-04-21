@@ -11,6 +11,7 @@ import {
   Menu,
   CreditCard,
   Package,
+  Users,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -59,7 +60,8 @@ export function AdminHeader({
 
   const menuMapping: Record<string, string> = {
     offres: "/admin",
-    modules: "/admin/modules",
+    candidates: "/admin/candidates",
+    modules: "/admin/accompagnement",
     cvtheque: "/espace-recruteur/sourcing",
     guides: "/espace-recruteur/support",
     subscriptions: "/espace-recruteur/abonnements",
@@ -198,6 +200,14 @@ export function AdminHeader({
             >
               <FileText className="w-4 h-4" />
               Offres
+            </button>
+
+            <button
+              onClick={() => handleNavClick("candidates")}
+              className="w-full text-left px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-all duration-200 flex items-center gap-2"
+            >
+              <Users className="w-4 h-4" />
+              Candidats
             </button>
 
             <button
