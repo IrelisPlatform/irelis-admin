@@ -431,11 +431,11 @@ export function AdminDashboard() {
                           <TrendingUp className="w-5 h-5 text-emerald-600" />
                         </div>
                         <div className="truncate">
-                          <p className="font-medium text-sm truncate">
+                          <p className="font-medium  truncate">
                             {offer.jobTitle}
                           </p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {getJobStatusLabel(offer.status)}
+                          <p className="font-bold text-sm truncate">
+                            {offer.companyName}
                           </p>
                         </div>
                       </div>
@@ -478,11 +478,11 @@ export function AdminDashboard() {
                           <Eye className="w-5 h-5 text-orange-600" />
                         </div>
                         <div className="truncate">
-                          <p className="font-medium text-sm truncate">
+                          <p className="font-medium truncate">
                             {offer.jobTitle}
                           </p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {getJobStatusLabel(offer.status)}
+                          <p className="font-bold text-sm truncate">
+                            {offer.companyName}
                           </p>
                         </div>
                       </div>

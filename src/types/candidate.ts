@@ -23,6 +23,16 @@ export interface CandidateExperience {
   description: string;
 }
 
+export interface JobPreference{
+  desiredPosition:string;
+  contractTypes: string[];
+  availability:string;
+  pretentionsSalarial:string;
+  country: string;
+  sectors:string[];
+
+}
+
 export interface CandidateResponse {
   id: string;
   email: string;
@@ -45,7 +55,7 @@ export interface CandidateResponse {
   skills?: CandidateSkill[];
   educations?: CandidateEducation[];
   experiences?: CandidateExperience[];
-
+  preference?:JobPreference;
   applicationCount: number;
 }
 

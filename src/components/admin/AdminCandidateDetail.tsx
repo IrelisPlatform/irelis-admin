@@ -504,34 +504,69 @@ export function AdminCandidateDetail({ id }: { id: string }) {
             </CardContent>
           </Card>
 
-          {/* Aperçu Professionnel */}
-          {(candidate.experienceLevel || candidate.schoolLevel) && (
-            <Card className="border-none shadow-md">
-              <CardHeader>
-                <CardTitle className="text-xl">Aperçu Professionnel</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {candidate.experienceLevel && (
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                        <Briefcase className="w-4 h-4" /> Niveau d'expérience
-                      </p>
-                      <p className="text-base font-semibold">{candidate.experienceLevel}</p>
+          {/* Préférences */}
+          <Card className="border-none shadow-md">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-blue-500" />
+                <CardTitle className="text-xl">Préférences</CardTitle>
+              </div>
+
+              {candidate.preference && (
+                  <CardDescription>
+                    Informations sur les attentes professionnelles
+                  </CardDescription>
+              )}
+            </CardHeader>
+
+            <CardContent className="pt-4 space-y-3">
+              {candidate.preference ? (
+                  <>
+                    {/* Poste recherché */}
+                    <div>
+                      <span className="font-medium">Poste souhaité : </span>
+                      {candidate.preference.desiredPosition || "Non renseigné"}
                     </div>
-                  )}
-                  {candidate.schoolLevel && (
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                        <GraduationCap className="w-4 h-4" /> Niveau d'études
-                      </p>
-                      <p className="text-base font-semibold">{candidate.schoolLevel}</p>
+
+                    {/* Types de contrat */}
+                    <div>
+                      <span className="font-medium">Contrat : </span>
+                      {candidate.preference.contractTypes?.length > 0
+                          ? candidate.preference.contractTypes.join(", ")
+                          : "Non renseigné"}
                     </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+
+                    {/* Disponibilité */}
+                    <div>
+                      <span className="font-medium">Disponibilité : </span>
+                      {candidate.preference.availability || "Non renseigné"}
+                    </div>
+
+                    {/* Salaire */}
+                    <div>
+                      <span className="font-medium">Prétentions salariales : </span>
+                      {candidate.preference.pretentionsSalarial || "Non renseigné"}
+                    </div>
+
+                    {/* Pays */}
+                    <div>
+                      <span className="font-medium">Pays : </span>
+                      {candidate.preference.country || "Non renseigné"}
+                    </div>
+
+                    {/* Secteurs */}
+                    <div>
+                      <span className="font-medium">Secteurs : </span>
+                      {candidate.preference.sectors?.length > 0
+                          ? candidate.preference.sectors.join(", ")
+                          : "Non renseigné"}
+                    </div>
+                  </>
+              ) : (
+                  <div className="text-gray-500">Aucune préférence renseignée</div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

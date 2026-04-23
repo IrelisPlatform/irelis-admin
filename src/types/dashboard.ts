@@ -1,5 +1,6 @@
 export interface TopOfferStats {
   jobTitle: string;
+  companyName: string;
   status: string;
   applicationCount: number;
   viewCount: number;
